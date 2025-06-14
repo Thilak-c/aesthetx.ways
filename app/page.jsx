@@ -126,10 +126,10 @@ function SpinningText() {
   useFrame((state) => {
     modelRefs.forEach((ref, index) => {
       if (ref.current) {
-        ref.current.rotation.y += 0.01
-        ref.current.position.y = Math.sin(state.clock.getElapsedTime() * 0.5 + index * Math.PI / 2) * 0.2
-        ref.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.3 + index * Math.PI / 2) * 0.1
-        ref.current.rotation.z = Math.cos(state.clock.getElapsedTime() * 0.3 + index * Math.PI / 2) * 0.1
+          ref.current.rotation.y += 0.01
+          ref.current.position.y = Math.sin(state.clock.getElapsedTime() * 0.5 + index * Math.PI / 2) * 0.2
+          ref.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.3 + index * Math.PI / 2) * 0.1
+          ref.current.rotation.z = Math.cos(state.clock.getElapsedTime() * 0.3 + index * Math.PI / 2) * 0.1
         
         ref.current.position.y += Math.sin(state.clock.getElapsedTime() + index) * 0.001
         ref.current.position.x += Math.cos(state.clock.getElapsedTime() + index) * 0.001
@@ -1202,6 +1202,34 @@ export default function Home() {
                   </Suspense>
                 </Canvas>
               </div>
+              {/* Scroll Down Arrow */}
+              <motion.div 
+                className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer"
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.scrollTo({
+                    top: window.innerHeight,
+                    behavior: 'smooth'
+                  });
+                }}
+              >
+                <svg 
+                  className="w-8 h-8 text-white"
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+                  />
+                </svg>
+              </motion.div>
             </section>
 
             <section id="drops" className="py-20 px-4 md:px-12 relative">
@@ -1626,76 +1654,28 @@ export default function Home() {
             </section>
 
             {/* Footer */}
-            <footer className="relative bg-gradient-to-b from-transparent to-black/5 dark:to-white/5 backdrop-blur-xl border-t border-black/10 dark:border-white/10">
-              {/* Animated Stars */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {[...Array(8)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute"
-                    style={{
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                    }}
-                    animate={{
-                      x: [0, Math.random() * 100 - 50],
-                      y: [0, Math.random() * 100 - 50],
-                      rotate: [0, 360],
-                      scale: [0.5, 1, 0.5],
-                    }}
-                    transition={{
-                      duration: 5 + Math.random() * 5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: i * 0.5,
-                    }}
-                  >
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-fuchsia-500/30 dark:bg-fuchsia-500/30 rounded-full blur-sm" />
-                      <div className="relative w-2 h-2 bg-fuchsia-500 dark:bg-fuchsia-500 rounded-full" />
-                    </div>
-                  </motion.div>
-                ))}
-                
-                {/* Shooting Stars */}
-                {[...Array(3)].map((_, i) => (
-                  <motion.div
-                    key={`shooting-${i}`}
-                    className="absolute"
-                    style={{
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                    }}
-                    animate={{
-                      x: [0, 100],
-                      y: [0, 100],
-                      opacity: [0, 1, 0],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: i * 2,
-                    }}
-                  >
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-fuchsia-500/30 dark:bg-fuchsia-500/30 rounded-full blur-sm" />
-                      <div className="relative w-1 h-1 bg-fuchsia-500 dark:bg-fuchsia-500 rounded-full" />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+            <footer className={`relative ${darkTheme ? 'bg-black/40' : 'bg-white/40'} backdrop-blur-xl border-t ${darkTheme ? 'border-neutral-800/30' : 'border-gray-200/30'}`}>
+              <div className=" mx-auto w-full px-4 sm:px-6 lg:px-8 py-16 relative">
+                {/* Decorative Elements */}
+                <motion.div 
+                  className="absolute inset-0 overflow-hidden pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                >
+                  <div className={`absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl opacity-20 ${darkTheme ? 'bg-fuchsia-500' : 'bg-fuchsia-400'}`} />
+                  <div className={`absolute -bottom-24 -right-24 w-96 h-96 rounded-full blur-3xl opacity-20 ${darkTheme ? 'bg-purple-500' : 'bg-purple-400'}`} />
+                </motion.div>
 
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative">
                   {/* Brand Section */}
-                  <div className="space-y-6">
-                    <motion.div 
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      className="flex items-center space-x-3"
-                    >
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="space-y-6"
+                  >
+                    <div className="flex items-center space-x-3">
                       <motion.div 
                         animate={{
                           scale: [1, 1.05, 1],
@@ -1706,7 +1686,7 @@ export default function Home() {
                           repeat: Infinity,
                           ease: "easeInOut"
                         }}
-                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center"
+                        className={`w-10 h-10 rounded-xl ${darkTheme ? 'bg-gradient-to-br from-fuchsia-500 to-purple-500' : 'bg-gradient-to-br from-fuchsia-400 to-purple-400'} flex items-center justify-center shadow-lg shadow-fuchsia-500/20`}
                       >
                         <span className="text-2xl font-bold text-white">A</span>
                       </motion.div>
@@ -1719,32 +1699,25 @@ export default function Home() {
                           repeat: Infinity,
                           ease: "linear"
                         }}
-                        className="text-2xl font-bold bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-[length:200%_auto] bg-clip-text text-transparent"
+                        className={`text-2xl font-bold bg-gradient-to-r ${darkTheme ? 'from-fuchsia-500 via-purple-500 to-fuchsia-500' : 'from-fuchsia-400 via-purple-400 to-fuchsia-400'} bg-[length:200%_auto] bg-clip-text text-transparent`}
                       >
                         AesthetX
                       </motion.span>
-                    </motion.div>
+                    </div>
                     <motion.p 
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.1 }}
-                      className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed"
-                    >
-                      Discover the future of digital fashion. Experience unique AR try-ons and exclusive NFT collections.
-                    </motion.p>
-                    <motion.div 
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: 0.2 }}
-                      className="flex items-center space-x-4"
+                      className={`text-sm ${darkTheme ? 'text-gray-400' : 'text-gray-600'}`}
                     >
+                      Redefining digital fashion with cutting-edge technology and sustainable innovation.
+                    </motion.p>
+                    <div className="flex items-center space-x-4">
                       {[
                         { icon: <FiTwitter className="w-5 h-5" />, label: "Twitter", href: "#" },
                         { icon: <FiInstagram className="w-5 h-5" />, label: "Instagram", href: "#" },
-                        { icon: <FiMessageCircle className="w-5 h-5" />, label: "Discord", href: "#" },
-                        { icon: <FiExternalLink className="w-5 h-5" />, label: "OpenSea", href: "#" }
+                        { icon: <FiMessageCircle className="w-5 h-5" />, label: "Discord", href: "#" }
                       ].map((social, index) => (
                         <motion.a
                           key={social.label}
@@ -1752,22 +1725,22 @@ export default function Home() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="group relative"
-                          whileHover={{ scale: 1.1 }}
+                          whileHover={{ scale: 1.1, y: -2 }}
                           whileTap={{ scale: 0.95 }}
                           initial={{ opacity: 0, y: 20 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
                           transition={{ delay: 0.2 + index * 0.1 }}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="relative p-2 rounded-lg bg-white/5 dark:bg-black/5 border border-black/10 dark:border-white/10 backdrop-blur-sm hover:border-purple-500/50 dark:hover:border-blue-500/50 transition-colors duration-300">
+                          <div className={`absolute inset-0 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${darkTheme ? 'bg-fuchsia-500/20' : 'bg-fuchsia-400/20'}`} />
+                          <div className={`relative p-2 rounded-lg ${darkTheme ? 'bg-neutral-800/50 hover:bg-neutral-700/50' : 'bg-gray-100/50 hover:bg-gray-200/50'} transition-colors duration-300 shadow-lg shadow-fuchsia-500/10`}>
                             {social.icon}
                           </div>
                           <span className="sr-only">{social.label}</span>
                         </motion.a>
                       ))}
-                    </motion.div>
-                  </div>
+                    </div>
+                  </motion.div>
 
                   {/* Quick Links */}
                   <motion.div 
@@ -1786,7 +1759,7 @@ export default function Home() {
                         repeat: Infinity,
                         ease: "linear"
                       }}
-                      className="text-lg font-semibold bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-[length:200%_auto] bg-clip-text text-transparent"
+                      className={`text-lg font-semibold bg-gradient-to-r ${darkTheme ? 'from-fuchsia-500 via-purple-500 to-fuchsia-500' : 'from-fuchsia-400 via-purple-400 to-fuchsia-400'} bg-[length:200%_auto] bg-clip-text text-transparent`}
                     >
                       Quick Links
                     </motion.h3>
@@ -1801,9 +1774,13 @@ export default function Home() {
                         >
                           <a 
                             href="#" 
-                            className="group flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-blue-500 transition-colors duration-300"
+                            className={`group flex items-center space-x-2 ${darkTheme ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'} transition-colors duration-300`}
                           >
-                            <span className="w-1 h-1 rounded-full bg-purple-500/50 dark:bg-blue-500/50 group-hover:scale-150 transition-transform duration-300" />
+                            <motion.span 
+                              className={`w-1 h-1 rounded-full ${darkTheme ? 'bg-fuchsia-500/50' : 'bg-fuchsia-400/50'}`}
+                              whileHover={{ scale: 2 }}
+                              transition={{ duration: 0.2 }}
+                            />
                             <span>{item}</span>
                           </a>
                         </motion.li>
@@ -1828,7 +1805,7 @@ export default function Home() {
                         repeat: Infinity,
                         ease: "linear"
                       }}
-                      className="text-lg font-semibold bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-[length:200%_auto] bg-clip-text text-transparent"
+                      className={`text-lg font-semibold bg-gradient-to-r ${darkTheme ? 'from-fuchsia-500 via-purple-500 to-fuchsia-500' : 'from-fuchsia-400 via-purple-400 to-fuchsia-400'} bg-[length:200%_auto] bg-clip-text text-transparent`}
                     >
                       Resources
                     </motion.h3>
@@ -1843,9 +1820,13 @@ export default function Home() {
                         >
                           <a 
                             href="#" 
-                            className="group flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-blue-500 transition-colors duration-300"
+                            className={`group flex items-center space-x-2 ${darkTheme ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'} transition-colors duration-300`}
                           >
-                            <span className="w-1 h-1 rounded-full bg-purple-500/50 dark:bg-blue-500/50 group-hover:scale-150 transition-transform duration-300" />
+                            <motion.span 
+                              className={`w-1 h-1 rounded-full ${darkTheme ? 'bg-fuchsia-500/50' : 'bg-fuchsia-400/50'}`}
+                              whileHover={{ scale: 2 }}
+                              transition={{ duration: 0.2 }}
+                            />
                             <span>{item}</span>
                           </a>
                         </motion.li>
@@ -1870,49 +1851,45 @@ export default function Home() {
                         repeat: Infinity,
                         ease: "linear"
                       }}
-                      className="text-lg font-semibold bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 bg-[length:200%_auto] bg-clip-text text-transparent"
+                      className={`text-lg font-semibold bg-gradient-to-r ${darkTheme ? 'from-fuchsia-500 via-purple-500 to-fuchsia-500' : 'from-fuchsia-400 via-purple-400 to-fuchsia-400'} bg-[length:200%_auto] bg-clip-text text-transparent`}
                     >
                       Stay Updated
                     </motion.h3>
-                    <form className="space-y-3">
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.6 }}
+                      className={`text-sm ${darkTheme ? 'text-gray-400' : 'text-gray-600'}`}
+                    >
+                      Subscribe to our newsletter for the latest drops and exclusive offers.
+                    </motion.p>
+                    <form className="space-y-4">
                       <motion.div 
-                        className="relative group"
-                        animate={{
-                          boxShadow: [
-                            '0 0 0 0 rgba(147, 51, 234, 0)',
-                            '0 0 0 10px rgba(147, 51, 234, 0.1)',
-                            '0 0 0 0 rgba(147, 51, 234, 0)',
-                          ],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
+                        className="relative"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.7 }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <input
                           type="email"
                           placeholder="Enter your email"
-                          className="relative w-full px-4 py-3 bg-white/5 dark:bg-black/5 border border-black/10 dark:border-white/10 rounded-lg backdrop-blur-sm focus:border-purple-500/50 dark:focus:border-blue-500/50 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-blue-500/20 transition-all duration-300"
+                          className={`w-full px-4 py-3 rounded-lg ${darkTheme ? 'bg-neutral-800/50 text-white placeholder-gray-400' : 'bg-gray-100/50 text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 ${darkTheme ? 'focus:ring-fuchsia-500/50' : 'focus:ring-fuchsia-400/50'} transition-all duration-300 shadow-lg shadow-fuchsia-500/10`}
                         />
                       </motion.div>
                       <motion.button
                         type="submit"
-                        className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-blue-600 transition-all duration-300 relative group overflow-hidden"
+                        className={`w-full px-4 py-3 rounded-lg font-medium relative group overflow-hidden ${darkTheme ? 'bg-gradient-to-r from-fuchsia-500 to-purple-500' : 'bg-gradient-to-r from-fuchsia-400 to-purple-400'} text-white hover:opacity-90 transition-opacity duration-300 shadow-lg shadow-fuchsia-500/20`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        animate={{
-                          backgroundPosition: ['0%', '100%', '0%'],
-                        }}
-                        transition={{
-                          duration: 5,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.8 }}
                       >
                         <motion.div 
-                          className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-white/20 to-blue-500/0"
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                           animate={{
                             x: ['-100%', '100%'],
                           }}
@@ -1946,19 +1923,16 @@ export default function Home() {
                         repeat: Infinity,
                         ease: "easeInOut"
                       }}
-                      className="text-sm text-gray-600 dark:text-gray-400"
+                      className={`text-sm ${darkTheme ? 'text-gray-400' : 'text-gray-600'}`}
                     >
                       © 2024 AesthetX. All rights reserved.
                     </motion.p>
                     <div className="flex items-center space-x-4">
                       <motion.button
                         onClick={() => setDarkTheme(!darkTheme)}
-                        className="p-2 rounded-lg bg-white/5 dark:bg-black/5 border border-black/10 dark:border-white/10 hover:border-purple-500/50 dark:hover:border-blue-500/50 transition-colors duration-300"
+                        className={`p-2 rounded-lg ${darkTheme ? 'bg-neutral-800/50 hover:bg-neutral-700/50' : 'bg-gray-100/50 hover:bg-gray-200/50'} transition-colors duration-300 shadow-lg shadow-fuchsia-500/10`}
                         whileHover={{ scale: 1.1, rotate: 180 }}
                         whileTap={{ scale: 0.9 }}
-                        animate={{
-                          rotate: [0, 360],
-                        }}
                       >
                         {darkTheme ? (
                           <FiSun className="w-5 h-5 text-yellow-500" />
