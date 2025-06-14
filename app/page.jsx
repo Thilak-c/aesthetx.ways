@@ -1204,7 +1204,7 @@ export default function Home() {
               </div>
               {/* Scroll Down Arrow */}
               <motion.div 
-                className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer"
+                className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer"
                 animate={{ y: [0, 10, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                 onClick={(e) => {
