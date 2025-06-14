@@ -533,7 +533,7 @@ function ProductShowcase({ darkTheme }) {
           className="md:w-1/2 h-[500px] md:h-[600px] flex"
           variants={scaleIn}
         >
-          <Canvas className="w-full h-full">
+          <Canvas className="w-full z-50 h-full">
             <Suspense fallback={<Html center><LoadingSpinner /></Html>}>
               <ambientLight intensity={0.3} color="#ffffff" />
               <directionalLight position={[8, 8, 8]} intensity={1.2} color="#ffffff" castShadow />
@@ -651,7 +651,7 @@ function Model3D({ url, onLoad }) {
     }
   }, [onLoad])
 
-  return <primitive ref={modelRef} object={scene} scale={2} position={[0, -2, 0]} />
+  return <primitive ref={modelRef} object={scene} scale={3.1} position={[0, -3, 0]} />
 }
 
 function Navigation({ darkTheme }) {
