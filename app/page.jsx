@@ -13,14 +13,15 @@ import BlurText from "@/components/BlurText/BlurText"
 import ScrollReveal from '@/components/ScrollReveal/ScrollReveal'
 import ScrollVelocity from '@/components/ScrollVelocity/ScrollVelocity'
 import StarBorder from '@/components/StarBorder/StarBorder'
+import Link from 'next/link'
 
 // Dynamically import heavy components
-const CircularGallery = dynamic(() => import('@/component/CircularGallery/CircularGallery'), {
+const CircularGallery = dynamic(() => import('@/components/CircularGallery/CircularGallery'), {
   loading: () => <div className="h-[600px] flex items-center justify-center">Loading gallery...</div>,
   ssr: false
 })
 
-const FlowingMenu = dynamic(() => import('@/component/FlowingMenu/FlowingMenu'), {
+const FlowingMenu = dynamic(() => import('@/components/FlowingMenu/FlowingMenu'), {
   loading: () => <div className="h-[600px] flex items-center justify-center">Loading menu...</div>,
   ssr: false
 })
@@ -67,21 +68,19 @@ const handleAnimationComplete = () => {
 };
 //test
 const demoItems = [
-  { link: '#', text: 'Men', image: '/random/1.png' },
-  { link: '#', text: 'Women', image: 'https://www.shutterstock.com/image-photo/portrait-elegant-woman-hydrated-skin-600nw-2500102381.jpg' },
-  { link: '#', text: 'Unisex ', image: 'https://cdn.shopify.com/s/files/1/0453/4049/1929/files/Page-Header-Image_68e1b922-1cae-4a1b-8df4-bf1f9d48625a.jpg?v=1676036767' },
+  { link: '/men', text: 'Men', image: '/random/1.png' },
+  { link: '/women', text: 'Women', image: 'https://www.shutterstock.com/image-photo/portrait-elegant-woman-hydrated-skin-600nw-2500102381.jpg' },
+  { link: '/unisex', text: 'Unisex ', image: 'https://cdn.shopify.com/s/files/1/0453/4049/1929/files/Page-Header-Image_68e1b922-1cae-4a1b-8df4-bf1f9d48625a.jpg?v=1676036767' },
 ];
 
 // Add these new categories with more detailed items
 const categoryItems = [
-  { name: "Streetwear", icon: <FiEye className="w-4 h-4" />, color: "#FF6B6B", description: "Urban Style" },
-  { name: "Luxury", icon: <FiAward className="w-4 h-4" />, color: "#4ECDC4", description: "Premium Collection" },
-  { name: "Sport", icon: <FiActivity className="w-4 h-4" />, color: "#45B7D1", description: "Active Wear" },
-  { name: "Casual", icon: <FiCoffee className="w-4 h-4" />, color: "#96CEB4", description: "Everyday Style" },
-  { name: "Formal", icon: <FiBriefcase className="w-4 h-4" />, color: "#FFEEAD", description: "Business Attire" },
-  { name: "Vintage", icon: <FiClock className="w-4 h-4" />, color: "#D4A5A5", description: "Retro Collection" },
-  { name: "Tech", icon: <FiCpu className="w-4 h-4" />, color: "#9B59B6", description: "Smart Fashion" },
-  { name: "Art", icon: <FiImage className="w-4 h-4" />, color: "#E67E22", description: "Creative Wear" }
+  { name: "Jeans", icon: <FiEye className="w-4 h-4" />, color: "#FF6B6B", description: "Urban Style" },
+  { name: "Trousers", icon: <FiAward className="w-4 h-4" />, color: "#4ECDC4", description: "Premium Collection" },
+  { name: "Jacket", icon: <FiActivity className="w-4 h-4" />, color: "#45B7D1", description: "Active Wear" },
+  { name: "T-shirt", icon: <FiCoffee className="w-4 h-4" />, color: "#96CEB4", description: "Everyday Style" },
+  { name: "Shirt", icon: <FiBriefcase className="w-4 h-4" />, color: "#FFEEAD", description: "Business Attire" },
+  { name: "Hoodie", icon: <FiClock className="w-4 h-4" />, color: "#D4A5A5", description: "Retro Collection" },
 ]
 
 // Preload 3D models
@@ -620,6 +619,7 @@ function ProductShowcase({ darkTheme }) {
               : 'bg-fuchsia-500 hover:bg-fuchsia-600'
               } text-white`}
             aria-label="View full collection"
+            onClick={() => window.location.href = '/3dcollection'}
           >
             View Full Collection
           </motion.button>
@@ -987,7 +987,7 @@ const FloatingCategories = ({ darkTheme }) => {
       >
         <motion.h1
           initial={{ scale: 0.8, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 0.03 }}
+          whileInView={{ scale: 1, opacity: 0.2 }}
           viewport={{ once: true }}
           transition={{ duration: 1 }}
           className={`text-[7vw] font-bold whitespace-nowrap ${darkTheme ? 'text-white' : 'text-gray-900'}`}
@@ -1058,14 +1058,18 @@ export default function Home() {
 
                   <div className="flex items-center gap-8">
                     <nav className="hidden md:flex gap-8">
-                      {['Drops', 'Collections'].map((item) => (
+                      {[
+                        { name: 'Drops', href: '/drops' },
+                        { name: 'Collections', href: '/collections' }
+                      ].map((item) => (
                         <motion.a
-                          key={item}
+                          key={item.name}
+                          href={item.href}
                           whileHover={{ y: -2 }}
                           className="relative group"
                         >
                           <span className={`text-sm font-medium transition-colors ${darkTheme ? 'text-gray-300 group-hover:text-white' : 'text-gray-600 group-hover:text-black'}`} style={{ fontFamily: fontConfig.body }}>
-                            {item}
+                            {item.name}
                           </span>
                           <motion.div
                             className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-fuchsia-500 to-purple-500"
@@ -1117,15 +1121,20 @@ export default function Home() {
                   >
                     <div className="container mx-auto px-6 py-4">
                       <nav className="flex flex-col gap-4">
-                        {['Drops', 'Collections', 'Marketplace', 'AR Try-On'].map((item, index) => (
+                        {[
+                          { name: 'Drops', href: '/drops' },
+                          { name: 'Collections', href: '/collections' },
+                          { name: 'Marketplace', href: '/marketplace' },
+                          { name: 'AR Try-On', href: '/ar-try-on' }
+                        ].map((item, index) => (
                           <motion.div
-                            key={item}
+                            key={item.name}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
                           >
                             <motion.a
-                              href="#"
+                              href={item.href}
                               whileHover={{ x: 10 }}
                               whileTap={{ scale: 0.98 }}
                               className={`group flex items-center gap-3 text-lg font-medium py-3 px-4 rounded-xl ${darkTheme 
@@ -1138,7 +1147,7 @@ export default function Home() {
                                 whileHover={{ scale: 1.5 }}
                                 transition={{ duration: 0.2 }}
                               />
-                              <span>{item}</span>
+                              <span>{item.name}</span>
                               <motion.div
                                 className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                                 initial={false}
@@ -1599,56 +1608,79 @@ export default function Home() {
 
             <FloatingCategories darkTheme={darkTheme} />
 
-            <section id="cta" className={`relative py-20 px-4 md:px-12 ${darkTheme ? 'bg-gradient-to-br from-neutral-900 to-neutral-800' : 'bg-gradient-to-br from-gray-200 to-gray-100'}`}>
-              <div className="container mx-auto text-center">
+            <section id="store-directory" className={`relative py-20 px-4 md:px-12 ${darkTheme ? 'bg-gradient-to-br from-neutral-900 to-neutral-800' : 'bg-gradient-to-br from-gray-200 to-gray-100'}`}>
+              <div className="container mx-auto">
                 <motion.h2
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.8 }}
-                  className={`text-3xl md:text-5xl font-bold mb-8 ${darkTheme ? 'text-white' : 'text-gray-900'}`}
+                  className={`text-3xl md:text-5xl font-bold mb-12 text-center ${darkTheme ? 'text-white' : 'text-gray-900'}`}
                 >
-                  JOIN THE DIGITAL FASHION REVOLUTION
+                  Store Directory
                 </motion.h2>
 
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className={`max-w-3xl mx-auto mb-12 text-lg ${darkTheme ? 'text-gray-400' : 'text-gray-600'}`}
-                >
-                  Be the first to access exclusive drops, limited editions, and members-only benefits in the world of digital fashion.
-                </motion.p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {categoryItems.map((category, index) => (
+                    <motion.div
+                      key={category.name}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`p-6 rounded-xl backdrop-blur-sm ${darkTheme ? 'bg-neutral-800/50' : 'bg-white/50'} hover:shadow-lg transition-all duration-300`}
+                    >
+                      <motion.a
+                        href={`/category/${category.name.toLowerCase()}`}
+                        className="block"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="flex items-center gap-4 mb-4">
+                          <div 
+                            className="p-3 rounded-lg"
+                            style={{ backgroundColor: `${category.color}20` }}
+                          >
+                            {category.icon}
+                          </div>
+                          <h3 className={`text-xl font-semibold ${darkTheme ? 'text-white' : 'text-gray-900'}`}>
+                            {category.name}
+                          </h3>
+                        </div>
+                        <p className={`${darkTheme ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+                          {category.description}
+                        </p>
+                        <motion.div
+                          className={`flex items-center gap-2 ${darkTheme ? 'text-fuchsia-400' : 'text-fuchsia-600'}`}
+                          whileHover={{ x: 5 }}
+                        >
+                          <span className="text-sm font-medium">View Collection</span>
+                          <FiExternalLink className="w-4 h-4" />
+                        </motion.div>
+                      </motion.a>
+                    </motion.div>
+                  ))}
+                </div>
 
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  className="flex flex-col sm:flex-row justify-center gap-4"
+                  transition={{ delay: 0.5 }}
+                  className="mt-12 text-center"
                 >
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`px-8 py-4 rounded-full font-bold ${darkTheme
+                  <motion.a
+                    href="/all-categories"
+                    className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium ${darkTheme
                       ? 'bg-fuchsia-600 hover:bg-fuchsia-700'
                       : 'bg-fuchsia-500 hover:bg-fuchsia-600'
                       } text-white transition-colors duration-200`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    Connect Wallet
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`px-8 py-4 rounded-full font-bold border-2 transition-colors duration-200 ${darkTheme
-                      ? 'border-fuchsia-400 text-white hover:bg-fuchsia-900/20'
-                      : 'border-fuchsia-500 text-gray-900 hover:bg-fuchsia-50'
-                      }`}
-                  >
-                    View Roadmap
-                  </motion.button>
+                    <span>View All Categories</span>
+                    <FiExternalLink className="w-4 h-4" />
+                  </motion.a>
                 </motion.div>
               </div>
             </section>
