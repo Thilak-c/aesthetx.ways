@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import SidebarDrawer from "./SidebarDrawer"; // adjust path as needed
 
 export default function Navbar() {
   const navLinks = ["MEN", "WOMEN", "SNEAKERS"];
@@ -118,22 +119,36 @@ export default function Navbar() {
 
 export function NavbarMobile() {
   const navLinks = ["MEN", "WOMEN", "SNEAKERS"];
-  const [active, setActive] = useState("MEN"); // or manage this in parent
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const barRef = useRef(null);
+  const [tabWidth, setTabWidth] = useState(0);
+
+  useEffect(() => {
+    if (barRef.current) {
+      setTabWidth(barRef.current.offsetWidth / navLinks.length);
+    }
+    const handleResize = () => {
+      if (barRef.current) {
+        setTabWidth(barRef.current.offsetWidth / navLinks.length);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [navLinks.length]);
 
   return (
     <>
       {/* Main Mobile Navbar */}
-      <nav className="relative w-full flex items-center justify-between px-2 py-2 border-b bg-white md:hidden">
+      <nav className="relative w-full flex items-center justify-between px-4 py-2 border-b bg-white md:hidden">
         {/* Hamburger */}
-        <button className="p-2 z-10">
+        <button className="p-2 z-10" onClick={() => setSidebarOpen(true)}>
           <Image src="/icons/hamburger.png" alt="Menu" width={24} height={24} />
         </button>
-
-        {/* Logo (absolutely centered) */}
-     
-
+        {/* Logo */}
+       
         {/* Icons */}
-        <div className="flex items-center gap- z-10">
+        <div className="flex items-center gap-2 z-10">
           <button className="p-1">
             <Image src="/icons/search.png" alt="Search" width={24} height={24} />
           </button>
@@ -146,30 +161,33 @@ export function NavbarMobile() {
         </div>
       </nav>
 
-      {/* Mobile Nav Links Bar */}
-      <div className="flex md:hidden items-center justify-between border-b relative">
+      <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* Mobile Nav Links Bar (at bottom) */}
+      <div
+        ref={barRef}
+        className="fixed bottom-0 left-0 w-full flex md:hidden items-center justify-between border-t bg-white z-40"
+        style={{ height: 56 }}
+      >
         {navLinks.map((link, idx) => (
-          <div key={link} className="flex-1 flex flex-col items-center relative">
-            <button
-              className={`w-full py-2 font-semibold text-sm ${
-                active === link ? "text-black font-bold" : "text-gray-700"
-              }`}
-              onClick={() => setActive(link)}
-            >
-              {link}
-            </button>
-            {/* Underline for active link */}
-            <span
-              className={`h-1 w-full transition-all duration-300 ${
-                active === link ? "bg-teal-800" : "bg-transparent"
-              }`}
-            ></span>
-            {/* Vertical divider except after last link */}
-            {idx < navLinks.length - 1 && (
-              <span className="absolute right-0 top-2 h-6 w-px bg-gray-300"></span>
-            )}
-          </div>
+          <button
+            key={link}
+            className={`flex-1 py-2 font-semibold text-sm relative ${
+              activeIdx === idx ? "text-black font-bold" : "text-gray-700"
+            } ${idx !== 0 ? "border-l border-gray-300" : ""}`}
+            onClick={() => setActiveIdx(idx)}
+          >
+            {link}
+          </button>
         ))}
+        {/* Animated Underline */}
+        <span
+          className="absolute bottom-0 left-0 h-1 bg-teal-800 transition-transform duration-300 rounded"
+          style={{
+            width: `${tabWidth}px`,
+            transform: `translateX(${activeIdx * tabWidth}px)`,
+          }}
+        />
       </div>
     </>
   );
