@@ -130,15 +130,7 @@ export function NavbarMobile() {
         </button>
 
         {/* Logo (absolutely centered) */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <Image
-            src="/logo.png"
-            alt="Logo"
-            width={150}
-            height={40}
-            className="object-contain"
-          />
-        </div>
+     
 
         {/* Icons */}
         <div className="flex items-center gap- z-10">
