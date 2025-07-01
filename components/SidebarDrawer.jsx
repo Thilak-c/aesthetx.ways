@@ -26,7 +26,7 @@ const menCards = [
   { name: "Hot Merch", img: "/sidebar-img/logo.png" },
 ];
 
-export default function SidebarDrawer({ open, onClose }) {
+export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-xs" }) {
   const [activeTab, setActiveTab] = useState(0);
   const [openSections, setOpenSections] = useState({});
 
@@ -49,7 +49,7 @@ export default function SidebarDrawer({ open, onClose }) {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-4/5 max-w-xs bg-white z-50 transition-transform duration-300 overflow-y-auto rounded-tr-xl rounded-br-xl shadow-xl border-r border-gray-200 ${
+        className={`fixed top-0 left-0 h-full ${width} bg-white z-50 transition-transform duration-300 overflow-y-auto rounded-tr-xl rounded-br-xl shadow-xl border-r border-gray-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ zIndex: 60 }}

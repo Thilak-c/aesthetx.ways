@@ -1,0 +1,23 @@
+"use client"
+import Navbar, { NavbarMobile } from "@/ components/Navbar";
+import { useState } from "react";
+import Image from "next/image";
+import ProductSlider from "@/components/ProductSlider";
+import CategoriesGrid from "@/components/CategoriesGrid";
+import NewArrivalsSlider from "@/components/NewArrivalsSlider";
+
+
+export default function Home() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <div className="md:hidden"><NavbarMobile /></div>
+      <div className="hidden md:block"><Navbar /></div>
+      <ProductSlider />
+      <NewArrivalsSlider />
+      <CategoriesGrid />
+      {/* ...rest of your page... */}
+    </>
+  );
+}

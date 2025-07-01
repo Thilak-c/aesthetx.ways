@@ -7,23 +7,24 @@ export default function Navbar() {
   const navLinks = ["MEN", "WOMEN", "SNEAKERS"];
   const [hovered, setHovered] = useState(null);
   const [active, setActive] = useState("MEN"); // Set this as needed
-
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <>
       {/* Main Navbar */}
+      <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} width={"w-1/3"} />
       <nav className="relative w-full flex items-center justify-between px-6 py-2 border-b">
         {/* Left: Hamburger + Nav Links */}
         <div className="flex items-center gap-6">
           {/* Hamburger */}
-          <button className="p-2">
+          <button onClick={() => setSidebarOpen(true)} className="p-4">
             <Image src="/icons/hamburger.png" alt="Menu" width={24} height={24} />
           </button>
           {/* Nav Links */}
-          <div className="flex items-center gap-6 font-semibold text-gray-900">
+          <div className="flex items-center w gap-6 font-semibold text-gray-900">
             {navLinks.map(link => (
               <div
                 key={link}
-                className="flex flex-col items-center cursor-pointer group"
+                className="flex flex-col p-3 font-bold items-center cursor-pointer group"
                 onMouseEnter={() => setHovered(link)}
                 onMouseLeave={() => setHovered(null)}
               >
@@ -32,8 +33,8 @@ export default function Navbar() {
                 </span>
                 <span
                   className={`
-                    h-1 mt-1 rounded transition-all duration-300
-                    ${hovered === link || (!hovered && active === link) ? "w-8 bg-gray-800" : "w-0 bg-transparent"}
+                    h-[2px] mt-1 rounded transition-all duration-300
+                    ${hovered === link || (!hovered && active === link) ? "w-[40px] bg-gray-800" : "w-0 bg-transparent"}
                   `}
                 ></span>
               </div>
@@ -140,9 +141,9 @@ export function NavbarMobile() {
   return (
     <>
       {/* Main Mobile Navbar */}
-      <nav className="relative w-full flex items-center justify-between px-4 py-2 border-b bg-white md:hidden">
+      <nav className="relative w-full flex items-center justify-between px-4 py-2 shadow-xl bg-white md:hidden">
         {/* Hamburger */}
-        <button className="p-2 z-10" onClick={() => setSidebarOpen(true)}>
+        <button className="p-2 z-10 opacity-80" onClick={() => setSidebarOpen(true)}>
           <Image src="/icons/hamburger.png" alt="Menu" width={24} height={24} />
         </button>
         {/* Logo */}
@@ -161,20 +162,20 @@ export function NavbarMobile() {
         </div>
       </nav>
 
-      <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} width={"w-[85%]"} />
 
       {/* Mobile Nav Links Bar (at bottom) */}
       <div
         ref={barRef}
-        className="fixed bottom-0 left-0 w-full flex md:hidden items-center justify-between border-t bg-white z-40"
+        className="fixed bottom-0 left-0  w-full flex md:hidden items-center justify-between border-t bg-white z-40"
         style={{ height: 56 }}
       >
         {navLinks.map((link, idx) => (
           <button
             key={link}
-            className={`flex-1 py-2 font-semibold text-sm relative ${
-              activeIdx === idx ? "text-black font-bold" : "text-gray-700"
-            } ${idx !== 0 ? "border-l border-gray-300" : ""}`}
+            className={`flex-1 py-2  text-sm relative ${
+              activeIdx === idx ? "text-black font-extrabold" : "text-gray-700"
+            } ${idx !== 0 ? "border-l border-gray-500" : ""}`}
             onClick={() => setActiveIdx(idx)}
           >
             {link}
@@ -182,7 +183,7 @@ export function NavbarMobile() {
         ))}
         {/* Animated Underline */}
         <span
-          className="absolute bottom-0 left-0 h-1 bg-teal-800 transition-transform duration-300 rounded"
+          className="absolute bottom-0 left-0 h-[2px] bg-gray-500 transition-transform duration-300 rounded"
           style={{
             width: `${tabWidth}px`,
             transform: `translateX(${activeIdx * tabWidth}px)`,
