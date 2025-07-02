@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import ProductCard from "./ProductCard";
 
 const products = [
   {
@@ -48,8 +49,43 @@ const products = [
 
 export default function NewArrivalsSlider() {
   const [start, setStart] = useState(0);
-  const visible = 4;
+  const [visible, setVisible] = useState(4);
   const [animDir, setAnimDir] = useState(null); // 'left' or 'right' or null
+  const [currentPage, setCurrentPage] = useState(0);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setVisible(window.innerWidth < 768 ? 2 : 4);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Track scroll position for dots
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const cardWidth = el.scrollWidth / products.length;
+      const page = Math.round(el.scrollLeft / (cardWidth * visible));
+      setCurrentPage(page);
+    };
+    el.addEventListener('scroll', handleScroll);
+    // Set initial page
+    handleScroll();
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [visible]);
+
+  // Scroll to page when dot is clicked (desktop only)
+  const scrollToPage = (idx) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardWidth = el.scrollWidth / products.length;
+    el.scrollTo({ left: idx * cardWidth * visible, behavior: 'smooth' });
+    setStart(idx * visible);
+  };
 
   const prev = () => {
     if (start === 0) return;
@@ -69,55 +105,37 @@ export default function NewArrivalsSlider() {
   };
 
   return (
-    <section className="w-full flex flex-col items-center py-10 bg-white">
+    <section className="w-full flex flex-col items-center pt-10 bg-white">
       <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-8 tracking-wide text-gray-800">NEW ARRIVALS</h2>
       <div className="relative w-full max-w-7xl mx-auto flex items-center">
-        {/* Left Arrow */}
-        <button
-          onClick={prev}
-          disabled={start === 0}
-          className="absolute left-0 z-10 hover:text-black text-2xl rounded-full p-2  transition disabled:opacity-30 disabled:pointer-events-none"
-          style={{ top: "40%" }}
-          aria-label="Previous"
-        >
-          <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        {/* Product Cards */}
-        <div className="w-full flex overflow-hidden">
-          <div
-            className={`flex w-full transition-transform duration-300 ${
-              animDir === 'left' ? '-translate-x-16' : animDir === 'right' ? 'translate-x-16' : ''
-            }`}
-          >
-            {products.slice(start, start + visible).map((p, i) => (
-              <div key={p.name} className="flex-1 min-w-0 max-w-xs mx-2 bg-white rounded-lg overflow-hidden  group flex flex-col">
-                <div className="relative w-full aspect-[3/4] bg-gray-100">
-                  <Image
-                    src={p.img}
-                    alt={p.name}
-                    fill
-                    className="object-cover  object-top group-hover:scale-105 transition"
-                  />
-                </div>
-                <div className="p-3 flex flex-col gap-1">
-                  <div className="font-semibold border-b border-gray-200 pb-2 text-gray-700 text-sm leading-tight">{p.name}</div>
-                  <div className="text-xs font-light text-gray-500">{p.category}</div>
-                  <div className="text-sm text-gray-700 font-bold">₹ {p.price}</div>
-                </div>
-              </div>
+       
+        {/* Product Cards - horizontally scrollable */}
+        <div ref={scrollRef} className="w-full overflow-x-auto scrollbar-hide">
+          <div className="flex flex-nowrap gap-4 px-1">
+            {products.map((p) => (
+              <ProductCard
+                key={p.name}
+                img={p.img}
+                name={p.name}
+                category={p.category}
+                price={p.price}
+              />
             ))}
           </div>
         </div>
-        {/* Right Arrow */}
-        <button
-          onClick={next}
-          disabled={start + visible >= products.length}
-          className="absolute right-0 z-10  hover:text-black text-2xl rounded-full p-2  transition disabled:opacity-30 disabled:pointer-events-none"
-          style={{ top: "40%" }}
-          aria-label="Next"
-        >
-          <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
+       
+      </div>
+      {/* Pagination Dots */}
+      <div className="flex justify-center gap-2 m4">
+        {Array.from({ length: Math.ceil(products.length / visible) }).map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => scrollToPage(idx)}
+            className={`w-1 h-1 rounded-full transition-colors duration-200 ${currentPage === idx ? 'bg-gray-800' : 'bg-gray-300'}`}
+            aria-label={`Go to slide ${idx + 1}`}
+            disabled={currentPage === idx}
+          />
+        ))}
       </div>
     </section>
   );

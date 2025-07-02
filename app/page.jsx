@@ -5,6 +5,7 @@ import Image from "next/image";
 import ProductSlider from "@/components/ProductSlider";
 import CategoriesGrid from "@/components/CategoriesGrid";
 import NewArrivalsSlider from "@/components/NewArrivalsSlider";
+import TopPicksSlider from "@/components/TopPicksSlider";
 
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
       <div className="md:hidden"><NavbarMobile /></div>
       <div className="hidden md:block"><Navbar /></div>
       <ProductSlider />
+      <TopPicksSlider />
       <NewArrivalsSlider />
       <CategoriesGrid />
       {/* ...rest of your page... */}
