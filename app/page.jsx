@@ -1,5 +1,6 @@
 "use client"
 import Navbar, { NavbarMobile } from "@/ components/Navbar";
+import Footer from "@/ components/footer";
 import { useState } from "react";
 import Image from "next/image";
 import ProductSlider from "@/components/ProductSlider";
@@ -13,6 +14,7 @@ export default function Home() {
 
   return (
     <>
+      <div className="md:block hidden h-[100px]"></div>
       <div className="md:hidden"><NavbarMobile /></div>
       <div className="hidden md:block"><Navbar /></div>
       <ProductSlider />
@@ -20,6 +22,7 @@ export default function Home() {
       <NewArrivalsSlider />
       <CategoriesGrid />
       {/* ...rest of your page... */}
+      <Footer/>
     </>
   );
 }

@@ -74,7 +74,7 @@ export default function ProductSlider() {
   };
 
   return (
-    <div className="relative w-full max-w-[1600px] mx-auto h-[70vh] overflow-hidden shadow-xl bg-black ">
+    <div className="relative w-full md:rounded-3xl rounded-b-3xl max-w-[1600px] mx-auto h-[70vh] overflow-hidden shadow-xl bg-black ">
       {/* Slide */}
       <div className="w-full h-full relative">
         <div className={`absolute inset-0 transition-opacity duration-300 ${fade ? 'opacity-100' : 'opacity-0'}`}>
@@ -89,7 +89,7 @@ export default function ProductSlider() {
         {/* Overlay */}
       
         {/* Arrows */}
-        <button
+        {/* <button
           onClick={handlePrev}
           className="absolute left-0 top-1/2 -translate-y-1/2  hover:bg-lime-500 hover:text-black text-white rounded-full p-3 z-20 transition"
           aria-label="Previous Slide"
@@ -102,7 +102,7 @@ export default function ProductSlider() {
           aria-label="Next Slide"
         >
           <svg width="25" height="25" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
+        </button> */}
         {/* Dots */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
           {slides.map((_, idx) => (

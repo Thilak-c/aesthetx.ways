@@ -1,5 +1,8 @@
+"use client"
 import Image from "next/image";
 import { useRef } from "react";
+import { useState } from "react";
+import { useEffect } from "react";
 import ProductCard from "./ProductCard";
 const products = [
   {
@@ -67,6 +70,46 @@ const products = [
 export default function TopPicksSlider() {
   const scrollRef = useRef(null);
 
+  const [start, setStart] = useState(0);
+  const [visible, setVisible] = useState(4);
+    const [currentPage, setCurrentPage] = useState(0);
+    useEffect(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const handleScroll = () => {
+        const cardWidth = el.scrollWidth / products.length;
+        const page = Math.round(el.scrollLeft / (cardWidth * visible));
+        setCurrentPage(page);
+      };
+      el.addEventListener('scroll', handleScroll);
+      // Set initial page
+      handleScroll();
+      return () => el.removeEventListener('scroll', handleScroll);
+    }, [visible]);
+  
+    const scrollToPage = (idx) => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const cardWidth = el.scrollWidth / products.length;
+      el.scrollTo({ left: idx * cardWidth * visible, behavior: 'smooth' });
+      setStart(idx * visible);
+    };
+    const prev = () => {
+      if (start === 0) return;
+      setAnimDir('right');
+      setTimeout(() => {
+        setStart((s) => s - 1);
+        setAnimDir(null);
+      }, 300);
+    };
+    const next = () => {
+      if (start + visible >= products.length) return;
+      setAnimDir('left');
+      setTimeout(() => {
+        setStart((s) => s + 1);
+        setAnimDir(null);
+      }, 300);
+    };
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
@@ -83,19 +126,12 @@ export default function TopPicksSlider() {
       </h2>
       <div className="relative w-full max-w-7xl mx-auto flex items-center">
         {/* Left Arrow - hide on mobile */}
-        <button
-          onClick={() => scroll("left")}
-          className="absolute left-0 z-10 hover:text-black text-3xl rounded-full p-2 transition disabled:opacity-30 disabled:pointer-events-none hidden md:block"
-          style={{ top: "40%" }}
-          aria-label="Previous"
-        >
-          <svg width="36" height="36" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
-        </button>
+       
         {/* Product Cards - horizontally scrollable */}
         <div ref={scrollRef} className="w-full overflow-x-auto scrollbar-hide">
           <div className="flex flex-nowrap gap-8 px-2">
             {products.map((p, i) => (
-                <>
+               
             
                 <ProductCard
                 key={p.name}
@@ -104,20 +140,25 @@ export default function TopPicksSlider() {
                 category={p.category}
                 price={p.price}
               />
-                </>
+               
         
             ))}
           </div>
         </div>
         {/* Right Arrow - hide on mobile */}
-        <button
-          onClick={() => scroll("right")}
-          className="absolute right-0 z-10 hover:text-black text-3xl rounded-full p-2 transition disabled:opacity-30 disabled:pointer-events-none hidden md:block"
-          style={{ top: "40%" }}
-          aria-label="Next"
-        >
-          <svg width="36" height="36" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-        </button>
+       
+        
+      </div>
+      <div className="flex justify-center gap-2 m4">
+        {Array.from({ length: Math.ceil(products.length / visible) }).map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => scrollToPage(idx)}
+            className={`w-1 h-1 rounded-full transition-colors duration-200 ${currentPage === idx ? 'bg-gray-800' : 'bg-gray-300'}`}
+            aria-label={`Go to slide ${idx + 1}`}
+            disabled={currentPage === idx}
+          />
+        ))}
       </div>
     </section>
   );
