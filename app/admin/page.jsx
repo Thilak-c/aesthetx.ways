@@ -106,16 +106,9 @@ export default function AdminHomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 p-6">
+    <div className="min-h-screen w-[100%]  bg-gray-100 text-gray-900 p-6">
       {/* Header */}
-      <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-gray-300 pb-4">
-        <h1 className="text-4xl font-extrabold tracking-tight mb-4 md:mb-0">Admin Dashboard</h1>
-        <div className="flex gap-4">
-          <Link href="/admin/all-products" className="bg-white px-4 py-2 rounded-lg shadow hover:shadow-md transition">Products</Link>
-          <Link href="/admin/orders" className="bg-white px-4 py-2 rounded-lg shadow hover:shadow-md transition">Orders</Link>
-          <Link href="/admin/upload" className="bg-black text-white px-4 py-2 rounded-lg shadow hover:shadow-md transition">+ Add Product</Link>
-        </div>
-      </header>
+   
 
       {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

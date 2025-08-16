@@ -141,10 +141,10 @@ export default function ProductDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard title="Today's Sales" value={`₹${todaySales}`} color="green" />
-        <StatCard title="Lifetime Sales" value={`₹${lifetimeSales}`} color="blue" />
-        <StatCard title="Total Products" value={products.length} color="purple" />
-        <StatCard title="Hidden Products" value={products.filter(p => p.isHidden).length} color="red" />
+        <StatCard title="Today's Sales" value={`₹${todaySales}`} color="" />
+        <StatCard title="Lifetime Sales" value={`₹${lifetimeSales}`} color="" />
+        <StatCard title="Total Products" value={products.length} color="" />
+        <StatCard title="Hidden Products" value={products.filter(p => p.isHidden).length} color="" />
       </div>
 
       {/* Category Overview */}

@@ -7,7 +7,7 @@ export default function AddProductPage() {
   const addProduct = useMutation(api.products.insert);
   const [form, setForm] = useState({
     name: "",
-    type: "",
+    subcategories: "",
     category: "",
     price: "",
     description: "",
@@ -64,7 +64,7 @@ export default function AddProductPage() {
     await addProduct({
       itemId: crypto.randomUUID(),
       name: form.name,
-      type: form.type,
+      subcategories: form.subcategories,
       category: form.category,
       price: parseFloat(form.price),
       description: form.description,
@@ -76,7 +76,7 @@ export default function AddProductPage() {
     alert("✅ Product Added Successfully!");
     setForm({
       name: "",
-      type: "",
+      subcategories: "",
       category: "",
       price: "",
       description: "",
@@ -105,13 +105,13 @@ export default function AddProductPage() {
             />
           </div>
 
-          {/* Type */}
+          {/* subcategories */}
           <div>
-            <label className="block text-sm font-medium mb-1">Type</label>
+            <label className="block text-sm font-medium mb-1">subcategories</label>
             <input
               type="text"
-              name="type"
-              value={form.type}
+              name="subcategories"
+              value={form.subcategories}
               onChange={handleChange}
               required
               className="w-full border rounded-lg px-3 py-2"

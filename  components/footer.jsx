@@ -1,5 +1,4 @@
 import React from "react";
-import FaultyTerminal from "./FaultyTerminal/FaultyTerminal";
 import Galaxy from "./Galaxy/Galaxy";
 import Image from "next/image";
 import { FaInstagram, FaYoutube, FaFacebook, FaTwitter } from "react-icons/fa";
