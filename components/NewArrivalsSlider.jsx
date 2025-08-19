@@ -59,37 +59,33 @@ export default function NewArrivalsSlider() {
       setVisible(window.innerWidth < 768 ? 2 : 4);
     };
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Track scroll position for dots
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const handleScroll = () => {
-      const cardWidth = el.scrollWidth / products.length;
-      const page = Math.round(el.scrollLeft / (cardWidth * visible));
-      setCurrentPage(page);
-    };
-    el.addEventListener('scroll', handleScroll);
-    // Set initial page
-    handleScroll();
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [visible]);
-
-  // Scroll to page when dot is clicked (desktop only)
-  const scrollToPage = (idx) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const cardWidth = el.scrollWidth / products.length;
-    el.scrollTo({ left: idx * cardWidth * visible, behavior: 'smooth' });
-    setStart(idx * visible);
+useEffect(() => {
+  const el = scrollRef.current;
+  if (!el) return;
+  const handleScroll = () => {
+    const page = Math.round(el.scrollLeft / el.clientWidth);
+    setCurrentPage(page);
   };
+  el.addEventListener("scroll", handleScroll);
+  handleScroll();
+  return () => el.removeEventListener("scroll", handleScroll);
+}, [visible]);
+
+const scrollToPage = (idx) => {
+  const el = scrollRef.current;
+  if (!el) return;
+  el.scrollTo({ left: idx * el.clientWidth, behavior: "smooth" });
+};
+
 
   const prev = () => {
     if (start === 0) return;
-    setAnimDir('right');
+    setAnimDir("right");
     setTimeout(() => {
       setStart((s) => s - 1);
       setAnimDir(null);
@@ -97,7 +93,7 @@ export default function NewArrivalsSlider() {
   };
   const next = () => {
     if (start + visible >= products.length) return;
-    setAnimDir('left');
+    setAnimDir("left");
     setTimeout(() => {
       setStart((s) => s + 1);
       setAnimDir(null);
@@ -106,9 +102,13 @@ export default function NewArrivalsSlider() {
 
   return (
     <section className="w-full flex flex-col items-center pt-10 bg-white">
-      <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-8 tracking-wide text-gray-800">NEW ARRIVALS</h2>
+      <div className="text-center mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-gray-800">
+          NEW ARRIVALS
+        </h2>
+        <span className="block w-28 sm:w-36 h-[2px] mx-auto mt-1 opacity-50 rounded-full bg-gradient-to-r from-white via-black to-white"></span>
+      </div>
       <div className="relative w-full max-w-7xl mx-auto flex items-center">
-       
         {/* Product Cards - horizontally scrollable */}
         <div ref={scrollRef} className="w-full overflow-x-auto scrollbar-hide">
           <div className="flex flex-nowrap gap-4 px-1">
@@ -123,20 +123,21 @@ export default function NewArrivalsSlider() {
             ))}
           </div>
         </div>
-       
       </div>
       {/* Pagination Dots */}
       <div className="flex justify-center gap-2 m4">
-        {Array.from({ length: Math.ceil(products.length / visible) }).map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => scrollToPage(idx)}
-            className={`w-1 h-1 rounded-full transition-colors duration-200 ${currentPage === idx ? 'bg-gray-800' : 'bg-gray-300'}`}
-            aria-label={`Go to slide ${idx + 1}`}
-            disabled={currentPage === idx}
-          />
-        ))}
+        {Array.from({ length: Math.ceil(products.length / visible) }).map(
+          (_, idx) => (
+            <button
+              key={idx}
+              onClick={() => scrollToPage(idx)}
+              className={`w-1 h-1 rounded-full transition-colors duration-200 ${currentPage === idx ? "bg-gray-800" : "bg-gray-300"}`}
+              aria-label={`Go to slide ${idx + 1}`}
+              disabled={currentPage === idx}
+            />
+          )
+        )}
       </div>
     </section>
   );
-} 
+}

@@ -69,61 +69,48 @@ const products = [
 
 export default function TopPicksSlider() {
   const scrollRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageCount, setPageCount] = useState(0);
 
-  const [start, setStart] = useState(0);
-  const [visible, setVisible] = useState(4);
-    const [currentPage, setCurrentPage] = useState(0);
-    useEffect(() => {
-      const el = scrollRef.current;
-      if (!el) return;
-      const handleScroll = () => {
-        const cardWidth = el.scrollWidth / products.length;
-        const page = Math.round(el.scrollLeft / (cardWidth * visible));
-        setCurrentPage(page);
-      };
-      el.addEventListener('scroll', handleScroll);
-      // Set initial page
-      handleScroll();
-      return () => el.removeEventListener('scroll', handleScroll);
-    }, [visible]);
-  
-    const scrollToPage = (idx) => {
-      const el = scrollRef.current;
-      if (!el) return;
-      const cardWidth = el.scrollWidth / products.length;
-      el.scrollTo({ left: idx * cardWidth * visible, behavior: 'smooth' });
-      setStart(idx * visible);
-    };
-    const prev = () => {
-      if (start === 0) return;
-      setAnimDir('right');
-      setTimeout(() => {
-        setStart((s) => s - 1);
-        setAnimDir(null);
-      }, 300);
-    };
-    const next = () => {
-      if (start + visible >= products.length) return;
-      setAnimDir('left');
-      setTimeout(() => {
-        setStart((s) => s + 1);
-        setAnimDir(null);
-      }, 300);
-    };
-  const scroll = (dir) => {
+  useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const card = el.querySelector(".top-pick-card");
-    if (!card) return;
-    const scrollAmount = card.offsetWidth * 2; // scroll by 2 cards
-    el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
-  };
 
+    const updatePages = () => {
+      setPageCount(Math.ceil(el.scrollWidth / el.clientWidth));
+    };
+
+    const handleScroll = () => {
+      const page = Math.round(el.scrollLeft / el.clientWidth);
+      setCurrentPage(page);
+    };
+
+    updatePages();
+    handleScroll();
+
+    window.addEventListener("resize", updatePages);
+    el.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("resize", updatePages);
+      el.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const scrollToPage = (idx) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: idx * el.clientWidth, behavior: "smooth" });
+  };
   return (
     <section className="w-full flex flex-col items-center py-12 bg-white">
-      <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-10 tracking-tight text-gray-900">
+      <div className="text-center mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-gray-800">
+         
         TOP 10 PICKS OF THE WEEK
-      </h2>
+        </h2>
+        <span className="block w-28 sm:w-36 h-[2px] mx-auto mt-1 opacity-50 rounded-full bg-gradient-to-r from-white via-black to-white"></span>
+      </div>
       <div className="relative w-full max-w-7xl mx-auto flex items-center">
         {/* Left Arrow - hide on mobile */}
        
@@ -150,7 +137,8 @@ export default function TopPicksSlider() {
         
       </div>
       <div className="flex justify-center gap-2 m4">
-        {Array.from({ length: Math.ceil(products.length / visible) }).map((_, idx) => (
+        {Array.from({ length: Math.ceil(scrollRef.current?.scrollWidth / scrollRef.current?.clientWidth || 0) })
+.map((_, idx) => (
           <button
             key={idx}
             onClick={() => scrollToPage(idx)}

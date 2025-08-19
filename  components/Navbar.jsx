@@ -11,82 +11,96 @@ export default function Navbar() {
   return (
     <>
       {/* Main Navbar */}
-      <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} width={"w-1/3"} />
-      <nav className="z-50 fixed top-1 w-[99%] left-2  rounded-3xl flex items-center justify-between px-6 py-2 border border-white/20 bg-white/10 backdrop-blur-md shadow-lg">
-  {/* Left: Hamburger + Nav Links */}
-  <div className="flex items-center gap-6">
-    {/* Hamburger */}
-    <button onClick={() => setSidebarOpen(true)} className="p-4 hover:bg-white/10 rounded-xl transition">
-      <Image src="/icons/hamburger.png" alt="Menu" width={24} height={24} />
-    </button>
-
-    {/* Nav Links */}
-    <div className="flex items-center gap-6 font-semibold text-white">
-    {navLinks.map(link => (
-  <div
-    key={link}
-    className="flex flex-col p-3 font-bold items-center cursor-pointer group rounded-lg transition-colors hover:bg-black/10"
-    onMouseEnter={() => setHovered(link)}
-    onMouseLeave={() => setHovered(null)}
-  >
-    <span className="tracking-wide text-black transition-colors group-hover:text-black/70">
-      {link}
-    </span>
-    <span
-      className={`h-[2px] mt-1 rounded transition-all duration-300 ${
-        hovered === link || (!hovered && active === link)
-          ? "w-[40px] bg-black"
-          : "w-0 bg-transparent"
-      }`}
-    ></span>
-  </div>
-))}
-
-    </div>
-  </div>
-
-  {/* Center: Logo */}
-  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-    <Image
-      src="/logo.png"
-      alt="The Souled Store"
-      width={200}
-      height={40}
-      className="object-contain"
-    />
-  </div>
-
-  {/* Right: Search + Icons */}
-  <div className="flex items-center gap-4">
-    {/* Search Bar */}
-    <div className="flex items-center border border-white/20 rounded-full px-3 py-1 w-72 bg-white/10 backdrop-blur-sm text-white">
-      <input
-        type="text"
-        placeholder="What are you looking for?"
-        className="outline-none flex-1 bg-transparent text-sm placeholder-black/60 text-black"
+      <SidebarDrawer
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        width={"w-1/3"}
       />
-      <button className="ml-2">
-        <Image src="/icons/search.png" alt="Search" width={24} height={24} />
-      </button>
-    </div>
+      <nav className="z-50 fixed top-1 w-[99%] left-2  rounded-3xl flex items-center justify-between px-6 py-2 border border-white/20 bg-white/10 backdrop-blur-md shadow-lg">
+        {/* Left: Hamburger + Nav Links */}
+        <div className="flex items-center gap-6">
+          {/* Hamburger */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-4 hover:bg-white/10 rounded-xl transition"
+          >
+            <Image
+              src="/icons/hamburger.png"
+              alt="Menu"
+              width={24}
+              height={24}
+            />
+          </button>
 
-    {/* Icons */}
-    {[
-    
-      { src: "/icons/user.png", alt: "User" },
-      { src: "/icons/wishlist.png", alt: "Wishlist" },
-      { src: "/icons/cart.png", alt: "Cart" }
-    ].map((icon, idx) => (
-      <button
-        key={idx}
-        className="hover:bg-white/10 rounded-full p-2 transition-colors"
-      >
-        <Image src={icon.src} alt={icon.alt} width={24} height={24} />
-      </button>
-    ))}
-  </div>
-</nav>
+          {/* Nav Links */}
+          <div className="flex items-center gap-6 font-semibold text-white">
+            {navLinks.map((link) => (
+              <div
+                key={link}
+                className="flex flex-col p-3 font-bold items-center cursor-pointer group rounded-lg transition-colors hover:bg-black/10"
+                onMouseEnter={() => setHovered(link)}
+                onMouseLeave={() => setHovered(null)}
+              >
+                <span className="tracking-wide text-black transition-colors group-hover:text-black/70">
+                  {link}
+                </span>
+                <span
+                  className={`h-[2px] mt-1 rounded transition-all duration-300 ${
+                    hovered === link || (!hovered && active === link)
+                      ? "w-[40px] bg-black"
+                      : "w-0 bg-transparent"
+                  }`}
+                ></span>
+              </div>
+            ))}
+          </div>
+        </div>
 
+        {/* Center: Logo */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <Image
+            src="/logo.png"
+            alt="The Souled Store"
+            width={200}
+            height={40}
+            className="object-contain"
+          />
+        </div>
+
+        {/* Right: Search + Icons */}
+        <div className="flex items-center gap-4">
+          {/* Search Bar */}
+          <div className="flex items-center border border-white/20 rounded-full px-3 py-1 w-72 bg-white/10 backdrop-blur-sm text-white">
+            <input
+              type="text"
+              placeholder="What are you looking for?"
+              className="outline-none flex-1 bg-transparent text-sm placeholder-black/60 text-black"
+            />
+            <button className="ml-2">
+              <Image
+                src="/icons/search.png"
+                alt="Search"
+                width={24}
+                height={24}
+              />
+            </button>
+          </div>
+
+          {/* Icons */}
+          {[
+            { src: "/icons/user.png", alt: "User" },
+            { src: "/icons/wishlist.png", alt: "Wishlist" },
+            { src: "/icons/cart.png", alt: "Cart" },
+          ].map((icon, idx) => (
+            <button
+              key={idx}
+              className="hover:bg-white/10 rounded-full p-2 transition-colors"
+            >
+              <Image src={icon.src} alt={icon.alt} width={24} height={24} />
+            </button>
+          ))}
+        </div>
+      </nav>
 
       {/* Mobile Nav Links Bar */}
       <div className="flex md:hidden items-center justify-between border-b">
@@ -119,7 +133,7 @@ export default function Navbar() {
 
 export function NavbarMobile() {
   const navLinks = ["MEN", "WOMEN", "SNEAKERS"];
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [activeIdx, setActiveIdx] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const barRef = useRef(null);
   const [tabWidth, setTabWidth] = useState(0);
@@ -140,75 +154,76 @@ export function NavbarMobile() {
   return (
     <>
       {/* Main Mobile Navbar */}
-      <nav className="fixed rounded-3xl  top-1 left-[2PX] z-50 w-[99%] flex items-center justify-between px-4 py-1 shadow-lg border-b border-white/20 bg-white/10 backdrop-blur-md md:hidden">
-  {/* Hamburger */}
-  <button
-    className="p-2 z-10 rounded-lg hover:bg-white/10 transition-colors"
-    onClick={() => setSidebarOpen(true)}
-  >
-    <Image src="/icons/hamburger.png" alt="Menu" width={24} height={24} />
-  </button>
+      <nav className="fixed rounded-3xl top-1 left-[2PX] z-50 w-[99%] flex items-center justify-between px-4 py-1 shadow-lg border-b border-white/20 bg-white/10 backdrop-blur-md md:hidden">
+        {/* Hamburger */}
+        <button
+          className="p-2 z-10 rounded-lg hover:bg-white/10 transition-colors"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Image src="/icons/hamburger.png" alt="Menu" width={24} height={24} />
+        </button>
 
-  {/* Logo (optional center placement) */}
+        {/* Icons */}
+        <div className="flex items-center gap-1 z-10">
+          {[
+            { src: "/icons/search.png", alt: "Search" },
+            { src: "/icons/cart.png", alt: "Cart" },
+            { src: "/icons/user.png", alt: "User" },
+          ].map((icon, idx) => (
+            <button
+              key={idx}
+              className="p-1 rounded-full hover:bg-white/10 transition-colors"
+            >
+              <Image src={icon.src} alt={icon.alt} width={24} height={24} />
+            </button>
+          ))}
+        </div>
+      </nav>
 
-
-  {/* Icons */}
-  <div className="flex items-center gap-1 z-10">
-    {[
-      { src: "/icons/search.png", alt: "Search" },
-      
-      { src: "/icons/cart.png", alt: "Cart" },
-      { src: "/icons/user.png", alt: "User" },
-    ].map((icon, idx) => (
-      <button
-        key={idx}
-        className="p-1 rounded-full hover:bg-white/10 transition-colors"
-      >
-        <Image src={icon.src} alt={icon.alt} width={24} height={24} />
-      </button>
-    ))}
-  </div>
-</nav>
-
-
-      <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} width={"w-[85%]"} />
+      <SidebarDrawer
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        width={"w-[85%]"}
+      />
 
       {/* Mobile Nav Links Bar (at bottom) */}
       <div
-  ref={barRef}
-  className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] flex md:hidden items-center justify-between 
+        ref={barRef}
+        className="fixed bottom-3 left-1/2 -translate-x-1/2 w-[92%] flex md:hidden items-center justify-between 
              border border-black/5 rounded-full 
              bg-gradient-to-tr from-white/80 to-white/60 backdrop-blur-xl 
              shadow-[0_8px_20px_rgba(0,0,0,0.15)] 
              px-2 z-50 transition-all duration-300"
-  style={{ height: 60 }}
->
-  {navLinks.map((link, idx) => (
-    <button
-      key={link}
-      className={`flex-1 py-2 text-sm relative rounded-full transition-all duration-300 flex items-center justify-center font-medium
-        ${activeIdx === idx
-          ? "text-black font-bold bg-white shadow-md scale-105"
-          : "text-black/70 hover:bg-black/5 hover:scale-[1.02]"} 
-        ${idx !== 0 ? "border-l border-black/5" : ""}`}
-      onClick={() => setActiveIdx(idx)}
-    >
-      {link}
-    </button>
-  ))}
+        style={{ height: 60 }}
+      >
+        {navLinks.map((link, idx) => (
+          <button
+            key={link}
+            className={`flex-1 py-2 text-sm relative rounded-full transition-all duration-300 flex items-center justify-center font-medium
+        ${
+          activeIdx === idx
+            ? "text-black font-bold bg-white shadow-md scale-105"
+            : "text-black/70 hover:bg-black/5 hover:scale-[1.02]"
+        } 
+        ${idx !== 0 ? "border-l border-black/0" : ""}`}
+            onClick={() => setActiveIdx(idx)}
+          >
+            {link}
+          </button>
+        ))}
 
-  {/* Animated Underline Bubble */}
-  <span
-    className="absolute bottom-1 left-0 h-[3px] rounded-full bg-black/80 transition-transform duration-300"
-    style={{
-      width: `${tabWidth * 0.6}px`,
-      transform: `translateX(${activeIdx * tabWidth + tabWidth * 0.2}px)`,
-    }}
-  />
-</div>
-
-
-
+        {/* Animated Underline Bubble - Fixed positioning */}
+        {activeIdx !== null && (
+          <span
+            className="absolute bottom-1 rounded-full bg-black/30 transition-all duration-300"
+            style={{
+              width: `${tabWidth * 0.6}px`,
+              left: `${activeIdx * tabWidth + tabWidth * 0.2}px`,
+              height: "3px",
+            }}
+          />
+        )}
+      </div>
     </>
   );
 }

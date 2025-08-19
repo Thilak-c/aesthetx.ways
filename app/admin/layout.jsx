@@ -1,15 +1,88 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiMenu, FiX, FiHome, FiPackage, FiUpload, FiUsers, FiFileText, FiBarChart2, FiLogOut } from "react-icons/fi";
-import { getServerSession } from "next-auth";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { FiMenu, FiX, FiHome, FiPackage, FiUpload, FiUsers, FiFileText, FiBarChart2, FiLogOut, FiShield, FiTrash2 } from "react-icons/fi";
 
 
 
+const getSessionToken = () => {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(/(?:^|; )sessionToken=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+};
 
-export default async function AdminLayout({ children }) {
+export default function AdminLayout({ children }) {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  const token = getSessionToken();
+  const adminUser = useQuery(api.users.adminMeByToken, token ? { token } : "skip");
+  const signOut = useMutation(api.users.signOut);
+
+  // Authentication check
+  useEffect(() => {
+    if (adminUser === undefined) return; // Still loading
+    
+    if (!adminUser || !token) {
+      // No valid admin session, redirect to admin login
+      router.push("/admin-login");
+      return;
+    }
+  }, [adminUser, token, router]);
+
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (adminUser === undefined) {
+        // If still loading after 10 seconds, redirect to login
+        router.push("/admin-login");
+      }
+    }, 10000);
+
+    return () => clearTimeout(timeout);
+  }, [adminUser, router]);
+
+  // Show loading while checking authentication
+  if (adminUser === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="text-gray-600">Verifying admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login redirect message if not authenticated
+  if (!adminUser || !token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-500">
+        <div className="text-center space-y-4">
+          <FiShield size={48} className="text-red-900 mx-auto" />
+          <h2 className="text-xl font-bold text-black">Access Denied</h2>
+          <p className="text-gray-900">Redirecting to admin login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut({ sessionToken: token });
+      document.cookie = "sessionToken=; Path=/; SameSite=Lax; Max-Age=0";
+      router.push("/admin/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force logout even if API call fails
+      document.cookie = "sessionToken=; Path=/; SameSite=Lax; Max-Age=0";
+      router.push("/admin/login");
+    }
+  };
   const navLinks = [
     { label: "Dashboard", href: "/admin", icon: <FiHome /> },
     { label: "Products", href: "/admin/products", icon: <FiPackage /> },
@@ -18,6 +91,11 @@ export default async function AdminLayout({ children }) {
     { label: "Users", href: "/admin/users", icon: <FiUsers /> },
     { label: "Reports", href: "/admin/reports", icon: <FiBarChart2 /> },
   ];
+
+  // Add trash link for super admins only
+  const allNavLinks = adminUser?.role === "super_admin" 
+    ? [...navLinks, { label: "Trash", href: "/admin/trash", icon: <FiTrash2 /> }]
+    : navLinks;
 
   return (
     <div className="flex min-h-screen font-sans text-gray-900 bg-gray-50">
@@ -35,7 +113,7 @@ export default async function AdminLayout({ children }) {
 
         {/* Nav links */}
         <ul className="space-y-4">
-          {navLinks.map(link => (
+          {allNavLinks.map(link => (
             <li key={link.href}>
               <Link 
                 href={link.href} 
@@ -48,9 +126,19 @@ export default async function AdminLayout({ children }) {
           ))}
         </ul>
 
-        {/* Logout */}
-        <div className="mt-auto pt-6">
-          <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-colors font-medium">
+        {/* Admin Info */}
+        <div className="mt-auto pt-6 space-y-3">
+          <div className="px-4 py-2 bg-gray-100 rounded-lg">
+            <p className="text-xs text-gray-600">Logged in as</p>
+            <p className="font-medium text-sm">{adminUser.name}</p>
+            <p className="text-xs text-gray-600">
+              {adminUser.role === "super_admin" ? "Super Admin" : "Admin"}
+            </p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-colors font-medium"
+          >
             <FiLogOut /> Logout
           </button>
         </div>
@@ -66,8 +154,18 @@ export default async function AdminLayout({ children }) {
           </button>
           <span className="font-bold text-2xl text-gray-900">Admin Panel</span>
           <div className="hidden md:flex items-center gap-4">
-            <button className="px-4 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-shadow shadow-sm">Profile</button>
-            <button className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-shadow shadow-sm">Logout</button>
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-900">{adminUser.name}</p>
+              <p className="text-xs text-gray-600">
+                {adminUser.role === "super_admin" ? "Super Admin" : "Admin"}
+              </p>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-shadow shadow-sm"
+            >
+              Logout
+            </button>
           </div>
         </nav>
 
