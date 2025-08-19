@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/core": "^0.37.0",
+    "@convex-dev/auth": "^0.0.88",
     "@heroicons/react": "^2.2.0",
     "@material-tailwind/react": "^2.1.10",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -25,7 +27,6 @@
     "lucide-react": "^0.539.0",
     "multer": "^2.0.2",
     "next": "15.3.4",
-    "next-auth": "^4.24.11",
     "ogl": "^1.0.11",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
