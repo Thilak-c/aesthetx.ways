@@ -23,11 +23,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ConvexProvider client={convex}>
+            <ConvexProvider client={convex}>
           <Suspense fallback={<div>Loading page...</div>}> {/* Add Suspense boundary */}
             <LayoutWrapper>{children}</LayoutWrapper>
           </Suspense>
-        </ConvexProvider>
+            </ConvexProvider>
       </body>
     </html>
   );

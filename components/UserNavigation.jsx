@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { User, Settings, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -38,11 +38,7 @@ export default function UserNavigation() {
     );
   }
 
-  const handleLogout = () => {
-    // Clear the session token cookie
-    document.cookie = "sessionToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    window.location.reload();
-  };
+
 
   return (
     <div className="relative">
@@ -113,13 +109,7 @@ export default function UserNavigation() {
               
               <div className="border-t border-gray-100 my-1" />
               
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Log Out</span>
-              </button>
+            
             </motion.div>
           </>
         )}
