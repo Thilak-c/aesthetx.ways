@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import SidebarDrawer from "./SidebarDrawer"; // adjust path as needed
+import UserNavigation from "@/components/UserNavigation";
 
 export default function Navbar() {
   const navLinks = ["MEN", "WOMEN", "SNEAKERS"];
@@ -87,8 +88,8 @@ export default function Navbar() {
           </div>
 
           {/* Icons */}
+          <UserNavigation />
           {[
-            { src: "/icons/user.png", alt: "User" },
             { src: "/icons/wishlist.png", alt: "Wishlist" },
             { src: "/icons/cart.png", alt: "Cart" },
           ].map((icon, idx) => (
@@ -168,7 +169,6 @@ export function NavbarMobile() {
           {[
             { src: "/icons/search.png", alt: "Search" },
             { src: "/icons/cart.png", alt: "Cart" },
-            { src: "/icons/user.png", alt: "User" },
           ].map((icon, idx) => (
             <button
               key={idx}
@@ -177,6 +177,7 @@ export function NavbarMobile() {
               <Image src={icon.src} alt={icon.alt} width={24} height={24} />
             </button>
           ))}
+          <UserNavigation />
         </div>
       </nav>
 

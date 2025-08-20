@@ -21,7 +21,12 @@ export default defineSchema({
 		deletedAt: v.optional(v.string()),
 		deletedBy: v.optional(v.id("users")),
 		// Onboarding fields
-		address: v.optional(v.string()),
+		address: v.optional(v.object({
+			state: v.string(),
+			city: v.string(),
+			pinCode: v.string(),
+			fullAddress: v.string(),
+		})),
 		photoUrl: v.optional(v.string()),
 		referralSource: v.optional(v.string()),
 		onboardingCompleted: v.optional(v.boolean()),
@@ -29,6 +34,7 @@ export default defineSchema({
 		interests: v.optional(v.array(v.string())),
 		// Phone and permanent address fields (immutable once set)
 		phoneNumber: v.optional(v.string()),
+		secondaryPhoneNumber: v.optional(v.string()),
 		phoneNumberLocked: v.optional(v.boolean()),
 		permanentAddress: v.optional(v.object({
 			state: v.string(),

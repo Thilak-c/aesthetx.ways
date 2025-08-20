@@ -355,11 +355,13 @@ export const saveProfile = mutation({
 		userId: v.id("users"),
 		name: v.optional(v.string()),
 		photoUrl: v.optional(v.string()),
+		interests: v.optional(v.array(v.string())),
 	},
-	handler: async (ctx, { userId, name, photoUrl }) => {
+	handler: async (ctx, { userId, name, photoUrl, interests }) => {
 		const updateData = { updatedAt: nowIso() };
 		if (name !== undefined) updateData.name = name;
 		if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
+		if (interests !== undefined) updateData.interests = interests;
 		
 		await ctx.db.patch(userId, updateData);
 		return { success: true };
@@ -633,6 +635,180 @@ export const clearTempPassword = mutation({
 		});
 		
 		return { success: true, message: "Temporary password cleared" };
+	},
+});
+
+// Move user to trash (user can move themselves to trash)
+export const moveUserToTrash = mutation({
+	args: { 
+		userId: v.id("users"), 
+		reason: v.optional(v.string()) 
+	},
+	handler: async (ctx, { userId, reason = "User requested deletion" }) => {
+		const user = await ctx.db.get(userId);
+		if (!user) throw new Error("User not found");
+		
+		// Prevent moving super admin accounts to trash
+		if (user.role === "super_admin") {
+			throw new Error("Cannot move super admin accounts to trash");
+		}
+		
+		// Store original data in trash
+		await ctx.db.insert("trash", {
+			originalId: userId,
+			tableName: "users",
+			originalData: user,
+			deletedAt: nowIso(),
+			deletedBy: userId, // User is moving themselves to trash
+			deletionReason: reason,
+			canRestore: true,
+		});
+		
+		// Mark user as deleted
+		await ctx.db.patch(userId, {
+			isDeleted: true,
+			deletedAt: nowIso(),
+			deletedBy: userId,
+			updatedAt: nowIso(),
+		});
+		
+		// Delete user's active sessions
+		const sessions = await ctx.db
+			.query("sessions")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.collect();
+		
+		for (const session of sessions) {
+			await ctx.db.delete(session._id);
+		}
+		
+		return { success: true, message: "User moved to trash successfully" };
+	},
+});
+
+// Deactivate user account (user can deactivate themselves)
+export const deactivateUser = mutation({
+	args: { 
+		userId: v.id("users"), 
+		reason: v.optional(v.string()) 
+	},
+	handler: async (ctx, { userId, reason = "User requested deactivation" }) => {
+		const user = await ctx.db.get(userId);
+		if (!user) throw new Error("User not found");
+		
+		// Prevent deactivating super admin accounts
+		if (user.role === "super_admin") {
+			throw new Error("Cannot deactivate super admin accounts");
+		}
+		
+		// Mark user as inactive
+		await ctx.db.patch(userId, {
+			isActive: false,
+			updatedAt: nowIso(),
+		});
+		
+		// Delete user's active sessions
+		const sessions = await ctx.db
+			.query("sessions")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.collect();
+		
+		for (const session of sessions) {
+			await ctx.db.delete(session._id);
+		}
+		
+		return { success: true, message: "User deactivated successfully" };
+	},
+});
+
+// Reactivate user account (user can reactivate themselves)
+export const reactivateUser = mutation({
+	args: { userId: v.id("users") },
+	handler: async (ctx, { userId }) => {
+		const user = await ctx.db.get(userId);
+		if (!user) throw new Error("User not found");
+		
+		// Mark user as active
+		await ctx.db.patch(userId, {
+			isActive: true,
+			updatedAt: nowIso(),
+		});
+		
+		return { success: true, message: "User reactivated successfully" };
+	},
+});
+
+// Reactivate admin account (super admin only)
+export const reactivateAdminAccount = mutation({
+	args: { 
+		userId: v.id("users"), 
+		reactivatedBy: v.id("users") 
+	},
+	handler: async (ctx, { userId, reactivatedBy }) => {
+		// Verify requestor is super admin
+		const requestor = await ctx.db.get(reactivatedBy);
+		if (!requestor || requestor.role !== "super_admin") {
+			throw new Error("Access denied. Only super admins can reactivate admin accounts.");
+		}
+		
+		const user = await ctx.db.get(userId);
+		if (!user) throw new Error("User not found");
+		
+		// Only allow reactivating admin accounts
+		if (user.role !== "admin" && user.role !== "super_admin") {
+			throw new Error("Can only reactivate admin accounts");
+		}
+		
+		// Mark user as active
+		await ctx.db.patch(userId, {
+			isActive: true,
+			updatedAt: nowIso(),
+		});
+		
+		return { success: true, message: "Admin account reactivated successfully" };
+	},
+});
+
+// =======================
+// USER PROFILE MUTATIONS
+// =======================
+
+// Update user profile (user can update their own profile)
+export const updateUserProfile = mutation({
+	args: {
+		userId: v.id("users"),
+		name: v.optional(v.string()),
+		address: v.optional(v.object({
+			state: v.string(),
+			city: v.string(),
+			pinCode: v.string(),
+			fullAddress: v.string(),
+		})),
+		photoUrl: v.optional(v.string()),
+		phoneNumber: v.optional(v.string()),
+		secondaryPhoneNumber: v.optional(v.string()),
+		interests: v.optional(v.array(v.string())),
+	},
+	handler: async (ctx, { userId, name, address, photoUrl, phoneNumber, secondaryPhoneNumber, interests }) => {
+		// Verify the user exists and is not deleted
+		const user = await ctx.db.get(userId);
+		if (!user || user.isDeleted) {
+			throw new Error("User not found");
+		}
+		
+		// Note: Phone number editing is now allowed for better user experience
+		// Previously locked phone numbers can now be updated by the user
+		
+		const updateData = { updatedAt: nowIso() };
+		if (name !== undefined) updateData.name = name;
+		if (address !== undefined) updateData.address = address;
+		if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
+		if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+		if (secondaryPhoneNumber !== undefined) updateData.secondaryPhoneNumber = secondaryPhoneNumber;
+		if (interests !== undefined) updateData.interests = interests;
+		
+		await ctx.db.patch(userId, updateData);
+		return { success: true, message: "Profile updated successfully" };
 	},
 });
 

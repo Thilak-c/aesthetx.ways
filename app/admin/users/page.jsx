@@ -40,6 +40,7 @@ export default function AdminUsers() {
   const deleteUser = useMutation(api.users.deleteUser);
   const updateUser = useMutation(api.users.updateUser);
   const toggleUserStatus = useMutation(api.users.toggleUserStatus);
+  const reactivateAdminAccount = useMutation(api.users.reactivateAdminAccount);
   const setUserPassword = useAction(api.auth.setUserPasswordWithView);
   const clearTempPassword = useMutation(api.users.clearTempPassword);
 
@@ -107,6 +108,30 @@ export default function AdminUsers() {
     setSelectedUser(user);
     setNewPassword("");
     setShowSetPasswordModal(true);
+  };
+
+  const handleReactivate = async (user) => {
+    if (!adminUser) return;
+    
+    try {
+      if (user.role === "admin" || user.role === "super_admin") {
+        // Use reactivateAdminAccount for admin users
+        await reactivateAdminAccount({
+          userId: user._id,
+          reactivatedBy: adminUser._id,
+        });
+      } else {
+        // For regular users, we can use the updateUser function to set isActive to true
+        await updateUser({
+          userId: user._id,
+          isActive: true,
+          updatedBy: adminUser._id,
+        });
+      }
+      toast.success("User account reactivated successfully!");
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const confirmEdit = async () => {
@@ -437,6 +462,17 @@ export default function AdminUsers() {
                           >
                             <FiKey size={16} />
                           </button>
+
+                          {/* Reactivate */}
+                          {!user.isActive && (
+                            <button
+                              onClick={() => handleReactivate(user)}
+                              className="text-green-600 hover:text-green-900"
+                              title="Reactivate User Account"
+                            >
+                              <FiUserCheck size={16} />
+                            </button>
+                          )}
 
                           {/* Edit */}
                           <button

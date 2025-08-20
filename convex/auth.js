@@ -72,6 +72,13 @@ export const signIn = action({
 		const ok = await bcrypt.compare(password, user.passwordHash);
 		if (!ok) throw new Error("Invalid credentials");
 		
+		// Auto-reactivate deactivated users when they log in
+		if (user.isActive === false) {
+			await ctx.runMutation(internal.users.reactivateUser, {
+				userId: user._id
+			});
+		}
+		
 		const sessionToken = crypto.randomUUID();
 		const expiresAt = addDays(nowIso(), 30);
 		await ctx.runMutation(internal.users.createSessionInternal, { 

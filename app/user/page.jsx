@@ -94,6 +94,16 @@ export default function UserOnboardingPage() {
         >
           {busy ? "Saving..." : "Continue"}
         </button>
+
+        <div className="text-center pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-600 mb-2">Already have an account?</p>
+          <a
+            href="/user/profile"
+            className="text-purple-600 hover:text-purple-700 text-sm font-medium underline"
+          >
+            Go to Profile
+          </a>
+        </div>
       </form>
     </div>
   );
