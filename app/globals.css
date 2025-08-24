@@ -123,5 +123,27 @@
     }
 }
 
+/* Custom scrollbar hiding for product sliders */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Smooth scrolling for product sliders */
+.product-slider {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure product cards maintain aspect ratio */
+.product-card-image {
+  aspect-ratio: 3/4;
+  object-fit: cover;
+}
+
 
 

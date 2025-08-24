@@ -16,6 +16,7 @@ import type {
 import type * as auth from "../auth.js";
 import type * as mutations_shares from "../mutations/shares.js";
 import type * as products from "../products.js";
+import type * as reviews from "../reviews.js";
 import type * as users from "../users.js";
 
 /**
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   "mutations/shares": typeof mutations_shares;
   products: typeof products;
+  reviews: typeof reviews;
   users: typeof users;
 }>;
 export declare const api: FilterApi<

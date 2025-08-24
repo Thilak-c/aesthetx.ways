@@ -4,46 +4,46 @@ import ProductCard from "./ProductCard";
 
 const products = [
   {
-    img: "/products/batman.jpg",
-    badge: "OVERSIZED FIT",
-    name: "Batman Ottoman: Caped Crusader",
-    category: "Oversized T-Shirts",
-    price: 1199,
-  },
-  {
+    _id: "new-1",
     img: "/products/ben10.jpg",
-    badge: "OVERSIZED FIT",
-    name: "Ben 10 Alien Force: Cosmic Defender",
+    name: "TSS Originals: Ben 10",
     category: "Oversized T-Shirts",
     price: 1299,
   },
   {
-    img: "/products/hooded-black.jpg",
-    badge: "OVERSIZED FIT",
-    name: "Hooded T-Shirt: Black",
-    category: "Hooded T-Shirts",
-    price: 1499,
+    _id: "new-2",
+    img: "/products/batman.jpg",
+    name: "TSS Originals: Batman",
+    category: "Oversized T-Shirts",
+    price: 1299,
   },
   {
+    _id: "new-3",
     img: "/products/safari.jpg",
-    badge: "APPLIQUE PATCH",
-    name: "Utility Shirt: Safari",
-    category: "Men Utility Shirts",
-    price: 1699,
-  },
-  {
-    img: "/products/ironman.jpg",
-    badge: "PREMIUM",
-    name: "Ironman Stark Tech",
-    category: "Oversized T-Shirts",
-    price: 1399,
-  },
-  {
-    img: "/products/spiderman.jpg",
-    badge: "LIMITED",
-    name: "Spiderman Web Slinger",
+    name: "TSS Originals: Safari",
     category: "Oversized T-Shirts",
     price: 1299,
+  },
+  {
+    _id: "new-4",
+    img: "/products/ironman.jpg",
+    name: "TSS Originals: Iron Man",
+    category: "Oversized T-Shirts",
+    price: 1299,
+  },
+  {
+    _id: "new-5",
+    img: "/products/kurukshetra.jpg",
+    name: "TSS Originals: Kurukshetra",
+    category: "Oversized T-Shirts",
+    price: 1799,
+  },
+  {
+    _id: "new-6",
+    img: "/products/nautical.jpg",
+    name: "Cotton Linen Stripes: Nautical",
+    category: "Shirts",
+    price: 1499,
   },
 ];
 
@@ -101,7 +101,7 @@ const scrollToPage = (idx) => {
   };
 
   return (
-    <section className="w-full flex flex-col items-center pt-10 bg-white">
+    <section className="w-full flex flex-col items-center pt-1 bg-white">
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-gray-800">
           NEW ARRIVALS
@@ -110,11 +110,12 @@ const scrollToPage = (idx) => {
       </div>
       <div className="relative w-full max-w-7xl mx-auto flex items-center">
         {/* Product Cards - horizontally scrollable */}
-        <div ref={scrollRef} className="w-full overflow-x-auto scrollbar-hide">
-          <div className="flex flex-nowrap gap-4 px-1">
+        <div ref={scrollRef} className="w-full overflow-x-auto scrollbar-hide product-slider">
+          <div className="flex flex-nowrap gap-6 px-4 sm:px-6 lg:px-8">
             {products.map((p) => (
               <ProductCard
-                key={p.name}
+                key={p._id}
+                productId={p._id}
                 img={p.img}
                 name={p.name}
                 category={p.category}

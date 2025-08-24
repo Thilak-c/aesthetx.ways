@@ -83,9 +83,46 @@ export default defineSchema({
 		name: v.string(),
 		price: v.float64(),
 		subcategories: v.optional(v.string()),
+		// Size-based inventory tracking
+		availableSizes: v.optional(v.array(v.string())), // ["S", "M", "L", "XL"]
+		sizeStock: v.optional(v.object({
+			S: v.optional(v.number()),
+			M: v.optional(v.number()),
+			L: v.optional(v.number()),
+			XL: v.optional(v.number()),
+			XXL: v.optional(v.number()),
+		})),
+		// Legacy inventory fields (keeping for backward compatibility)
+		inStock: v.optional(v.boolean()),
+		totalAvailable: v.optional(v.number()),
+		currentStock: v.optional(v.number()),
 		// Soft delete
 		isDeleted: v.optional(v.boolean()),
 		deletedAt: v.optional(v.string()),
 		deletedBy: v.optional(v.id("users")),
 	}).index("by_deleted", ["isDeleted"]),
+
+	// Reviews table for product reviews
+	reviews: defineTable({
+		productId: v.string(), // itemId of the product
+		userId: v.id("users"),
+		userName: v.string(), // User's name for display
+		rating: v.number(), // 1-5 rating
+		title: v.string(), // Review title
+		comment: v.string(), // Review comment
+		size: v.optional(v.string()), // Size purchased
+		recommend: v.boolean(), // Whether user recommends the product
+		verified: v.boolean(), // Whether user actually purchased the product
+		helpful: v.number(), // Number of helpful votes
+		createdAt: v.string(),
+		updatedAt: v.string(),
+		// Soft delete
+		isDeleted: v.optional(v.boolean()),
+		deletedAt: v.optional(v.string()),
+		deletedBy: v.optional(v.id("users")),
+	}).index("by_product", ["productId"])
+	 .index("by_user", ["userId"])
+	 .index("by_rating", ["rating"])
+	 .index("by_created", ["createdAt"])
+	 .index("by_deleted", ["isDeleted"]),
 });
