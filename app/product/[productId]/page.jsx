@@ -31,6 +31,12 @@ import {
   Lock
 } from "lucide-react";
 
+// Font classes
+const fontClasses = {
+  poppins: "font-poppins",
+  inter: "font-inter"
+};
+
 export default function ProductPage() {
   const [token, setToken] = useState(null);
 
@@ -275,21 +281,22 @@ export default function ProductPage() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 100 }}
-        className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm"
+        className={`border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm ${fontClasses.poppins}`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
             <motion.button
               whileHover={{ x: -5 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => router.back()}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-all duration-200 group"
             >
-              <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-              <span className="font-medium">Back to Products</span>
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mr-1.5 sm:mr-2 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium text-xs sm:text-sm lg:text-base hidden sm:inline">Back to Products</span>
+              <span className="font-medium text-xs sm:hidden">Back</span>
             </motion.button>
             
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-6">
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -308,30 +315,24 @@ export default function ProductPage() {
                     setTimeout(() => setShowToast(false), 3000);
                   }
                 }}
-                className="p-3 text-black hover:bg-gray-100 rounded-xl transition-all duration-200 group relative"
+                className="p-1.5 sm:p-2 lg:p-3 text-black hover:bg-gray-100 rounded-lg sm:rounded-xl transition-all duration-200 group relative"
                 title="Share this sustainable product and support ethical fashion"
               >
-                <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 group-hover:rotate-12 transition-transform" />
               </motion.button>
-              
-              {/* Social Impact Badge */}
-             
               
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsWishlisted(!isWishlisted)}
-                className={`p-3 rounded-xl transition-all duration-200 ${
+                className={`p-1.5 sm:p-2 lg:p-3 rounded-lg sm:rounded-xl transition-all duration-200 ${
                   isWishlisted 
                     ? 'text-red-500 hover:text-red-600 hover:bg-red-50' 
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
-                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 ${isWishlisted ? 'fill-current' : ''}`} />
               </motion.button>
-              
-              {/* Demo Login/Logout Toggle */}
-            
             </div>
           </div>
         </div>
@@ -345,11 +346,11 @@ export default function ProductPage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -100, scale: 0.8 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50"
+            className={`fixed top-16 sm:top-20 lg:top-24 left-1/2 transform -translate-x-1/2 z-50 mx-3 sm:mx-4 lg:mx-0 max-w-xs sm:max-w-sm lg:max-w-md w-full ${fontClasses.poppins}`}
           >
-            <div className="bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-2xl border border-gray-700 flex items-center space-x-3">
-              <Check className="w-5 h-5 text-green-400" />
-              <span className="font-medium">{toastMessage}</span>
+            <div className="bg-gray-900 text-white px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-2xl border border-gray-700 flex items-center space-x-2 sm:space-x-3">
+              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-green-400 flex-shrink-0" />
+              <span className="font-medium text-xs sm:text-sm lg:text-base">{toastMessage}</span>
             </div>
           </motion.div>
         )}
@@ -359,13 +360,13 @@ export default function ProductPage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+        className={`max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-12 ${fontClasses.poppins}`}
       >
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-16">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 lg:gap-16">
           {/* Enhanced Product Images */}
-          <motion.div variants={itemVariants} className="space-y-6">
+          <motion.div variants={itemVariants} className="space-y-3 sm:space-y-4 lg:space-y-6">
             <div className="relative group">
-              <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl overflow-hidden shadow-2xl">
+              <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-lg sm:shadow-xl lg:shadow-2xl">
                 <Image
                   src={product.mainImage}
                   alt={product.name}
@@ -380,25 +381,22 @@ export default function ProductPage() {
                 <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}
                   whileHover={{ scale: 1.1 }}
-                  className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300"
+                  className="absolute top-2 sm:top-3 lg:top-4 right-2 sm:right-3 lg:right-4 p-1.5 sm:p-2 lg:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300"
                 >
-                  <Eye className="w-5 h-5 text-gray-700" />
+                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-gray-700" />
                 </motion.button>
               </div>
-              
-              {/* Discount Badge */}
-
             </div>
             
             {/* Enhanced Thumbnail Images */}
-            <div className="flex space-x-4">
+            <div className="flex space-x-2 sm:space-x-3 lg:space-x-4 overflow-x-auto pb-2">
               {[product.mainImage, product.mainImage, product.mainImage, product.mainImage].map((img, index) => (
                 <motion.button
                   key={index}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedImage(index)}
-                  className={`relative w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all duration-300 shadow-lg ${
+                  className={`relative w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-lg sm:rounded-xl lg:rounded-2xl overflow-hidden border-2 transition-all duration-300 shadow-lg flex-shrink-0 ${
                     selectedImage === index 
                       ? 'border-gray-900 ring-4 ring-gray-900/20' 
                       : 'border-gray-200 hover:border-gray-300'
@@ -418,7 +416,7 @@ export default function ProductPage() {
                       animate={{ scale: 1 }}
                       className="absolute inset-0 bg-black/20 flex items-center justify-center"
                     >
-                      <Check className="w-6 h-6 text-white" />
+                      <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-6 lg:h-6 text-white" />
                     </motion.div>
                   )}
                 </motion.button>
@@ -427,16 +425,16 @@ export default function ProductPage() {
           </motion.div>
 
           {/* Enhanced Product Info */}
-          <motion.div variants={itemVariants} className="space-y-8">
+          <motion.div variants={itemVariants} className={`space-y-4 sm:space-y-6 lg:space-y-8 ${fontClasses.poppins}`}>
             {/* Product Header */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+            <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
                   <motion.span 
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full border border-gray-200"
+                    className="px-2.5 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 bg-gray-100 text-gray-700 text-xs sm:text-sm font-semibold rounded-full border border-gray-200 w-fit"
                   >
                     {product.category}
                   </motion.span>
@@ -447,10 +445,17 @@ export default function ProductPage() {
                     transition={{ delay: 0.4 }}
                     className="flex items-center space-x-1"
                   >
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                    <span className="text-sm text-gray-600 ml-2 font-medium">(24 reviews)</span>
+                     {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star} 
+                              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 ${
+                                star <= (reviewStats?.averageRating || 0) 
+                                  ? 'fill-yellow-400 text-yellow-400' 
+                                  : 'text-gray-300'
+                              }`} 
+                            />
+                          ))}
+                    <span className="text-xs sm:text-sm text-gray-600 ml-1.5 sm:ml-2 font-medium">({reviews.length} reviews)</span>
                   </motion.div>
                 </div>
                 
@@ -458,9 +463,9 @@ export default function ProductPage() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.5, type: "spring" }}
-                  className="flex items-center space-x-2 text-sm text-gray-500"
+                  className="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm text-gray-500"
                 >
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
                   <span>In Stock</span>
                 </motion.div>
               </div>
@@ -469,7 +474,7 @@ export default function ProductPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-5xl font-bold text-gray-900 leading-tight"
+                className="text-xl sm:text-2xl lg:text-3xl xl:text-3xl font-bold text-gray-900 leading-tight"
               >
                 {product.name}
               </motion.h1>
@@ -478,14 +483,12 @@ export default function ProductPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="flex items-center space-x-6"
+                className="flex items-center space-x-3 sm:space-x-4 lg:space-x-6"
               >
-                <div className="flex items-baseline space-x-3">
-                  <span className="text-4xl font-bold text-gray-900">₹{product.price}</span>
-                  <span className="text-xl text-gray-400 line-through">₹{Math.round(product.price * 1.2)}</span>
+                <div className="flex items-baseline space-x-1.5 sm:space-x-2 lg:space-x-3">
+                  <span className="text-lg sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900"> <span className="text-green-800">₹</span>{product.price}</span>
+                  <span className="text-base sm:text-lg lg:text-xl text-gray-400 line-through">₹{Math.round(product.price * 1.2)}</span>
                 </div>
-                
-               
               </motion.div>
             </div>
 
@@ -495,16 +498,14 @@ export default function ProductPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="space-y-4"
+                className={`space-y-2.5 sm:space-y-3 lg:space-y-4 ${fontClasses.poppins}`}
               >
-                <div className="flex items-center justify-between">
-                  <label className="text-lg font-semibold text-gray-900">Select Size</label>
-                  <button className="text-sm text-gray-600 hover:text-gray-700 underline">
-                    Size Guide
-                  </button>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-1.5 sm:space-y-0">
+                  <label className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">Select Size</label>
+                  
                 </div>
                 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 lg:gap-3">
                   {product.availableSizes.map((size) => {
                     const sizeStock = product.sizeStock?.[size] || 0;
                     const isOutOfStock = sizeStock === 0;
@@ -517,7 +518,7 @@ export default function ProductPage() {
                         whileTap={{ scale: isOutOfStock ? 1 : 0.95 }}
                         onClick={() => !isOutOfStock && setSelectedSize(size)}
                         disabled={isOutOfStock}
-                        className={`relative px-4 py-3 rounded-xl border-2 font-medium transition-all duration-200 ${
+                        className={`relative px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 lg:py-3 rounded-md sm:rounded-lg lg:rounded-xl border-2 font-medium transition-all duration-200 text-xs sm:text-sm lg:text-base ${
                           isSelected
                             ? 'border-gray-900 bg-gray-900 text-white'
                             : isOutOfStock
@@ -525,9 +526,9 @@ export default function ProductPage() {
                               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
-                        <span className="text-lg">{size}</span>
+                        <span>{size}</span>
                         {sizeStock > 0 && sizeStock < 10 && (
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-gray-500 rounded-full"></div>
+                          <div className="absolute -top-0.5 sm:-top-1 lg:-top-1 -right-0.5 sm:-right-1 lg:-right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 lg:w-3 lg:h-3 bg-gray-500 rounded-full"></div>
                         )}
                         {isOutOfStock && (
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -539,42 +540,10 @@ export default function ProductPage() {
                   })}
                 </div>
                 
-                {/* Stock Information for Selected Size */}
-                {/* {selectedSize && product.sizeStock?.[selectedSize] !== undefined && (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        product.sizeStock[selectedSize] >= 10  
-                          ? 'bg-gray-500' 
-                          : product.sizeStock[selectedSize] > 0 
-                            ? 'bg-gray-500' 
-                            : 'bg-red-500'
-                      }`}></div>
-                      <span className="text-sm font-medium text-gray-700">
-                        Size {selectedSize}:
-                      </span>
-                    </div>
-                    <span className={`text-sm font-semibold ${
-                      product.sizeStock[selectedSize] >= 10 
-                        ? 'text-gray-600' 
-                        : product.sizeStock[selectedSize] > 0 
-                          ? 'text-gray-600' 
-                          : 'text-red-600'
-                    }`}>
-                      {product.sizeStock[selectedSize] === 0 
-                        ? 'Out of Stock' 
-                        : product.sizeStock[selectedSize] < 10 
-                          ? `Only few left!` 
-                          : ` available`
-                      }
-                    </span>
-                  </div>
-                )} */}
-                
                 {/* Size Selection Warning */}
                 {!selectedSize && product.availableSizes.length > 0 && (
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <Clock className="w-4 h-4" />
+                  <div className="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm text-gray-600 bg-gray-50 p-2 sm:p-3 rounded-lg border border-gray-200">
+                    <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
                     <span>Please select a size to continue</span>
                   </div>
                 )}
@@ -586,25 +555,24 @@ export default function ProductPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="space-y-4"
+              className={`space-y-2.5 sm:space-y-3 lg:space-y-4 ${fontClasses.poppins}`}
             >
-              <div className="flex items-center justify-between">
-                <label className="text-lg font-semibold text-gray-900">Quantity</label>
-               
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-1.5 sm:space-y-0">
+                <label className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">Quantity</label>
               </div>
               
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2.5 sm:space-x-3 lg:space-x-4">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1}
-                  className="p-3 border-2 border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1.5 sm:p-2 lg:p-3 border-2 border-gray-200 rounded-md sm:rounded-lg lg:rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Minus className="w-5 h-5" />
+                  <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                 </motion.button>
                 
-                <span className="w-20 text-center text-2xl font-bold text-gray-900">
+                <span className="w-14 sm:w-16 lg:w-20 text-center text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
                   {quantity}
                 </span>
                 
@@ -613,9 +581,9 @@ export default function ProductPage() {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setQuantity(quantity + 1)}
                   disabled={selectedSize && product.sizeStock?.[selectedSize] !== undefined && quantity >= product.sizeStock[selectedSize]}
-                  className="p-3 border-2 border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1.5 sm:p-2 lg:p-3 border-2 border-gray-200 rounded-md sm:rounded-lg lg:rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                 </motion.button>
               </div>
               
@@ -623,23 +591,23 @@ export default function ProductPage() {
               {selectedSize && product.sizeStock?.[selectedSize] !== undefined && (
                 <>
                   {product.sizeStock[selectedSize] === 0 && (
-                    <div className="flex items-center space-x-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                      <X className="w-4 h-4" />
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm text-red-600 bg-red-50 p-2 sm:p-3 rounded-lg border border-red-200">
+                      <X className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
                       <span>Size {selectedSize} is currently out of stock</span>
                     </div>
                   )}
                   
                   {product.sizeStock[selectedSize] > 0 && product.sizeStock[selectedSize] < 10 && (
-                    <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                      <Clock className="w-4 h-4" />
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm text-gray-600 bg-gray-50 p-2 sm:p-3 rounded-lg border border-gray-200">
+                      <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
                       <span>Only few units left in size {selectedSize}!</span>
                     </div>
                   )}
                 </>
               )}
               
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Check className="w-4 h-4 text-gray-500" />
+              <div className="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm text-gray-600">
+                <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-gray-500" />
                 <span>Free shipping on orders over ₹999</span>
               </div>
             </motion.div>
@@ -649,7 +617,7 @@ export default function ProductPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="space-y-4"
+              className={`space-y-2.5 sm:space-y-3 lg:space-y-4 ${fontClasses.poppins}`}
             >
               <motion.button
                 whileHover={{ scale: 1.02, y: -2 }}
@@ -660,10 +628,10 @@ export default function ProductPage() {
                   (selectedSize && product.sizeStock?.[selectedSize] === 0) ||
                   (product.availableSizes && product.availableSizes.length > 0 && !selectedSize)
                 }
-                className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white py-5 px-6 rounded-2xl font-bold text-lg hover:from-gray-800 hover:to-gray-700 transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-900 disabled:hover:to-gray-800"
+                className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white py-3 sm:py-4 lg:py-5 px-3 sm:px-4 lg:px-6 rounded-lg sm:rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:from-gray-800 hover:to-gray-700 transition-all duration-300 flex items-center justify-center space-x-2 sm:space-x-2 lg:space-x-3 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-900 disabled:hover:to-gray-800"
               >
-                <ShoppingCart className="w-6 h-6" />
-                <span>
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                <span className="text-xs sm:text-sm lg:text-base">
                   {!selectedSize && product.availableSizes && product.availableSizes.length > 0
                     ? 'Select Size to Add to Cart'
                     : selectedSize && product.sizeStock?.[selectedSize] === 0
@@ -682,14 +650,16 @@ export default function ProductPage() {
                   (selectedSize && product.sizeStock?.[selectedSize] === 0) ||
                   (product.availableSizes && product.availableSizes.length > 0 && !selectedSize)
                 }
-                className="w-full bg-white text-gray-900 py-5 px-6 rounded-2xl font-bold text-lg border-3 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-900"
+                className="w-full bg-white text-gray-900 py-3 sm:py-4 lg:py-5 px-3 sm:px-4 lg:px-6 rounded-lg sm:rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg border-3 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-900"
               >
-                {!selectedSize && product.availableSizes && product.availableSizes.length > 0
-                  ? 'Select Size to Buy Now'
-                  : selectedSize && product.sizeStock?.[selectedSize] === 0
-                    ? `Size ${selectedSize} Out of Stock`
-                    : `Buy Now - ₹${product.price * quantity}`
-                }
+                <span className="text-xs sm:text-sm lg:text-base">
+                  {!selectedSize && product.availableSizes && product.availableSizes.length > 0
+                    ? 'Select Size to Buy Now'
+                    : selectedSize && product.sizeStock?.[selectedSize] === 0
+                      ? `Size ${selectedSize} Out of Stock`
+                      : `Buy Now - ₹${product.price * quantity}`
+                  }
+                </span>
               </motion.button>
             </motion.div>
 
@@ -698,45 +668,45 @@ export default function ProductPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-8 border-t border-gray-200"
+              className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 pt-4 sm:pt-6 lg:pt-8 border-t border-gray-200 ${fontClasses.poppins}`}
             >
-              <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
-                <div className="p-3 bg-gray-100 rounded-xl">
-                  <Truck className="w-6 h-6 text-gray-600" />
+              <div className="flex items-center space-x-2.5 sm:space-x-3 lg:space-x-4 p-2.5 sm:p-3 lg:p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl lg:rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
+                <div className="p-1.5 sm:p-2 lg:p-3 bg-gray-100 rounded-md sm:rounded-lg lg:rounded-xl">
+                  <Truck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">Free Shipping</p>
-                  <p className="text-sm text-gray-600">On orders over ₹999</p>
+                  <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">Free Shipping</p>
+                  <p className="text-xs sm:text-sm text-gray-600">On orders over ₹999</p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
-                <div className="p-3 bg-gray-100 rounded-xl">
-                  <RotateCcw className="w-6 h-6 text-gray-600" />
+              <div className="flex items-center space-x-2.5 sm:space-x-3 lg:space-x-4 p-2.5 sm:p-3 lg:p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl lg:rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
+                <div className="p-1.5 sm:p-2 lg:p-3 bg-gray-100 rounded-md sm:rounded-lg lg:rounded-xl">
+                  <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">Easy Returns</p>
-                  <p className="text-sm text-gray-600">30 day return policy</p>
+                  <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">Easy Returns</p>
+                  <p className="text-xs sm:text-sm text-gray-600">30 day return policy</p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
-                <div className="p-3 bg-gray-100 rounded-xl">
-                  <Shield className="w-6 h-6 text-gray-600" />
+              <div className="flex items-center space-x-2.5 sm:space-x-3 lg:space-x-4 p-2.5 sm:p-3 lg:p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl lg:rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
+                <div className="p-1.5 sm:p-2 lg:p-3 bg-gray-100 rounded-md sm:rounded-lg lg:rounded-xl">
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">Secure Payment</p>
-                  <p className="text-sm text-gray-600">100% secure checkout</p>
+                  <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">Secure Payment</p>
+                  <p className="text-xs sm:text-sm text-gray-600">100% secure checkout</p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
-                <div className="p-3 bg-gray-100 rounded-xl">
-                  <Award className="w-6 h-6 text-gray-600" />
+              <div className="flex items-center space-x-2.5 sm:space-x-3 lg:space-x-4 p-2.5 sm:p-3 lg:p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl lg:rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
+                <div className="p-1.5 sm:p-2 lg:p-3 bg-gray-100 rounded-md sm:rounded-lg lg:rounded-xl">
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">Premium Quality</p>
-                  <p className="text-sm text-gray-600">Certified materials</p>
+                  <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">Premium Quality</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Certified materials</p>
                 </div>
               </div>
             </motion.div>
@@ -748,11 +718,11 @@ export default function ProductPage() {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-20"
+          className={`mt-8 sm:mt-12 lg:mt-16 xl:mt-20 ${fontClasses.poppins}`}
         >
           {/* Enhanced Tab Navigation */}
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8">
+          <div className="border-b border-gray-200 overflow-x-auto">
+            <nav className="flex space-x-3 sm:space-x-4 lg:space-x-6 xl:space-x-8 min-w-max px-3 sm:px-4 lg:px-0">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -761,15 +731,15 @@ export default function ProductPage() {
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex flex-col items-center space-y-2 py-6 px-4 border-b-2 font-semibold text-sm transition-all duration-300 ${
+                    className={`flex flex-col items-center space-y-1 sm:space-y-2 py-3 sm:py-4 lg:py-6 px-1.5 sm:px-2 lg:px-4 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'border-gray-900 text-gray-900'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                     <span>{tab.label}</span>
-                    <span className="text-xs font-normal text-gray-400">{tab.description}</span>
+                    <span className="text-xs font-normal text-gray-400 hidden sm:block">{tab.description}</span>
                   </motion.button>
                 );
               })}
@@ -777,7 +747,7 @@ export default function ProductPage() {
           </div>
 
           {/* Enhanced Tab Content */}
-          <div className="py-12">
+          <div className="py-6 sm:py-8 lg:py-12">
             <AnimatePresence mode="wait">
               {activeTab === 'details' && (
                 <motion.div
@@ -885,19 +855,19 @@ export default function ProductPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -30 }}
                   transition={{ duration: 0.3 }}
-                  className="space-y-8"
+                  className="space-y-6 sm:space-y-8"
                 >
-                  <div className="text-center mb-12">
-                    <h3 className="text-4xl font-bold text-gray-900 mb-4">Technical Specifications</h3>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                  <div className="text-center mb-8 sm:mb-12">
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Technical Specifications</h3>
+                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
                       Detailed technical information and material specifications
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <div className="space-y-6">
-                      <h4 className="text-2xl font-bold text-gray-900">Material & Construction</h4>
-                      <div className="space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
+                    <div className="space-y-4 sm:space-y-6">
+                      <h4 className="text-xl sm:text-2xl font-bold text-gray-900">Material & Construction</h4>
+                      <div className="space-y-3 sm:space-y-4">
                         {[
                           { label: 'Material', value: '100% Premium Cotton' },
                           { label: 'Weight', value: '180 GSM (Lightweight)' },
@@ -910,18 +880,18 @@ export default function ProductPage() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className="flex justify-between py-4 border-b border-gray-100"
+                            className="flex flex-col sm:flex-row sm:justify-between py-3 sm:py-4 border-b border-gray-100 space-y-1 sm:space-y-0"
                           >
-                            <span className="text-gray-600 font-medium">{spec.label}</span>
-                            <span className="font-semibold text-gray-900">{spec.value}</span>
+                            <span className="text-sm sm:text-base text-gray-600 font-medium">{spec.label}</span>
+                            <span className="text-sm sm:text-base font-semibold text-gray-900">{spec.value}</span>
                           </motion.div>
                         ))}
                       </div>
                     </div>
                     
-                    <div className="space-y-6">
-                      <h4 className="text-2xl font-bold text-gray-900">Fit & Sizing</h4>
-                      <div className="space-y-4">
+                    <div className="space-y-4 sm:space-y-6">
+                      <h4 className="text-xl sm:text-2xl font-bold text-gray-900">Fit & Sizing</h4>
+                      <div className="space-y-3 sm:space-y-4">
                         {[
                           { label: 'Fit Type', value: 'Regular Fit' },
                           { label: 'Sleeve Length', value: 'Full Sleeve' },
@@ -934,10 +904,10 @@ export default function ProductPage() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className="flex justify-between py-4 border-b border-gray-100"
+                            className="flex flex-col sm:flex-row sm:justify-between py-3 sm:py-4 border-b border-gray-100 space-y-1 sm:space-y-0"
                           >
-                            <span className="text-gray-600 font-medium">{spec.label}</span>
-                            <span className="font-semibold text-gray-900">{spec.value}</span>
+                            <span className="text-sm sm:text-base text-gray-600 font-medium">{spec.label}</span>
+                            <span className="text-sm sm:text-base font-semibold text-gray-900">{spec.value}</span>
                           </motion.div>
                         ))}
                       </div>
@@ -1039,69 +1009,74 @@ export default function ProductPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -30 }}
                   transition={{ duration: 0.3 }}
-                  className="space-y-8"
+                  className="space-y-6 sm:space-y-8"
                 >
-                  <div className="text-center mb-12">
-                    <h3 className="text-4xl font-bold text-gray-900 mb-4">Customer Reviews</h3>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                  <div className="text-center mb-8 sm:mb-12">
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Customer Reviews</h3>
+                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
                       See what our customers are saying about this product
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-                    <div className="text-center space-y-4">
-                      <div className="text-6xl font-bold text-gray-900">
-                        {reviewStats ? reviewStats.averageRating.toFixed(1) : '0.0'}
+                  {/* Review Statistics */}
+                  <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-gray-200 mb-8 sm:mb-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                      {/* Overall Rating */}
+                      <div className="text-center space-y-3 sm:space-y-4">
+                        <div className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900">
+                          {reviewStats ? reviewStats.averageRating.toFixed(1) : '0.0'}
+                        </div>
+                        <div className="flex items-center justify-center space-x-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star} 
+                              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 ${
+                                star <= (reviewStats?.averageRating || 0) 
+                                  ? 'fill-yellow-400 text-yellow-400' 
+                                  : 'text-gray-300'
+                              }`} 
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm sm:text-base text-gray-600">
+                          Based on {reviewStats?.totalReviews || 0} reviews
+                        </p>
                       </div>
-                      <div className="flex items-center justify-center space-x-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star} 
-                            className={`w-6 h-6 ${
-                              star <= (reviewStats?.averageRating || 0) 
-                                ? 'fill-yellow-400 text-yellow-400' 
-                                : 'text-gray-300'
-                            }`} 
-                          />
-                        ))}
+                      
+                      {/* Rating Distribution */}
+                      <div className="lg:col-span-2 space-y-2 sm:space-y-3">
+                        {[5, 4, 3, 2, 1].map((rating) => {
+                          const count = reviewStats?.ratingDistribution?.[rating] || 0;
+                          const percentage = reviewStats?.totalReviews 
+                            ? Math.round((count / reviewStats.totalReviews) * 100) 
+                            : 0;
+                          
+                          return (
+                            <div key={rating} className="flex items-center space-x-2 sm:space-x-3">
+                              <div className="flex items-center space-x-1 w-10 sm:w-12 lg:w-16">
+                                <span className="text-xs sm:text-sm font-medium text-gray-600">{rating}</span>
+                                <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
+                              </div>
+                              <div className="flex-1 bg-gray-200 rounded-full h-1.5 sm:h-2">
+                                <div 
+                                  className="bg-yellow-400 h-1.5 sm:h-2 rounded-full transition-all duration-1000"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-xs sm:text-sm text-gray-600 w-6 sm:w-8 lg:w-12 text-right">{count}</span>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <p className="text-gray-600">
-                        Based on {reviewStats?.totalReviews || 0} reviews
-                      </p>
-                    </div>
-                    
-                    <div className="lg:col-span-2 space-y-3">
-                      {[5, 4, 3, 2, 1].map((rating) => {
-                        const count = reviewStats?.ratingDistribution?.[rating] || 0;
-                        const percentage = reviewStats?.totalReviews 
-                          ? Math.round((count / reviewStats.totalReviews) * 100) 
-                          : 0;
-                        
-                        return (
-                          <div key={rating} className="flex items-center space-x-3">
-                            <div className="flex items-center space-x-1 w-16">
-                              <span className="text-sm font-medium text-gray-600">{rating}</span>
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            </div>
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-yellow-400 h-2 rounded-full transition-all duration-1000"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                            <span className="text-sm text-gray-600 w-12 text-right">{count}</span>
-                          </div>
-                        );
-                      })}
                     </div>
                   </div>
                   
-                  <div className="space-y-8">
+                  <div className="space-y-6 sm:space-y-8">
                     {reviews === undefined ? (
                       // Loading state
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-600">Loading reviews...</p>
+                      <div className="text-center py-8 sm:py-12">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-sm sm:text-base text-gray-600">Loading reviews...</p>
                       </div>
                     ) : reviews && reviews.length > 0 ? (
                       reviews.map((review, index) => {
@@ -1112,84 +1087,110 @@ export default function ProductPage() {
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                         const dateText = diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
                         
-                                                return (
-                          <motion.div 
-                            key={review._id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="border border-gray-200 rounded-3xl p-8 hover:border-gray-300 transition-all duration-200"
-                          >
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center">
-                                  <span className="text-lg font-bold text-gray-700">
-                                    {review.userName.charAt(0)}
-                                  </span>
-                                </div>
-                                <div>
-                                  <div className="flex items-center space-x-2">
-                                    <p className="font-semibold text-gray-900">{review.userName}</p>
-                                    {review.verified && (
-                                      <Check className="w-4 h-4 text-blue-600" strokeWidth={4} />
-                                    )}
-                                  </div>
-                                  <p className="text-sm text-gray-500">{dateText}</p>
-                                  {review.size && (
-                                    <p className="text-xs text-gray-500">Size: {review.size}</p>
+                        return (
+                          <motion.div
+                          key={review._id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1, duration: 0.4, ease: "easeOut" }}
+                          className="border border-gray-200 dark:border-gray-800 rounded-2xl p-5 sm:p-7 lg:p-8 
+                                     bg-white dark:bg-gray-900 shadow-sm hover:shadow-md 
+                                     hover:scale-[1.01] transition-all duration-300"
+                        >
+                          {/* Header */}
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:mb-5">
+                            {/* User Info */}
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400 
+                                              dark:from-gray-700 dark:to-gray-800 rounded-full flex items-center justify-center flex-shrink-0 shadow-inner">
+                                <span className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-200">
+                                  {review.userName.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base truncate">
+                                    {review.userName}
+                                  </p>
+                                  {review.verified && (
+                                    <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" strokeWidth={3} />
                                   )}
                                 </div>
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{dateText}</p>
                               </div>
-                              
-                              <div className="flex items-center space-x-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star 
-                                    key={star} 
-                                    className={`w-5 h-5 ${
-                                      star <= review.rating 
-                                        ? 'fill-yellow-400 text-yellow-400' 
-                                        : 'text-gray-300'
-                                    }`} 
+                            </div>
+                        
+                            {/* Stars */}
+                            <div className="flex items-center">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <motion.div
+                                  key={star}
+                                  initial={{ scale: 0, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  transition={{ delay: index * 0.1 + star * 0.05 }}
+                                >
+                                  <Star
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                                      star <= review.rating
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "text-gray-300 dark:text-gray-600"
+                                    }`}
                                   />
-                                ))}
-                              </div>
+                                </motion.div>
+                              ))}
                             </div>
-                            
-                            <div className="mb-4">
-                              <h4 className="font-semibold text-gray-900 mb-2">{review.title}</h4>
-                              <p className="text-gray-700 leading-relaxed">{review.comment}</p>
-                            </div>
-                            
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                                <button className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                                  <ThumbsUp className="w-4 h-4" />
-                                  <span>Helpful ({review.helpful})</span>
-                                </button>
-                                
-                                {review.recommend && (
-                                  <span className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                    ✓ Recommends this product
-                                  </span>
-                                )}
-                              </div>
-                              
-                              {review.size && (
-                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                  Size {review.size}
+                          </div>
+                        
+                          {/* Content */}
+                          <div className="mb-4">
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-sm sm:text-base">
+                              {review.title}
+                            </h4>
+                            <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm sm:text-base">
+                              {review.comment}
+                            </p>
+                          </div>
+                        
+                          {/* Footer */}
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-3">
+                              {review.recommend && (
+                                <span className="text-xs sm:text-sm text-green-700 dark:text-green-400 
+                                                 bg-green-50 dark:bg-green-900/30 
+                                                 px-3 py-1 rounded-full flex items-center gap-1.5 font-medium">
+                                  <Check className="w-3.5 h-3.5" />
+                                  Recommends this product
                                 </span>
                               )}
+                        
+                              <button
+                                className="flex items-center gap-1.5 text-xs sm:text-sm 
+                                           text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 
+                                           px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                              >
+                                <ThumbsUp className="w-4 h-4" />
+                                Helpful ({review.helpful})
+                              </button>
                             </div>
-                          </motion.div>
+                        
+                            {review.size && (
+                              <span className="text-xs text-center sm:text-sm text-gray-600 dark:text-gray-300 
+                                               bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full font-medium">
+                                Size {review.size}
+                              </span>
+                            )}
+                          </div>
+                        </motion.div>
+                        
                         );
                       })
                     ) : (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Star className="w-8 h-8 text-gray-400" />
+                      <div className="text-center py-8 sm:py-12">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Star className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                         </div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">No Reviews Yet</h4>
-                        <p className="text-gray-600">Be the first to review this product!</p>
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">No Reviews Yet</h4>
+                        <p className="text-sm sm:text-base text-gray-600">Be the first to review this product!</p>
                       </div>
                     )}
                   </div>
@@ -1472,86 +1473,86 @@ export default function ProductPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -30 }}
                   transition={{ duration: 0.3 }}
-                  className="space-y-8"
+                  className="space-y-6 sm:space-y-8"
                 >
-                  <div className="text-center mb-12">
-                    <h3 className="text-4xl font-bold text-gray-900 mb-4">Shipping & Returns</h3>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                  <div className="text-center mb-8 sm:mb-12">
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Shipping & Returns</h3>
+                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
                       Everything you need to know about delivery and returns
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <div className="space-y-6">
-                      <h4 className="text-2xl font-bold text-gray-900 flex items-center space-x-3">
-                        <Truck className="w-6 h-6 text-gray-500" />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
+                    <div className="space-y-4 sm:space-y-6">
+                      <h4 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center space-x-2 sm:space-x-3">
+                        <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
                         <span>Shipping Information</span>
                       </h4>
                       
-                      <div className="space-y-4">
-                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <Truck className="w-5 h-5 text-gray-600" />
-                            <span className="font-semibold text-gray-900">Free Shipping</span>
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100">
+                          <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                            <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                            <span className="font-semibold text-gray-900 text-sm sm:text-base">Free Shipping</span>
                           </div>
-                          <p className="text-gray-700 text-sm">On orders over ₹999</p>
+                          <p className="text-gray-700 text-xs sm:text-sm">On orders over ₹999</p>
                         </div>
                         
-                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <Clock className="w-5 h-5 text-gray-600" />
-                            <span className="font-semibold text-gray-900">Delivery Time</span>
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100">
+                          <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                            <span className="font-semibold text-gray-900 text-sm sm:text-base">Delivery Time</span>
                           </div>
-                          <p className="text-gray-700 text-sm">2-3 business days</p>
+                          <p className="text-gray-700 text-xs sm:text-sm">2-3 business days</p>
                         </div>
                         
-                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <MapPin className="w-5 h-5 text-gray-600" />
-                            <span className="font-semibold text-gray-900">Tracking</span>
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100">
+                          <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                            <span className="font-semibold text-gray-900 text-sm sm:text-base">Tracking</span>
                           </div>
-                          <p className="text-gray-700 text-sm">Real-time tracking available</p>
+                          <p className="text-gray-700 text-xs sm:text-sm">Real-time tracking available</p>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="space-y-6">
-                      <h4 className="text-2xl font-bold text-gray-900 flex items-center space-x-3">
-                        <RotateCcw className="w-6 h-6 text-gray-500" />
+                    <div className="space-y-4 sm:space-y-6">
+                      <h4 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center space-x-2 sm:space-x-3">
+                        <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
                         <span>Return Policy</span>
                       </h4>
                       
-                      <div className="space-y-4">
-                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <RotateCcw className="w-5 h-5 text-gray-600" />
-                            <span className="font-semibold text-gray-900">30 Day Returns</span>
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100">
+                          <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                            <span className="font-semibold text-gray-900 text-sm sm:text-base">30 Day Returns</span>
                           </div>
-                          <p className="text-gray-700 text-sm">Easy returns for any reason</p>
+                          <p className="text-gray-700 text-xs sm:text-sm">Easy returns for any reason</p>
                         </div>
                         
-                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <Shield className="w-5 h-5 text-gray-600" />
-                            <span className="font-semibold text-gray-900">Money Back Guarantee</span>
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100">
+                          <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                            <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                            <span className="font-semibold text-gray-900 text-sm sm:text-base">Money Back Guarantee</span>
                           </div>
-                          <p className="text-gray-700 text-sm">100% refund guarantee</p>
+                          <p className="text-gray-700 text-xs sm:text-sm">100% refund guarantee</p>
                         </div>
                         
-                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <Check className="w-5 h-5 text-gray-600" />
-                            <span className="font-semibold text-gray-900">No Questions Asked</span>
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100">
+                          <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                            <Check className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                            <span className="font-semibold text-gray-900 text-sm sm:text-base">No Questions Asked</span>
                           </div>
-                          <p className="text-gray-700 text-sm">Simple return process</p>
+                          <p className="text-gray-700 text-xs sm:text-sm">Simple return process</p>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-gradient-to-r from-gray-50 to-white rounded-3xl p-8 border border-gray-100">
-                    <h4 className="text-2xl font-bold text-gray-900 mb-6 text-center">Shipping Zones</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-gray-100">
+                    <h4 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Shipping Zones</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                       {[
                         { zone: 'Local', time: '1-2 days', cost: 'Free' },
                         { zone: 'Metro Cities', time: '2-3 days', cost: '₹99' },
@@ -1563,17 +1564,15 @@ export default function ProductPage() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className="text-center p-4 bg-white rounded-2xl border border-gray-100"
+                          className="text-center p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-gray-100"
                         >
-                          <h5 className="font-semibold text-gray-900 mb-2">{zone.zone}</h5>
-                          <p className="text-sm text-gray-600 mb-1">{zone.time}</p>
-                          <p className="text-lg font-bold text-gray-900">{zone.cost}</p>
+                          <h5 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{zone.zone}</h5>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1">{zone.time}</p>
+                          <p className="text-base sm:text-lg font-bold text-gray-900">{zone.cost}</p>
                         </motion.div>
                       ))}
                     </div>
                   </div>
-                  
-
                 </motion.div>
               )}
             </AnimatePresence>
