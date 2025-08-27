@@ -27,9 +27,9 @@ export default function ProductCard({ img, name, category, price, productId, cla
             className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-110"
           />
         </div>
-        <div className="p-2 sm:p-3 flex flex-col gap- sm:gap-1">
+        <div className="p-2 sm:p-3 flex flex-col gap-1 sm:gap-1">
         <div
-          className={`${poppins.className} font-normal md:font-semibold border-b border-gray-200 pb-1 sm:pb- text-gray-800 text-[12px] sm:text-[14px] leading-snug line-clamp-2`}
+          className={`${poppins.className} font-normal md:font-semibold border-b border-gray-200 pb-1 sm:pb-1 text-gray-800 text-[12px] sm:text-[14px] leading-snug line-clamp-2`}
         >
           {name}
         </div>

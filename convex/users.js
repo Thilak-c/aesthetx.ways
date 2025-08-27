@@ -356,12 +356,14 @@ export const saveProfile = mutation({
 		name: v.optional(v.string()),
 		photoUrl: v.optional(v.string()),
 		interests: v.optional(v.array(v.string())),
+		selectedSizes: v.optional(v.array(v.string())),
 	},
-	handler: async (ctx, { userId, name, photoUrl, interests }) => {
+	handler: async (ctx, { userId, name, photoUrl, interests, selectedSizes }) => {
 		const updateData = { updatedAt: nowIso() };
 		if (name !== undefined) updateData.name = name;
 		if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
 		if (interests !== undefined) updateData.interests = interests;
+		if (selectedSizes !== undefined) updateData.selectedSizes = selectedSizes;
 		
 		await ctx.db.patch(userId, updateData);
 		return { success: true };
@@ -385,12 +387,13 @@ export const savePhoneAndAddress = mutation({
 	args: {
 		userId: v.id("users"),
 		phoneNumber: v.string(),
+		secondaryPhoneNumber: v.optional(v.string()),
 		state: v.string(),
 		city: v.string(),
 		pinCode: v.string(),
 		fullAddress: v.string(),
 	},
-	handler: async (ctx, { userId, phoneNumber, state, city, pinCode, fullAddress }) => {
+	handler: async (ctx, { userId, phoneNumber, secondaryPhoneNumber, state, city, pinCode, fullAddress }) => {
 		const user = await ctx.db.get(userId);
 		if (!user) throw new Error("User not found");
 		
@@ -411,10 +414,16 @@ export const savePhoneAndAddress = mutation({
 			throw new Error("Please enter a valid 6-digit PIN code");
 		}
 		
-		// Save phone and address with lock
-		await ctx.db.patch(userId, {
+		// Save phone and address to both fields for backward compatibility
+		const updateData = {
 			phoneNumber: cleanPhone,
 			phoneNumberLocked: true,
+			address: {
+				state,
+				city,
+				pinCode: cleanPin,
+				fullAddress,
+			},
 			permanentAddress: {
 				state,
 				city,
@@ -422,23 +431,41 @@ export const savePhoneAndAddress = mutation({
 				fullAddress,
 			},
 			permanentAddressLocked: true,
-			onboardingStep: 3,
+			onboardingStep: 4,
 			updatedAt: nowIso(),
-		});
+		};
 		
+		// Add secondary phone if provided
+		if (secondaryPhoneNumber) {
+			const cleanSecondaryPhone = secondaryPhoneNumber.replace(/\D/g, '');
+			if (cleanSecondaryPhone.length === 10 && /^[6-9]/.test(cleanSecondaryPhone)) {
+				updateData.secondaryPhoneNumber = cleanSecondaryPhone;
+			}
+		}
+		
+		await ctx.db.patch(userId, updateData);
 		return { success: true };
 	},
 });
 
 // Complete onboarding
 export const completeOnboarding = mutation({
-	args: { userId: v.id("users") },
-	handler: async (ctx, { userId }) => {
-		await ctx.db.patch(userId, {
+	args: { 
+		userId: v.id("users"),
+		referralSource: v.optional(v.string()),
+	},
+	handler: async (ctx, { userId, referralSource }) => {
+		const updateData = {
 			onboardingCompleted: true,
-			onboardingStep: 5,
+			onboardingStep: 4,
 			updatedAt: nowIso(),
-		});
+		};
+		
+		if (referralSource) {
+			updateData.referralSource = referralSource;
+		}
+		
+		await ctx.db.patch(userId, updateData);
 		return { success: true };
 	},
 });

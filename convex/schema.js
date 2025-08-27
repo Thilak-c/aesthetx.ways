@@ -32,10 +32,12 @@ export default defineSchema({
 		onboardingCompleted: v.optional(v.boolean()),
 		onboardingStep: v.optional(v.number()),
 		interests: v.optional(v.array(v.string())),
-		// Phone and permanent address fields (immutable once set)
+		selectedSizes: v.optional(v.array(v.string())), // Array of user's preferred sizes
+		// Phone fields
 		phoneNumber: v.optional(v.string()),
-		secondaryPhoneNumber: v.optional(v.string()),
+		secondaryPhoneNumber: v.optional(v.string()), // Secondary phone number
 		phoneNumberLocked: v.optional(v.boolean()),
+		// Permanent address fields (immutable once set) - for backward compatibility
 		permanentAddress: v.optional(v.object({
 			state: v.string(),
 			city: v.string(),
@@ -83,6 +85,7 @@ export default defineSchema({
 		name: v.string(),
 		price: v.float64(),
 		subcategories: v.optional(v.string()),
+		type: v.optional(v.array(v.string())), // Array of product types
 		// Size-based inventory tracking
 		availableSizes: v.optional(v.array(v.string())), // ["S", "M", "L", "XL"]
 		sizeStock: v.optional(v.object({
@@ -125,4 +128,68 @@ export default defineSchema({
 	 .index("by_rating", ["rating"])
 	 .index("by_created", ["createdAt"])
 	 .index("by_deleted", ["isDeleted"]),
+
+	// Cart table for storing user cart items
+	cart: defineTable({
+		userId: v.id("users"),
+		productId: v.string(),
+		productName: v.string(),
+		productImage: v.string(),
+		price: v.float64(),
+		size: v.string(),
+		quantity: v.number(),
+		addedAt: v.string(),
+		updatedAt: v.string(),
+		isActive: v.boolean(), // For soft delete/archiving
+	}).index("by_user", ["userId"])
+	 .index("by_product", ["productId"])
+	 .index("by_user_product_size", ["userId", "productId", "size"])
+	 .index("by_active", ["isActive"]),
+
+	// Wishlist table for storing user wishlist items
+	wishlist: defineTable({
+		userId: v.id("users"),
+		productId: v.string(),
+		productName: v.string(),
+		productImage: v.string(),
+		price: v.float64(),
+		category: v.optional(v.string()),
+		addedAt: v.string(),
+		isActive: v.boolean(), // For soft delete/archiving
+	}).index("by_user", ["userId"])
+	 .index("by_product", ["productId"])
+	 .index("by_user_product", ["userId", "productId"])
+	 .index("by_active", ["isActive"]),
+	 orders: defineTable({
+		userId: v.id("users"),
+		orderNumber: v.string(),
+		items: v.array(v.object({
+		  productId: v.string(),
+		  name: v.string(),
+		  price: v.number(),
+		  image: v.string(),
+		  quantity: v.number(),
+		})),
+		shippingDetails: v.object({
+		  fullName: v.string(),
+		  email: v.string(),
+		  phone: v.string(),
+		  address: v.string(),
+		  city: v.string(),
+		  state: v.string(),
+		  pincode: v.string(),
+		  country: v.string(),
+		}),
+		paymentDetails: v.object({
+		  razorpayOrderId: v.string(),
+		  razorpayPaymentId: v.string(),
+		  amount: v.number(),
+		  currency: v.string(),
+		  status: v.string(), // 'pending', 'completed', 'failed'
+		}),
+		orderTotal: v.number(),
+		status: v.string(), // 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled'
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	  }).index("by_user", ["userId"]).index("by_order_number", ["orderNumber"]),
 });

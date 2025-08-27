@@ -5,8 +5,30 @@ import { NextResponse } from "next/server";
 // Handle GET requests (e.g., fetching user data)
 export async function GET(request) {
   try {
+    // Validate request URL
+    if (!request.url) {
+      console.error('Invalid request: missing URL');
+      return NextResponse.json({ error: "Invalid request URL" }, { status: 400 });
+    }
+
+    // Validate URL format
+    try {
+      new URL(request.url);
+    } catch (error) {
+      console.error('Error validating request URL:', error, 'URL:', request.url);
+      return NextResponse.json({ error: "Invalid request URL format" }, { status: 400 });
+    }
+
     // Extract query parameters if needed
-    const { searchParams } = new URL(request.url);
+    let searchParams;
+    try {
+      const url = new URL(request.url);
+      searchParams = url.searchParams;
+    } catch (error) {
+      console.error('Error parsing request URL:', error, 'URL:', request.url);
+      return NextResponse.json({ error: "Invalid request URL format" }, { status: 400 });
+    }
+    
     const userId = searchParams.get("userId");
 
     if (!userId) {
@@ -25,6 +47,12 @@ export async function GET(request) {
 // Handle POST requests (e.g., updating user data)
 export async function POST(request) {
   try {
+    // Validate request URL
+    if (!request.url) {
+      console.error('Invalid request: missing URL');
+      return NextResponse.json({ error: "Invalid request URL" }, { status: 400 });
+    }
+
     const body = await request.json();
     const { userId, ...updateData } = body;
 

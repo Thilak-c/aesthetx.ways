@@ -8,6 +8,7 @@ export default function AddProductPage() {
   const [form, setForm] = useState({
     name: "",
     subcategories: "",
+    type: [],
     category: "",
     price: "",
     description: "",
@@ -26,7 +27,13 @@ export default function AddProductPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "type") {
+      // Handle multiple select for type field
+      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+      setForm((prev) => ({ ...prev, [name]: selectedOptions }));
+    } else {
     setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSizeToggle = (size) => {
@@ -95,6 +102,7 @@ export default function AddProductPage() {
       itemId: crypto.randomUUID(),
       name: form.name,
       subcategories: form.subcategories,
+      type: form.type,
       category: form.category,
       price: parseFloat(form.price),
       description: form.description,
@@ -114,6 +122,7 @@ export default function AddProductPage() {
     setForm({
       name: "",
       subcategories: "",
+      type: [],
       category: "",
       price: "",
       description: "",
@@ -161,6 +170,66 @@ export default function AddProductPage() {
               required
               className="w-full border rounded-lg px-3 py-2"
             />
+          </div>
+
+          {/* Type */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Product Types (Click to Select)</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-3">
+              {[
+                "Baggy Shirts", "Oversized T-Shirts", "Crop Tops", "High Waist Jeans", "Low Rise Pants", "Mom Jeans", "Dad Sneakers", "Chunky Sneakers", "Platform Shoes",
+                "Y2K Fashion", "Vintage", "Retro", "Street Style", "Hip Hop", "Skater Style", "Grunge", "Punk", "Goth", "Emo", "Chokers", "Oversized Hoodies", "Baggy Pants",
+                "Cargo Pants", "Athleisure", "Streetwear", "Trendy Dresses", "Mini Skirts", "Micro Shorts", "Tank Tops", "Tube Tops", "Bralettes", "Mesh Tops", "Fishnet",
+                "Leather Jackets", "Denim Jackets", "Oversized Blazers", "Trendy Accessories", "Chain Necklaces", "Hoop Earrings", "Statement Rings", "Trendy Bags", "Crossbody Bags"
+              ].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      type: prev.type.includes(type)
+                        ? prev.type.filter(t => t !== type)
+                        : [...prev.type, type]
+                    }));
+                  }}
+                  className={`px-3 py-2 lg:px-4 lg:py-2.5 text-sm lg:text-base font-medium rounded-lg border transition-all duration-200 ${
+                    form.type.includes(type)
+                      ? 'bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:scale-105'
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+            {form.type.length > 0 && (
+              <div className="mt-3">
+                <p className="text-sm text-gray-600 mb-2">Selected types:</p>
+                <div className="flex flex-wrap gap-2">
+                  {form.type.map((type, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full flex items-center gap-2"
+                    >
+                      {type}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm((prev) => ({
+                            ...prev,
+                            type: prev.type.filter(t => t !== type)
+                          }));
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-lg font-bold"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Category */}

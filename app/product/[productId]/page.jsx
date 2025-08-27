@@ -2,7 +2,6 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { convex } from "../../../convexClient";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
@@ -43,7 +42,6 @@ export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const { productId } = params;
-  const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -64,6 +62,13 @@ export default function ProductPage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
+  // Cart state
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [cartSuccess, setCartSuccess] = useState(false);
+
+  // Wishlist state
+  const [isWishlisting, setIsWishlisting] = useState(false);
+
   useEffect(() => {
     if (typeof document !== "undefined") {
       const match = document.cookie.match(/(?:^|; )sessionToken=([^;]+)/);
@@ -82,55 +87,164 @@ export default function ProductPage() {
     }
   }, [me, token]);
 
+  const wishlistStatus = useQuery(api.wishlist.isProductWishlisted, me && productId ? { userId: me._id, productId } : "skip");
+  // Update wishlist state when wishlistStatus changes
+  useEffect(() => {
+    if (wishlistStatus) {
+      setIsWishlisted(wishlistStatus.isWishlisted);
+    }
+  }, [wishlistStatus]);
+
   // Reviews data
   const reviews = useQuery(api.reviews.getProductReviews, productId ? { productId } : "skip");
   const reviewStats = useQuery(api.reviews.getProductReviewStats, productId ? { productId } : "skip");
   
   // Mutations
   const addReviewMutation = useMutation(api.reviews.addReview);
+  const addToCartMutation = useMutation(api.cart.addToCart);
+  const toggleWishlistMutation = useMutation(api.wishlist.toggleWishlist);
+  
+  // Cart data
+  const userCart = useQuery(api.cart.getUserCart, me ? { userId: me._id } : "skip");
+  const cartSummary = useQuery(api.cart.getCartSummary, me ? { userId: me._id } : "skip");
+  
+  // Wishlist data
+  const wishlistSummary = useQuery(api.wishlist.getWishlistSummary, me ? { userId: me._id } : "skip");
+  
+  // Product data using new Convex React hooks
+  const product = useQuery(api.products.getProductById, productId ? { productId } : "skip");
+  
+  // Update loading state based on product query
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setIsLoading(true);
-        const result = await convex.query("products:getProductById", { productId });
-        if (result) {
-          setProduct(result);
-        } else {
-          setError("Product not found");
-        }
-      } catch (err) {
-        console.error('Error fetching product:', err);
-        setError(err.message || "Failed to load product");
-      } finally {
-        setIsLoading(false);
+    if (product !== undefined) {
+      setIsLoading(false);
+      if (!product) {
+        setError("Product not found");
       }
-    };
-
-    if (productId) {
-      fetchProduct();
     }
-  }, [productId]);
+  }, [product]);
 
-  const handleAddToCart = () => {
-    // Add to cart functionality
-    console.log('Added to cart:', {
-      product: product.name,
-      size: selectedSize,
-      quantity: quantity,
-      price: product.price,
-      total: product.price * quantity
-    });
+  const handleAddToCart = async () => {
+    if (!isLoggedIn || !me) {
+      setToastMessage('Please login to add items to cart');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    if (!selectedSize) {
+      setToastMessage('Please select a size first');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    if (!product) {
+      setToastMessage('Product information not available');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    // Check if quantity exceeds available stock
+    if (selectedSize && product.sizeStock?.[selectedSize] !== undefined) {
+      const availableStock = product.sizeStock[selectedSize];
+      if (quantity > availableStock) {
+        setToastMessage(`Only ${availableStock} units available in size ${selectedSize}`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        return;
+      }
+    }
+
+    setIsAddingToCart(true);
+    try {
+      const result = await addToCartMutation({
+        userId: me._id,
+        productId: productId,
+        productName: product.name,
+        productImage: product.mainImage,
+        price: product.price,
+        size: selectedSize,
+        quantity: quantity,
+      });
+
+      if (result.success) {
+        setCartSuccess(true);
+        setToastMessage(`${product.name} (Size: ${selectedSize}, Qty: ${quantity}) ${result.action} to cart!`);
+        setShowToast(true);
+        
+        // Reset quantity to 1 after successful add
+        setQuantity(1);
+        
+        // Hide success state after 3 seconds
+        setTimeout(() => setCartSuccess(false), 3000);
+        setTimeout(() => setShowToast(false), 3000);
+        
+
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      setToastMessage(error.message || 'Failed to add item to cart');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const handleBuyNow = () => {
     // Buy now functionality
-    console.log('Buy now:', {
-      product: product.name,
-      size: selectedSize,
-      quantity: quantity,
-      price: product.price,
-      total: product.price * quantity
-    });
+                    alert('Payment integration pending. This feature will be available soon.');
+
+  };
+
+  const handleWishlistToggle = async () => {
+    if (!isLoggedIn || !me) {
+      setToastMessage('Please login to manage your wishlist');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    if (!product) {
+      setToastMessage('Product information not available');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    setIsWishlisting(true);
+    try {
+      const result = await toggleWishlistMutation({
+        userId: me._id,
+        productId: productId,
+        productName: product.name,
+        productImage: product.mainImage,
+        price: product.price,
+        category: product.category,
+      });
+
+      if (result.success) {
+        setIsWishlisted(result.isWishlisted);
+        setToastMessage(result.message);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        
+        console.log('Wishlist updated:', {
+          product: product.name,
+          action: result.action,
+          isWishlisted: result.isWishlisted
+        });
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error);
+      setToastMessage(error.message || 'Failed to update wishlist');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } finally {
+      setIsWishlisting(false);
+    }
   };
 
   const handleAddReview = async () => {
@@ -210,19 +324,57 @@ export default function ProductPage() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
+          className="text-center space-y-4 max-w-md mx-auto px-4"
         >
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
             <X className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Oops! Something went wrong</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Product Loading Error</h2>
           <p className="text-red-600 text-lg">{error}</p>
-          <button 
-            onClick={() => router.back()}
-            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
-          >
-            Go Back
-          </button>
+          
+          <div className="text-left text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
+            <p className="font-semibold mb-2">Debug Information:</p>
+            <p>Product ID: {productId}</p>
+            <p>Convex Test: {testResult || 'Failed'}</p>
+            <p>Products Count: {allProducts?.length || 'Unknown'}</p>
+            <p>Loading State: {isLoading ? 'Yes' : 'No'}</p>
+            {debugProductIds && debugProductIds.length > 0 && (
+              <div className="mt-2">
+                <p className="font-semibold">Available Product IDs:</p>
+                <div className="text-xs space-y-1 max-h-32 overflow-y-auto">
+                  {debugProductIds.slice(0, 5).map((p, i) => (
+                    <div key={i} className="bg-white p-1 rounded">
+                      <span className="font-mono">{p.itemId || p._id}</span> - {p.name}
+                    </div>
+                  ))}
+                  {debugProductIds.length > 5 && (
+                    <p className="text-gray-500">... and {debugProductIds.length - 5} more</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+            >
+              Retry
+            </button>
+            <button 
+              onClick={() => router.back()}
+              className="w-full px-6 py-3 bg-white text-gray-900 rounded-xl font-medium border-2 border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+            >
+              Go Back
+            </button>
+            <a 
+              href="/debug/products"
+              className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors text-center block"
+            >
+              View Database Debug
+            </a>
+          </div>
         </motion.div>
       </div>
     );
@@ -297,6 +449,31 @@ export default function ProductPage() {
             </motion.button>
             
             <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-6">
+              {/* Wishlist Summary */}
+              
+              {/* Cart Icon with Badge */}
+              {isLoggedIn && (
+                <Link href="/cart">
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative p-1.5 sm:p-2 lg:p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg sm:rounded-xl transition-all duration-200"
+                    title="View Cart"
+                  >
+                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                    {cartSummary && cartSummary.totalItems > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-transparent text-black text-xs rounded-full flex items-center justify-center font-bold"
+                      >
+                        {cartSummary.totalItems > 99 ? '99+' : cartSummary.totalItems}
+                      </motion.div>
+                    )}
+                  </motion.button>
+                </Link>
+              )}
+              
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -324,14 +501,20 @@ export default function ProductPage() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setIsWishlisted(!isWishlisted)}
+                onClick={handleWishlistToggle}
+                disabled={isWishlisting || !isLoggedIn}
                 className={`p-1.5 sm:p-2 lg:p-3 rounded-lg sm:rounded-xl transition-all duration-200 ${
                   isWishlisted 
                     ? 'text-red-500 hover:text-red-600 hover:bg-red-50' 
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
+                } ${isWishlisting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={isLoggedIn ? (isWishlisted ? 'Remove from wishlist' : 'Add to wishlist') : 'Login to manage wishlist'}
               >
-                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+                {isWishlisting ? (
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+                )}
               </motion.button>
             </div>
           </div>
@@ -368,14 +551,14 @@ export default function ProductPage() {
             <div className="relative group">
               <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-lg sm:shadow-xl lg:shadow-2xl">
                 <Image
-                  src={product.mainImage}
+                  src={selectedImage === 0 ? product.mainImage : product.otherImages[selectedImage - 1]}
                   alt={product.name}
                   fill
                   className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                 />
                 
                 {/* Image Overlay */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
+                <div className="absolute inset-0 bg-black/0 group-hover: transition-all duration-300" />
                 
                 {/* Quick View Button */}
                 <motion.button
@@ -390,7 +573,7 @@ export default function ProductPage() {
             
             {/* Enhanced Thumbnail Images */}
             <div className="flex space-x-2 sm:space-x-3 lg:space-x-4 overflow-x-auto pb-2">
-              {[product.mainImage, product.mainImage, product.mainImage, product.mainImage].map((img, index) => (
+              {[product.mainImage, product.otherImages[0], product.otherImages[1], product.otherImages[2], product.otherImages[3]].map((img, index) => (
                 <motion.button
                   key={index}
                   whileHover={{ scale: 1.05 }}
@@ -626,19 +809,41 @@ export default function ProductPage() {
                 disabled={
                   !selectedSize || 
                   (selectedSize && product.sizeStock?.[selectedSize] === 0) ||
-                  (product.availableSizes && product.availableSizes.length > 0 && !selectedSize)
+                  (product.availableSizes && product.availableSizes.length > 0 && !selectedSize) ||
+                  isAddingToCart ||
+                  !isLoggedIn
                 }
-                className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white py-3 sm:py-4 lg:py-5 px-3 sm:px-4 lg:px-6 rounded-lg sm:rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:from-gray-800 hover:to-gray-700 transition-all duration-300 flex items-center justify-center space-x-2 sm:space-x-2 lg:space-x-3 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-900 disabled:hover:to-gray-800"
+                className={`w-full py-3 sm:py-4 lg:py-5 px-3 sm:px-4 lg:px-6 rounded-lg sm:rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg transition-all duration-300 flex items-center justify-center space-x-2 sm:space-x-2 lg:space-x-3 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed ${
+                  cartSuccess 
+                    ? 'bg-black  text-white' 
+                    : 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white'
+                }`}
               >
-                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                <span className="text-xs sm:text-sm lg:text-base">
-                  {!selectedSize && product.availableSizes && product.availableSizes.length > 0
-                    ? 'Select Size to Add to Cart'
-                    : selectedSize && product.sizeStock?.[selectedSize] === 0
-                      ? `Size ${selectedSize} Out of Stock`
-                      : `Add to Cart - ₹${product.price * quantity}`
-                  }
-                </span>
+                {isAddingToCart ? (
+                  <>
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-xs sm:text-sm lg:text-base">Adding to Cart...</span>
+                  </>
+                ) : cartSuccess ? (
+                  <>
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                    <span className="text-xs sm:text-sm lg:text-base">Added to Cart!</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                    <span className="text-xs sm:text-sm lg:text-base">
+                      {!isLoggedIn
+                        ? 'Login to Add to Cart'
+                        : !selectedSize && product.availableSizes && product.availableSizes.length > 0
+                          ? 'Select Size to Add to Cart'
+                          : selectedSize && product.sizeStock?.[selectedSize] === 0
+                            ? `Size ${selectedSize} Out of Stock`
+                            : `Add to Cart`
+                      }
+                    </span>
+                  </>
+                )}
               </motion.button>
               
               <motion.button
@@ -648,20 +853,77 @@ export default function ProductPage() {
                 disabled={
                   !selectedSize || 
                   (selectedSize && product.sizeStock?.[selectedSize] === 0) ||
-                  (product.availableSizes && product.availableSizes.length > 0 && !selectedSize)
+                  (product.availableSizes && product.availableSizes.length > 0 && !selectedSize) ||
+                  !isLoggedIn
                 }
                 className="w-full bg-white text-gray-900 py-3 sm:py-4 lg:py-5 px-3 sm:px-4 lg:px-6 rounded-lg sm:rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg border-3 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-900"
               >
                 <span className="text-xs sm:text-sm lg:text-base">
-                  {!selectedSize && product.availableSizes && product.availableSizes.length > 0
-                    ? 'Select Size to Buy Now'
-                    : selectedSize && product.sizeStock?.[selectedSize] === 0
-                      ? `Size ${selectedSize} Out of Stock`
-                      : `Buy Now - ₹${product.price * quantity}`
+                  {!isLoggedIn
+                    ? 'Login to Buy Now'
+                    : !selectedSize && product.availableSizes && product.availableSizes.length > 0
+                      ? 'Select Size to Buy Now'
+                      : selectedSize && product.sizeStock?.[selectedSize] === 0
+                        ? `Size ${selectedSize} Out of Stock`
+                        : `- Buy Now - `
                   }
                 </span>
               </motion.button>
             </motion.div>
+
+            {/* View Cart Button - Shows after successful add */}
+            {/* {cartSuccess && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4"
+              >
+                <Link href="/cart">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    <span>View Cart ({cartSummary?.totalItems || 0} items)</span>
+                  </motion.button>
+                </Link>
+              </motion.div>
+            )} */}
+
+            {/* Login Prompt - Shows when not logged in */}
+            {!isLoggedIn && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl text-center"
+              >
+                <Lock className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                <p className="text-sm text-blue-800 mb-3">
+                  Login to add items to cart, manage your wishlist, and save your preferences
+                </p>
+                <div className="flex items-center justify-center space-x-3">
+                  <Link href="/login">
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Login
+                    </motion.button>
+                  </Link>
+                  <Link href="/signup">
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-4 py-2 bg-white text-blue-600 rounded-lg text-sm font-medium border border-blue-600 hover:bg-blue-50 transition-colors"
+                    >
+                      Sign Up
+                    </motion.button>
+                  </Link>
+                </div>
+              </motion.div>
+            )}
 
             {/* Enhanced Features */}
             <motion.div 
@@ -671,9 +933,7 @@ export default function ProductPage() {
               className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 pt-4 sm:pt-6 lg:pt-8 border-t border-gray-200 ${fontClasses.poppins}`}
             >
               <div className="flex items-center space-x-2.5 sm:space-x-3 lg:space-x-4 p-2.5 sm:p-3 lg:p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl lg:rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
-                <div className="p-1.5 sm:p-2 lg:p-3 bg-gray-100 rounded-md sm:rounded-lg lg:rounded-xl">
-                  <Truck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-gray-600" />
-                </div>
+                
                 <div>
                   <p className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base">Free Shipping</p>
                   <p className="text-xs sm:text-sm text-gray-600">On orders over ₹999</p>

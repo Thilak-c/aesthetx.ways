@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
 // Existing insert mutation
 export const insert = mutation(async ({ db }, product) => {
   await db.insert("products", {
@@ -79,11 +80,49 @@ export const debugProducts = query(async ({ db }) => {
 });
 
 // Get single product by _id for public product pages
-export const getProductById = query(async ({ db }, { productId }) => {
-  return await db
-    .query("products")
-    .filter(q => q.eq(q.field("_id"), productId))
-    .unique();
+export const getProductById = query({
+  args: { productId: v.string() },
+  handler: async (ctx, { productId }) => {
+    // First try to find by itemId (which is the public identifier)
+    let product = await ctx.db
+      .query("products")
+      .filter(q => q.eq(q.field("itemId"), productId))
+      .filter(q => q.eq(q.field("isDeleted"), undefined))
+      .unique();
+    
+    // If not found by itemId, try to find by _id (fallback)
+    if (!product) {
+      try {
+        product = await ctx.db.get(productId);
+        // Check if it's a valid product and not deleted
+        if (product && product.isDeleted === true) {
+          product = null;
+        }
+      } catch (error) {
+        product = null;
+      }
+    }
+    
+    return product;
+  },
+});
+
+// Get multiple products by IDs for wishlist/cart pages
+export const getProductsByIds = query({
+  args: { productIds: v.array(v.string()) },
+  handler: async (ctx, { productIds }) => {
+    if (productIds.length === 0) return [];
+    
+    const products = await ctx.db
+      .query("products")
+      .filter(q => q.and(
+        q.neq(q.field("isDeleted"), true),
+        q.or(...productIds.map(id => q.eq(q.field("itemId"), id)))
+      ))
+      .collect();
+    
+    return products;
+  },
 });
 
 // Get top 10 products of the week (by sales)
