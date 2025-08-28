@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -17,8 +17,10 @@ import {
   User,
   Phone,
   Mail,
-  Calendar
+  Calendar,
+  AlertCircle,
 } from "lucide-react";
+import { Smartphone, Landmark, Wallet, Banknote, Home } from "lucide-react";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -26,19 +28,31 @@ export default function CheckoutPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Form states
   const [shippingDetails, setShippingDetails] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    country: 'India'
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    country: "India",
+  });
+
+  const [useDefaultAddress, setUseDefaultAddress] = useState(true);
+  const [customAddress, setCustomAddress] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    country: "India",
   });
 
   useEffect(() => {
@@ -54,49 +68,129 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (me) {
       setIsLoggedIn(true);
-      console.log('User object:', me); // Debug log
+      console.log("User object:", me); // Debug log
       
       // Pre-fill shipping details with user data if available
-      if (me.name) setShippingDetails(prev => ({ ...prev, fullName: me.name }));
-      if (me.email) setShippingDetails(prev => ({ ...prev, email: me.email }));
-      if (me.phoneNumber) setShippingDetails(prev => ({ ...prev, phone: me.phoneNumber }));
+      if (me.name)
+        setShippingDetails((prev) => ({ ...prev, fullName: me.name }));
+      if (me.email)
+        setShippingDetails((prev) => ({ ...prev, email: me.email }));
+      if (me.phoneNumber)
+        setShippingDetails((prev) => ({ ...prev, phone: me.phoneNumber }));
       
       // Handle address fields with proper type checking
-      if (me.address && typeof me.address === 'object') {
+      if (me.address && typeof me.address === "object") {
         // Extract address fields from nested structure
         if (me.address.fullAddress) {
-          setShippingDetails(prev => ({ ...prev, address: me.address.fullAddress }));
+          setShippingDetails((prev) => ({
+            ...prev,
+            address: me.address.fullAddress,
+          }));
         }
         if (me.address.city) {
-          setShippingDetails(prev => ({ ...prev, city: me.address.city }));
+          setShippingDetails((prev) => ({ ...prev, city: me.address.city }));
         }
         if (me.address.state) {
-          setShippingDetails(prev => ({ ...prev, state: me.address.state }));
+          setShippingDetails((prev) => ({ ...prev, state: me.address.state }));
         }
         if (me.address.pinCode) {
-          setShippingDetails(prev => ({ ...prev, pincode: me.address.pinCode }));
+          setShippingDetails((prev) => ({
+            ...prev,
+            pincode: me.address.pinCode,
+          }));
         }
-      } else if (me.address && typeof me.address === 'string') {
+      } else if (me.address && typeof me.address === "string") {
         // Fallback for string address
-        setShippingDetails(prev => ({ ...prev, address: me.address }));
+        setShippingDetails((prev) => ({ ...prev, address: me.address }));
       } else {
         // Clear address fields if no valid data
         clearInvalidAddressData();
       }
       
-      if (me.city && typeof me.city === 'string') setShippingDetails(prev => ({ ...prev, city: me.city }));
-      if (me.state && typeof me.state === 'string') setShippingDetails(prev => ({ ...prev, state: me.state }));
-      if (me.pincode && typeof me.pincode === 'string') setShippingDetails(prev => ({ ...prev, pincode: me.pincode }));
+      if (me.city && typeof me.city === "string")
+        setShippingDetails((prev) => ({ ...prev, city: me.city }));
+      if (me.state && typeof me.state === "string")
+        setShippingDetails((prev) => ({ ...prev, state: me.state }));
+      if (me.pincode && typeof me.pincode === "string")
+        setShippingDetails((prev) => ({ ...prev, pincode: me.pincode }));
+
+      // Also set custom address with same data
+      setCustomAddress({
+        fullName: me.name || "",
+        email: me.email || "",
+        phone: me.phoneNumber || "",
+        address: me.address?.fullAddress || me.address || "",
+        city: me.address?.city || me.city || "",
+        state: me.address?.state || me.state || "",
+        pincode: me.address?.pinCode || me.pincode || "",
+        country: "India",
+      });
     } else if (token && !me) {
       setIsLoggedIn(false);
     }
   }, [me, token]);
 
-  // Cart data and mutations
-  const userCart = useQuery(api.cart.getUserCart, me ? { userId: me._id } : "skip");
+  // Cart data
+  const userCart = useQuery(
+    api.cart.getUserCart,
+    me ? { userId: me._id } : "skip"
+  );
   const removeFromCartMutation = useMutation(api.cart.removeFromCart);
   const clearCartMutation = useMutation(api.cart.clearCart);
-  const createOrderMutation = useMutation(api.orders.createOrder);
+
+  // Stock validation
+  const stockValidation = useQuery(
+    api.products.validateStockForCheckout,
+    userCart?.items
+      ? {
+          cartItems: userCart.items.map((item) => ({
+            productId: item.productId,
+            size: item.size,
+            quantity: item.quantity,
+          })),
+        }
+      : "skip"
+  );
+
+  // Debug: Log cart items and stock validation
+  useEffect(() => {
+    if (userCart?.items) {
+      console.log(
+        "Cart items for stock validation:",
+        userCart.items.map((item) => ({
+          productId: item.productId,
+          size: item.size,
+          quantity: item.quantity,
+        }))
+      );
+    }
+    if (stockValidation) {
+      console.log("Stock validation result:", stockValidation);
+    }
+  }, [userCart?.items, stockValidation]);
+
+  // Debug function to check database
+  const checkDatabase = async () => {
+    try {
+      console.log("=== CHECKING DATABASE ===");
+
+      // Check if the specific product exists
+      const response = await fetch("/api/debug-product", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          itemId: userCart?.items?.[0]?.productId,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Database check result:", data);
+    } catch (error) {
+      console.error("Error checking database:", error);
+    }
+  };
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -105,12 +199,12 @@ export default function CheckoutPage() {
   };
 
   const clearInvalidAddressData = () => {
-    setShippingDetails(prev => ({
+    setShippingDetails((prev) => ({
       ...prev,
-      address: '',
-      city: '',
-      state: '',
-      pincode: ''
+      address: "",
+      city: "",
+      state: "",
+      pincode: "",
     }));
   };
 
@@ -121,9 +215,9 @@ export default function CheckoutPage() {
         resolve(window.Razorpay);
         return;
       }
-      
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(window.Razorpay);
       script.onerror = () => resolve(null);
       document.body.appendChild(script);
@@ -132,14 +226,14 @@ export default function CheckoutPage() {
 
   const createRazorpayOrder = async () => {
     try {
-      const response = await fetch('/api/create-order', {
-        method: 'POST',
+      const response = await fetch("/api/create-order", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           amount: finalTotal,
-          currency: 'INR',
+          currency: "INR",
           receipt: `order_${Date.now()}`,
           notes: {
             userId: me._id,
@@ -150,19 +244,33 @@ export default function CheckoutPage() {
 
       const data = await response.json();
       if (!data.success) {
-        throw new Error(data.error || 'Failed to create order');
+        throw new Error(data.error || "Failed to create order");
       }
 
       return data.order;
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error("Error creating order:", error);
       throw error;
     }
   };
 
   const handlePayment = async () => {
     if (!isFormValid()) {
-      showToastMessage('Please fill all required fields');
+      showToastMessage("Please fill all required fields");
+      return;
+    }
+
+    // Check stock availability before proceeding
+    if (
+      stockValidation &&
+      stockValidation.results &&
+      !stockValidation.allValid
+    ) {
+      const invalidItems = stockValidation.results.filter((r) => !r.valid);
+      const errorMessage = invalidItems
+        .map((item) => `${item.productId}: ${item.error}`)
+        .join(", ");
+      showToastMessage(`Stock validation failed: ${errorMessage}`);
       return;
     }
 
@@ -171,39 +279,43 @@ export default function CheckoutPage() {
       // Load Razorpay script
       const Razorpay = await loadRazorpayScript();
       if (!Razorpay) {
-        throw new Error('Failed to load Razorpay');
+        throw new Error("Failed to load Razorpay");
       }
 
       // Create order
       const order = await createRazorpayOrder();
-      console.log('Razorpay order created:', order);
+      console.log("Razorpay order created:", order);
 
       // Configure Razorpay options
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_RAMQAuyK0c66gh',
+        key:
+          process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_RAMQAuyK0c66gh",
         amount: order.amount,
         currency: order.currency,
-        name: 'AesthetX Ways',
+        name: "AesthetX Ways",
         description: `Order for ${shippingDetails.fullName}`,
         order_id: order.id,
         prefill: {
-          name: shippingDetails.fullName,
-          email: shippingDetails.email,
-          contact: shippingDetails.phone,
+          name: getCurrentShippingDetails().fullName,
+          email: getCurrentShippingDetails().email,
+          contact: getCurrentShippingDetails().phone,
         },
         notes: {
-          address: `${shippingDetails.address}, ${shippingDetails.city}, ${shippingDetails.state} - ${shippingDetails.pincode}`,
+          name: getCurrentShippingDetails().fullName,
+          email: getCurrentShippingDetails().email,
+          phone: getCurrentShippingDetails().phone,
+          address: `${getCurrentShippingDetails().address}, ${getCurrentShippingDetails().city}, ${getCurrentShippingDetails().state} - ${getCurrentShippingDetails().pincode}`,
         },
         theme: {
-          color: '#000000',
+          color: "#000000",
         },
         handler: async function (response) {
           try {
             // Verify payment
-            const verifyResponse = await fetch('/api/verify-payment', {
-              method: 'POST',
+            const verifyResponse = await fetch("/api/verify-payment", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
@@ -216,81 +328,180 @@ export default function CheckoutPage() {
             if (verifyData.success) {
               // Create order in database
               try {
-                const orderResult = await createOrderMutation({
-                  userId: me._id,
-                  items: userCart.items.map(item => ({
-                    productId: item.productId,
-                    productName: item.productName,
-                    productImage: item.productImage,
-                    price: item.price,
-                    size: item.size,
-                    quantity: item.quantity,
-                  })),
-                  shippingDetails: shippingDetails,
-                  paymentDetails: {
+                // Debug: Log the cart items being sent
+                const mappedCartItems = userCart.items.map((item) => ({
+                  productId: item.productId,
+                  name: item.productName,
+                  price: item.price,
+                  quantity: item.quantity,
+                  size: item.size,
+                  image: item.productImage,
+                }));
+
+                console.log(
+                  "Cart items being sent to order API:",
+                  mappedCartItems
+                );
+                console.log("Original cart items:", userCart.items);
+
+                const orderResponse = await fetch("/api/create-order-db", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    userId: me._id,
+                    userEmail: getCurrentShippingDetails().email,
+                    shippingDetails: getCurrentShippingDetails(),
+                    cartItems: mappedCartItems,
+                    totalAmount: finalTotal,
                     razorpayOrderId: response.razorpay_order_id,
                     razorpayPaymentId: response.razorpay_payment_id,
-                    amount: finalTotal,
-                    currency: 'INR',
-                    status: 'completed',
-                  },
-                  orderTotal: finalTotal,
+                    orderStatus: "confirmed",
+                    paymentStatus: "paid",
+                    deliveryStatus: "pending",
+                  }),
                 });
 
-                // Clear the cart after successful order
-                await clearCartMutation({ userId: me._id });
-
-                showToastMessage('Payment successful! Order placed successfully.');
-                
-                // Redirect to success page with order details
-                setTimeout(() => {
-                  router.push(`/order-success?orderNumber=${orderResult.orderNumber}`);
-                }, 2000);
-              } catch (dbError) {
-                console.error('Database error:', dbError);
-                showToastMessage('Order created but database update failed. Please contact support.');
+                const orderData = await orderResponse.json();
+                if (orderData.success) {
+                  showToastMessage(
+                    "Payment successful! Order placed successfully."
+                  );
+                  // Clear cart after successful order
+                  try {
+                    // Clear entire cart at once (more efficient)
+                    await clearCartMutation({ userId: me._id });
+                    console.log("Cart cleared successfully");
+                  } catch (error) {
+                    console.error("Error clearing cart:", error);
+                    // Don't block the success flow if cart clearing fails
+                  }
+                  setTimeout(() => {
+                    router.push("/order-success");
+                  }, 2000);
+                } else {
+                  showToastMessage(
+                    "Order created but failed to save to database. Please contact support."
+                  );
+                }
+              } catch (error) {
+                console.error("Error creating order in database:", error);
+                showToastMessage(
+                  "Payment successful but order creation failed. Please contact support."
+                );
               }
             } else {
-              showToastMessage('Payment verification failed. Please contact support.');
+              showToastMessage(
+                "Payment verification failed. Please contact support."
+              );
             }
           } catch (error) {
-            console.error('Payment verification error:', error);
-            showToastMessage('Payment verification failed. Please contact support.');
+            console.error("Payment verification error:", error);
+            showToastMessage(
+              "Payment verification failed. Please contact support."
+            );
           }
         },
         modal: {
           ondismiss: function () {
+            console.log("Razorpay modal dismissed");
             setIsProcessing(false);
           },
         },
       };
 
       // Open Razorpay checkout
-      console.log('Razorpay options:', options);
+      console.log("Razorpay options:", options);
       const razorpayInstance = new Razorpay(options);
+
+      // Add event listeners for better state management
+      razorpayInstance.on("payment.failed", function (response) {
+        console.log("Payment failed:", response.error);
+        showToastMessage("Payment failed. Please try again.");
+        setIsProcessing(false);
+      });
+
+      razorpayInstance.on("payment.cancelled", function (response) {
+        console.log("Payment cancelled:", response);
+        showToastMessage("Payment was cancelled.");
+        setIsProcessing(false);
+      });
+
       razorpayInstance.open();
+
+      // Reset processing state after a timeout as fallback
+      setTimeout(() => {
+        if (isProcessing) {
+          console.log("Resetting processing state after timeout");
+          setIsProcessing(false);
+        }
+      }, 10000); // 10 seconds timeout
     } catch (error) {
-      console.error('Payment error:', error);
-      showToastMessage(error.message || 'Failed to process payment');
+      console.error("Payment error:", error);
+      showToastMessage(error.message || "Failed to process payment");
       setIsProcessing(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setShippingDetails(prev => ({
+    if (useDefaultAddress) {
+      setShippingDetails((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    } else {
+      setCustomAddress((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
+  };
+
+  const handleAddressToggle = (useDefault) => {
+    setUseDefaultAddress(useDefault);
+    if (useDefault) {
+      // Switch back to default address
+      setShippingDetails((prev) => ({
       ...prev,
-      [field]: value
-    }));
+        fullName: me?.name || "",
+        email: me?.email || "",
+        phone: me?.phoneNumber || "",
+        address: me?.address?.fullAddress || me?.address || "",
+        city: me?.address?.city || me?.city || "",
+        state: me?.address?.state || me?.state || "",
+        pincode: me?.address?.pinCode || me?.pincode || "",
+        country: "India",
+      }));
+    } else {
+      // Switch to custom address - start with empty form
+      setCustomAddress({
+        fullName: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        state: "",
+        pincode: "",
+        country: "India",
+      });
+    }
+  };
+
+  // Get current shipping details based on selection
+  const getCurrentShippingDetails = () => {
+    return useDefaultAddress ? shippingDetails : customAddress;
   };
 
   const isFormValid = () => {
+    const currentDetails = getCurrentShippingDetails();
     return (
-      shippingDetails.fullName &&
-      shippingDetails.email &&
-      shippingDetails.phone &&
-      shippingDetails.address &&
-      shippingDetails.city &&
-      shippingDetails.pincode
+      currentDetails.fullName &&
+      currentDetails.email &&
+      currentDetails.phone &&
+      currentDetails.address &&
+      currentDetails.city &&
+      currentDetails.pincode
     );
   };
 
@@ -306,9 +517,11 @@ export default function CheckoutPage() {
             <Lock className="w-8 h-8 text-gray-600" />
           </div>
           <h2 className="text-xl font-bold text-gray-900">Login Required</h2>
-          <p className="text-sm text-gray-600">Please login to proceed with checkout.</p>
+          <p className="text-sm text-gray-600">
+            Please login to proceed with checkout.
+          </p>
           <button 
-            onClick={() => router.push('/login')}
+            onClick={() => router.push("/login")}
             className="px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
           >
             Login
@@ -330,9 +543,11 @@ export default function CheckoutPage() {
             <ShoppingCart className="w-8 h-8 text-gray-600" />
           </div>
           <h2 className="text-xl font-bold text-gray-900">Cart is Empty</h2>
-          <p className="text-sm text-gray-600">Please add items to your cart before checkout.</p>
+          <p className="text-sm text-gray-600">
+            Please add items to your cart before checkout.
+          </p>
           <button 
-            onClick={() => router.push('/cart')}
+            onClick={() => router.push("/cart")}
             className="px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
           >
             Go to Cart
@@ -343,7 +558,8 @@ export default function CheckoutPage() {
   }
 
   const deliveryFee = userCart.totalPrice >= 999 ? 0 : 50;
-  const finalTotal = userCart.totalPrice + (userCart.totalItems * 9) + deliveryFee;
+  const finalTotal =
+    userCart.totalPrice + userCart.totalItems * 9 + deliveryFee;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -363,7 +579,9 @@ export default function CheckoutPage() {
               className="flex items-center text-gray-600 hover:text-gray-900 transition-all duration-200 group"
             >
               <ArrowLeft className="w-4 h-4 text-black lg:w-5 lg:h-5 mr-1.5 lg:mr-2 group-hover:-translate-x-1 transition-transform" />
-              <span className="font-medium text-sm hidden text-black sm:inline">Back</span>
+              <span className="font-medium text-sm hidden text-black sm:inline">
+                Back
+              </span>
             </motion.button>
             
             <h1 className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900 flex justify-center items-center space-x-1.5 lg:space-x-2">
@@ -402,18 +620,10 @@ export default function CheckoutPage() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-2xl border border-gray-200 p-6 lg:p-8 shadow-sm"
+              className="bg-white rounded-2xl border border-gray-200 p-6 lg:p-8 shadow-lg"
             >
               {/* Progress Steps */}
               {/* Step Navigation */}
-              <div className="flex items-center justify-center space-x-8 mb-8">
-                <div className={`flex items-center space-x-2 text-black`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-black text-white`}>
-                    1
-                  </div>
-                  <span className="font-medium">Shipping Details</span>
-                </div>
-              </div>
 
               {/* Shipping Details */}
                 <motion.div
@@ -422,248 +632,577 @@ export default function CheckoutPage() {
                   className="space-y-6"
                 >
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-black" />
+                  <div className="md:w-12 md:h-12 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Truck className="md:w-6 md:h-6 h-6 w-6 text-gray-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">Shipping Details</h2>
-                      <p className="text-gray-600">Where should we deliver your order?</p>
+                    <h2 className="text-lg md:text-2xl font-bold text-gray-900">
+                      Shipping Details
+                    </h2>
+                    <p className="text-gray-600 text-sm md:text-lg">
+                      Where should we deliver your order?
+                    </p>
+                  </div>
+                </div>
+
+                {/* Address Selection */}
+                <div className="md:bg-white md:border md:border-gray-50 rounded-lg md:p-4 p-1 mb-4 md:shadow-sm sm:rounded-xl sm:p-6 sm:mb-6">
+                  <h3 className="text-base sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
+                    Delivery Address
+                  </h3>
+
+                  <div className="space-y-3 sm:space-y-4">
+                    {/* Default Address */}
+                    <label
+                      onClick={() => handleAddressToggle(true)}
+                      className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${
+                        useDefaultAddress
+                          ? "border-gray-900 bg-gray-100 shadow-md"
+                          : "border-gray-200 hover:border-gray-400"
+                      }`}
+                    >
+                      {/* Radio */}
+                      <div className="flex-shrink-0">
+                        <div
+                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${
+                            useDefaultAddress
+                              ? "border-gray-50 bg-gray-900"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {useDefaultAddress && (
+                            <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Icon + Text */}
+                      <div className="flex items-center space-x-2">
+                        <Home className="w-5 h-5 text-gray-700" />
+                        <div>
+                          <p className="font-semibold text-sm sm:text-lg">
+                            Deliver to Default Address
+                          </p>
+                          <p className="text-gray-600 text-xs sm:text-sm">
+                            {me?.address?.fullAddress ||
+                              me?.address ||
+                              "No default address set"}
+                          </p>
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* Custom Address */}
+                    <label
+                      onClick={() => handleAddressToggle(false)}
+                      className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${
+                        !useDefaultAddress
+                          ? "border-gray-900 bg-gray-100 shadow-md"
+                          : "border-gray-200 hover:border-gray-400"
+                      }`}
+                    >
+                      {/* Radio */}
+                      <div className="flex-shrink-0">
+                        <div
+                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${
+                            !useDefaultAddress
+                              ? "border-gray-900 bg-gray-900"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {!useDefaultAddress && (
+                            <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Icon + Text */}
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="w-5 h-5 text-gray-700" />
+                        <div>
+                          <p className="font-semibold text-sm sm:text-lg">
+                            Deliver to Another Address
+                          </p>
+                          <p className="text-gray-600 text-xs sm:text-sm">
+                            Enter a different delivery address
+                          </p>
+                        </div>
+                      </div>
+                    </label>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Address Form – Only Show if Custom */}
+                <AnimatePresence>
+                  {!useDefaultAddress && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, y: -20 }}
+                      animate={{ opacity: 1, height: "auto", y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: -20 }}
+                      transition={{
+                        duration: 0.4,
+                        ease: "easeInOut",
+                        opacity: { duration: 0.3 },
+                        height: { duration: 0.4 },
+                      }}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 sm:gap-4 sm:mt-6 overflow-hidden"
+                    >
+                      {/* Full Name */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Full Name *
                       </label>
                       <input
                         type="text"
-                        value={shippingDetails.fullName}
-                        onChange={(e) => handleInputChange('fullName', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          value={getCurrentShippingDetails().fullName}
+                          onChange={(e) =>
+                            handleInputChange("fullName", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
                         placeholder="Enter your full name"
                       />
                     </div>
 
+                      {/* Email */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Email *
                       </label>
                       <input
                         type="email"
-                        value={shippingDetails.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          value={getCurrentShippingDetails().email}
+                          onChange={(e) =>
+                            handleInputChange("email", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
                         placeholder="Enter your email address"
                       />
                     </div>
 
+                      {/* Phone */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone Number *
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                          Phone *
                       </label>
                       <input
                         type="tel"
-                        value={shippingDetails.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                        placeholder="Enter your 10-digit phone number"
+                          value={getCurrentShippingDetails().phone}
+                          onChange={(e) =>
+                            handleInputChange("phone", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                          placeholder="10 digits"
                       />
                     </div>
 
+                      {/* Country (disabled) */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Country
                       </label>
                       <input
                         type="text"
-                        value={shippingDetails.country}
+                          value={getCurrentShippingDetails().country}
                         disabled
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl bg-gray-50 text-gray-600 text-xs sm:text-base"
                       />
                     </div>
 
+                      {/* Address */}
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Address *
                       </label>
                       <input
                         type="text"
-                        value={shippingDetails.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          value={getCurrentShippingDetails().address}
+                          onChange={(e) =>
+                            handleInputChange("address", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
                         placeholder="House/Flat number, Street, Landmark, Area"
                       />
                     </div>
 
+                      {/* City */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         City *
                       </label>
                       <input
                         type="text"
-                        value={shippingDetails.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          value={getCurrentShippingDetails().city}
+                          onChange={(e) =>
+                            handleInputChange("city", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
                         placeholder="Enter your city name"
                       />
                     </div>
 
+                      {/* State */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         State *
                       </label>
                       <input
                         type="text"
-                        value={shippingDetails.state}
-                        onChange={(e) => handleInputChange('state', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          value={getCurrentShippingDetails().state}
+                          onChange={(e) =>
+                            handleInputChange("state", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
                         placeholder="Enter your state name"
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Pincode *
-                      </label>
-                      <input
-                        type="text"
-                        value={shippingDetails.pincode}
-                        onChange={(e) => handleInputChange('pincode', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                        placeholder="Enter 6-digit pincode"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Payment Method Selection */}
-                  <div className="border-t border-gray-200 pt-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <CreditCard className="w-5 h-5 text-green-600" />
-                      </div>
+                      {/* Pincode */}
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Payment Method</h3>
-                        <p className="text-gray-600">Choose how you want to pay</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                        <input
-                          type="radio"
-                          id="razorpay"
-                          name="paymentMethod"
-                          value="razorpay"
-                          defaultChecked
-                          className="w-4 h-4 text-black border-gray-300 focus:ring-black"
-                        />
-                        <label htmlFor="razorpay" className="flex items-center space-x-3 cursor-pointer">
-                          <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                            <CreditCard className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-900">Credit/Debit Card</span>
-                            <p className="text-sm text-gray-500">Pay securely with Razorpay</p>
-                          </div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                          Pincode *
                         </label>
+                        <input
+                          type="text"
+                          value={getCurrentShippingDetails().pincode}
+                          onChange={(e) =>
+                            handleInputChange("pincode", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                          placeholder="Enter 6-digit pincode"
+                        />
                       </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Payment Method Selection */}
+                <div className="border-t border-gray-200 pt-6">
+                  <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Banknote className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+                        Payment Method
+                      </h3>
+                      <p className="text-gray-600 text-sm sm:text-lg">
+                        Choose how you want to pay
+                      </p>
                     </div>
                   </div>
 
-                  {/* Security Badge */}
-                  <div className="flex items-center justify-center space-x-2 text-sm text-gray-500 pt-4">
-                    <Shield className="w-4 h-4" />
-                    <span>Your payment is secured by Razorpay</span>
+                  <div className="space-y-3 sm:space-y-4">
+                    {/* UPI Option */}
+                    <div className="flex items-center space-x-3 sm:space-x-4 p-2 pl-4 sm:p-5 border-2 border-gray-300 rounded-xl bg-gray-50 hover:shadow-md transition-all duration-300">
+                      <input
+                        type="radio"
+                        id="upi"
+                        name="paymentMethod"
+                        value="upi"
+                        defaultChecked
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 border-gray-300 focus:ring-gray-500"
+                        style={{ accentColor: "#4B5563" }}
+                      />
+                      <label
+                        htmlFor="upi"
+                        className="flex items-center space-x-3 sm:space-x-4 cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-sm sm:text-lg text-gray-900">
+                            UPI
+                          </span>
+                          <p className="text-gray-600 text-xs sm:text-sm">
+                            Pay instantly using UPI apps
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Card Option */}
+                    <div className="flex items-center space-x-3 sm:space-x-4 p-2 pl-4 sm:p-5 border-2 border-gray-300 rounded-xl bg-gray-50 hover:shadow-md transition-all duration-300">
+                      <input
+                        type="radio"
+                        id="card"
+                        name="paymentMethod"
+                        value="card"
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 border-gray-300 focus:ring-gray-500"
+                        style={{ accentColor: "#4B5563" }}
+                      />
+                      <label
+                        htmlFor="card"
+                        className="flex items-center space-x-3 sm:space-x-4 cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-sm sm:text-lg text-gray-900">
+                            Card
+                          </span>
+                          <p className="text-gray-600 text-xs sm:text-sm">
+                            Credit / Debit Card payments
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Net Banking Option */}
+                    <div className="flex items-center space-x-3 sm:space-x-4 p-2 pl-4 sm:p-5 border-2 border-gray-300 rounded-xl bg-gray-50 hover:shadow-md transition-all duration-300">
+                      <input
+                        type="radio"
+                        id="netbanking"
+                        name="paymentMethod"
+                        value="netbanking"
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 border-gray-300 focus:ring-gray-500"
+                        style={{ accentColor: "#4B5563" }}
+                      />
+                      <label
+                        htmlFor="netbanking"
+                        className="flex items-center space-x-3 sm:space-x-4 cursor-pointer w-full"
+                      >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Landmark className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-sm sm:text-lg text-gray-900">
+                            Net Banking
+                          </span>
+                          <p className="text-gray-600 text-xs sm:text-sm">
+                            Pay securely through your bank
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* COD Option */}
+                    <div className="flex items-center space-x-3 sm:space-x-4 p-2 pl-4 pr-0 sm:p-5 border-2 border-gray-200 rounded-xl bg-gray-100 opacity-60 cursor-not-allowed">
+                      <input
+                        type="radio"
+                        id="cod"
+                        name="paymentMethod"
+                        value="cod"
+                        disabled
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 border-gray-300 cursor-not-allowed"
+                        style={{ accentColor: "#9CA3AF" }}
+                      />
+                      <label
+                        htmlFor="cod"
+                        className="flex items-center space-x-3 sm:space-x-4 cursor-not-allowed w-full"
+                      >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-lg flex items-center justify-center">
+                          <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-semibold text-sm sm:text-lg text-gray-500">
+                              Cash on Delivery
+                            </span>
+                            <span className="md:px-2 py-0.5 sm:py-1 bg- text-gray-600 text-[11px] rounded-full font-medium">
+                              Coming Soon
+                            </span>
+                          </div>
+                          <p className="text-gray-500 text-xs sm:text-sm">
+                            Pay when you receive your order
+                          </p>
+                        </div>
+                      </label>
+                    </div>
                   </div>
+                </div>
+
+                {/* Debug Section - Remove this after debugging */}
+
+                {/* Stock Validation Warning */}
+                {stockValidation &&
+                  stockValidation.results &&
+                  !stockValidation.allValid && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                      <div className="flex items-center space-x-2 text-red-800">
+                        <AlertCircle className="w-5 h-5" />
+                        <span className="font-medium">
+                          Stock Issues Detected
+                        </span>
+                      </div>
+                      <div className="mt-2 text-sm text-red-700">
+                        {stockValidation.results
+                          .filter((r) => !r.valid)
+                          .map((item, index) => (
+                            <div key={index} className="mt-1">
+                              • {item.productId} (Size {item.size}):{" "}
+                              {item.error}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Security Badge */}
 
                   {/* Navigation Buttons */}
-                  <div className="flex justify-end pt-6">
+                <div className="flex justify-center sm:justify-end pt-6">
                     <button
-                      onClick={handlePayment}
-                      disabled={!isFormValid() || isProcessing}
-                      className="px-6 py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="w-4 h-4" />
-                          <span>Proceed to Pay</span>
-                        </>
-                      )}
+    onClick={handlePayment}
+    disabled={!isFormValid() || isProcessing}
+    className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 bg-gray-900 text-white rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-md sm:shadow-lg flex items-center justify-center space-x-2 sm:space-x-3"
+  >
+    {isProcessing ? (
+      <>
+        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <span>Processing...</span>
+      </>
+    ) : (
+      <>
+        <Wallet className="w-4 h-4" />
+        <span>Proceed to Pay</span>
+      </>
+    )}
                     </button>
                   </div>
+
                 </motion.div>
+
+              {/* Navigation Buttons - Removed since step 2 is final */}
             </motion.div>
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className="block lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1">
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm sticky top-24"
-              >
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h3>
-                
-                <div className="space-y-4 font-bold">
-                  {/* Items */}
-                  <div className="flex justify-between text-gray-600">
-                    <span>Items ({userCart.totalItems})</span>
-                    <span>₹{(userCart.totalPrice * 1.2).toFixed(2)}</span>
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-2xl border border-gray-200 p-4 lg:p-6 shadow-sm"
+            >
+              {/* Header with Price Details and Collapsible Icon */}
+              <div className="flex items-center justify-between mb-3 lg:mb-4">
+                <h3 className="text-lg lg:text-xl font-bold text-gray-900">
+                  Price Details
+                </h3>
+                <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <svg
+                    className="w-4 h-4 lg:w-5 lg:h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 15l7-7 7 7"
+                    />
+                  </svg>
+                </button>
                   </div>
                   
-                  {/* Discount */}
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount </span>
-                    <span>- ₹{(userCart.totalPrice * 0.24).toFixed(2)}</span>
-                  </div>
-                  
-                  {/* Coupon */}
-                  <div className="flex justify-between text-gray-500">
-                    <span>Coupons</span>
-                    <span>No coupons available for now</span>
-                  </div>
-                  
-                  {/* Protection Fee */}
-                  <div className="flex justify-between text-gray-600">
-                    <span>Protection Fee</span>
-                    <span>₹{(userCart.totalItems * 9).toFixed(2)}</span>
-                  </div>
-                  
-                  {/* Delivery Fee */}
-                  <div className="flex justify-between text-gray-600">
-                    <span>Delivery Fee</span>
-                    <span className={userCart.totalPrice >= 999 ? 'text-green-600 font-medium' : 'text-gray-600'}>
-                      {userCart.totalPrice >= 999 ? 'Free' : '₹50.00'}
+              {/* Dashed Separator Line */}
+              <div className="border-t border-dashed border-gray-300 mb-3 lg:mb-4"></div>
+
+              {/* Price Breakdown */}
+              <div className="space-y-3 lg:space-y-4">
+                {/* Price (1 item) */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm lg:text-base font-bold text-gray-700">
+                      Price (1 item)
                     </span>
+                    <div className="w-3 h-3 lg:w-4 lg:h-4 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-xs text-gray-600 font-bold">i</span>
+                    </div>
+                  </div>
+                  <span className="text-sm lg:text-base font-bold text-gray-900">
+                    ₹{(userCart.totalPrice * 1.2).toFixed(2)}
+                  </span>
                   </div>
                   
-                  {/* Shipping */}
-                  <div className="flex justify-between text-gray-600">
-                    <span>Shipping</span>
-                    <span className="text-green-600 font-medium">Free</span>
+                {/* Discount */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm lg:text-base font-bold text-gray-700">
+                    Discount{" "}
+                  </span>
+                  <span className="text-sm lg:text-base font-bold text-green-600">
+                    - ₹{(userCart.totalPrice * 0.24).toFixed(2)}
+                  </span>
                   </div>
                   
-                  {/* Divider */}
-                  <div className="border-t border-gray-200 pt-4">
-                    <div className="flex justify-between text-lg font-bold text-gray-900">
-                      <span>Total</span>
-                      <span>₹{(userCart.totalPrice + (userCart.totalItems * 9) + (userCart.totalPrice >= 999 ? 0 : 50)).toFixed(2)}</span>
+                {/* Coupons for you */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm lg:text-base font-bold text-gray-700">
+                      Coupons
+                    </span>
+                    <div className="w-3 h-3 lg:w-4 lg:h-4 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-xs text-gray-600 font-bold">i</span>
+                    </div>
+                  </div>
+                  <span className="text-sm lg:text-base font-bold text-gray-500">
+                    No coupons available for now
+                  </span>
+                  </div>
+                  
+                {/* Protect Promise Fee */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm lg:text-base font-bold text-gray-700">
+                      Protect Promise Fee
+                    </span>
+                    <div className="w-3 h-3 lg:w-4 lg:h-4 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-xs text-gray-600 font-bold">i</span>
+                    </div>
+                  </div>
+                  <span className="text-sm lg:text-base font-bold text-gray-900">
+                    ₹{(userCart.totalItems * 9).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Delivery Fee */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm lg:text-base font-bold text-gray-700">
+                    Delivery Fee
+                  </span>
+                  <span
+                    className={`text-sm lg:text-base font-bold ${userCart.totalPrice >= 999 ? "text-green-600" : "text-gray-900"}`}
+                  >
+                    {userCart.totalPrice >= 999 ? "Free" : "₹50.00"}
+                  </span>
+                </div>
+
+                {/* Dashed Separator Line */}
+                <div className="border-t border-dashed border-gray-300 pt-3 lg:pt-4"></div>
+
+                {/* Total Amount */}
+                <div className="flex items-center justify-between pt-2 lg:pt-3">
+                  <span className="text-base lg:text-lg font-bold text-gray-900">
+                    Total Amount
+                  </span>
+                  <span className="text-base lg:text-lg font-bold text-gray-900">
+                    ₹
+                    {(
+                      userCart.totalPrice +
+                      userCart.totalItems * 9 +
+                      (userCart.totalPrice >= 999 ? 0 : 50)
+                    ).toFixed(2)}
+                  </span>
                     </div>
                   </div>
                   
-                  {/* Savings Info */}
-                  <div className="text-center pt-2">
-                    <span className="text-sm text-green-600 font-medium">
-                      You saved ₹{(userCart.totalPrice * 0.24).toFixed(2)} on this order!
+              {/* Savings Banner */}
+              <div className="mt-4 lg:mt-6 bg-green-50 border border-green-200 rounded-lg p-3 lg:p-4">
+                <div className="flex items-center space-x-2 lg:space-x-3">
+                  <div className="w-6 h-6 lg:w-8 lg:h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <span className="text-green-600 font-bold text-xs lg:text-sm">
+                      %
                     </span>
                   </div>
+                  <span className="text-sm lg:text-base font-bold text-green-800">
+                    You saved ₹{(userCart.totalPrice * 0.24).toFixed(2)} on this
+                    order!
+                  </span>
                 </div>
+              </div>
               </motion.div>
             </div>
         </div>
