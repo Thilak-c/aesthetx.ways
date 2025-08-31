@@ -137,65 +137,138 @@ export default function CheckoutPage() {
   );
   const removeFromCartMutation = useMutation(api.cart.removeFromCart);
   const clearCartMutation = useMutation(api.cart.clearCart);
+  
+  // Order mutations
+  const createOrderMutation = useMutation(api.orders.createOrder);
 
   // Stock validation
-  const stockValidation = useQuery(
-    api.products.validateStockForCheckout,
-    userCart?.items
-      ? {
-          cartItems: userCart.items.map((item) => ({
-            productId: item.productId,
-            size: item.size,
-            quantity: item.quantity,
-          })),
-        }
-      : "skip"
-  );
-
+ 
   // Debug: Log cart items and stock validation
-  useEffect(() => {
-    if (userCart?.items) {
-      console.log(
-        "Cart items for stock validation:",
-        userCart.items.map((item) => ({
-          productId: item.productId,
-          size: item.size,
-          quantity: item.quantity,
-        }))
-      );
-    }
-    if (stockValidation) {
-      console.log("Stock validation result:", stockValidation);
-    }
-  }, [userCart?.items, stockValidation]);
+ 
 
-  // Debug function to check database
-  const checkDatabase = async () => {
-    try {
-      console.log("=== CHECKING DATABASE ===");
-
-      // Check if the specific product exists
-      const response = await fetch("/api/debug-product", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          itemId: userCart?.items?.[0]?.productId,
-        }),
-      });
-
-      const data = await response.json();
-      console.log("Database check result:", data);
-    } catch (error) {
-      console.error("Error checking database:", error);
-    }
-  };
 
   const showToastMessage = (message) => {
     setToastMessage(message);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  // Get products data for stock validation
+  const cartProductIds = userCart?.items?.map(item => item.productId) || [];
+  const cartProducts = useQuery(
+    api.products.getProductsByIds, 
+    cartProductIds.length > 0 ? { productIds: cartProductIds } : "skip"
+  );
+
+  // Stock validation function
+  const validateCartStock = () => {
+    if (!userCart?.items || userCart.items.length === 0) {
+      return { isValid: false, message: "Cart is empty" };
+    }
+
+    if (!cartProducts) {
+      return { isValid: false, message: "Loading product data..." };
+    }
+
+    try {
+      // Create a map for quick product lookup - handle both _id and itemId
+      const productMap = new Map();
+      cartProducts.forEach(product => {
+        if (product) {
+          // Map both _id and itemId since cart might store either
+          productMap.set(product._id, product);
+          productMap.set(product.itemId, product);
+        }
+      });
+
+      // Validate each cart item
+      const invalidItems = [];
+      
+      for (const cartItem of userCart.items) {
+        const product = productMap.get(cartItem.productId);
+        
+        if (!product) {
+          invalidItems.push({
+            isValid: false,
+            productName: cartItem.productName,
+            message: "Product not found",
+          });
+          continue;
+        }
+
+        // Check if product is hidden or deleted
+        if (product.isHidden || product.isDeleted) {
+          invalidItems.push({
+            isValid: false,
+            productName: cartItem.productName,
+            message: "Product is no longer available",
+          });
+          continue;
+        }
+
+        // Check general stock status
+        if (!product.inStock) {
+          invalidItems.push({
+            isValid: false,
+            productName: cartItem.productName,
+            message: "Product is currently out of stock",
+          });
+          continue;
+        }
+
+        // Check if the requested size is available
+        if (!product.availableSizes?.includes(cartItem.size)) {
+          invalidItems.push({
+            isValid: false,
+            productName: cartItem.productName,
+            message: `Size ${cartItem.size} is not available`,
+          });
+          continue;
+        }
+        
+        // Check size-specific stock
+        const availableStock = product.sizeStock?.[cartItem.size] || 0;
+        
+        if (availableStock < cartItem.quantity) {
+          // Show available stock in other sizes for better user experience
+          const otherSizesStock = product.availableSizes
+            ?.filter(size => size !== cartItem.size && (product.sizeStock?.[size] || 0) > 0)
+            ?.map(size => `${size}(${product.sizeStock[size]})`)
+            ?.join(", ");
+          
+          let stockMessage;
+          if (availableStock === 0) {
+            stockMessage = `Size ${cartItem.size} is out of stock`;
+          } else {
+            stockMessage = `Only ${availableStock} of ${cartItem.quantity} units available in size ${cartItem.size}`;
+          }
+          
+          if (otherSizesStock) {
+            stockMessage += `. Available in: ${otherSizesStock}`;
+          }
+          
+          invalidItems.push({
+            isValid: false,
+            productName: cartItem.productName,
+            message: stockMessage,
+          });
+          continue;
+        }
+      }
+
+      if (invalidItems.length > 0) {
+        const errorMessage = invalidItems.length === 1 
+          ? `${invalidItems[0].productName}: ${invalidItems[0].message}`
+          : `${invalidItems.length} items are out of stock or have insufficient quantity`;
+        
+        return { isValid: false, message: errorMessage };
+      }
+
+      return { isValid: true, message: "All items are in stock" };
+    } catch (error) {
+      console.error("Stock validation error:", error);
+      return { isValid: false, message: "Unable to verify stock availability" };
+    }
   };
 
   const clearInvalidAddressData = () => {
@@ -261,19 +334,12 @@ export default function CheckoutPage() {
     }
 
     // Check stock availability before proceeding
-    if (
-      stockValidation &&
-      stockValidation.results &&
-      !stockValidation.allValid
-    ) {
-      const invalidItems = stockValidation.results.filter((r) => !r.valid);
-      const errorMessage = invalidItems
-        .map((item) => `${item.productId}: ${item.error}`)
-        .join(", ");
-      showToastMessage(`Stock validation failed: ${errorMessage}`);
+    const stockValidation = validateCartStock();
+    if (!stockValidation.isValid) {
+      showToastMessage(stockValidation.message);
       return;
     }
-
+   
     setIsProcessing(true);
     try {
       // Load Razorpay script
@@ -326,9 +392,9 @@ export default function CheckoutPage() {
 
             const verifyData = await verifyResponse.json();
             if (verifyData.success) {
-              // Create order in database
+              // Create order using Convex mutation
               try {
-                // Debug: Log the cart items being sent
+                // Map cart items to order format
                 const mappedCartItems = userCart.items.map((item) => ({
                   productId: item.productId,
                   name: item.productName,
@@ -338,55 +404,51 @@ export default function CheckoutPage() {
                   image: item.productImage,
                 }));
 
-                console.log(
-                  "Cart items being sent to order API:",
-                  mappedCartItems
-                );
-                console.log("Original cart items:", userCart.items);
+                console.log("Creating order with items:", mappedCartItems);
 
-                const orderResponse = await fetch("/api/create-order-db", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    userId: me._id,
-                    userEmail: getCurrentShippingDetails().email,
-                    shippingDetails: getCurrentShippingDetails(),
-                    cartItems: mappedCartItems,
-                    totalAmount: finalTotal,
+                const orderResult = await createOrderMutation({
+                  userId: me._id,
+                  items: mappedCartItems,
+                  shippingDetails: getCurrentShippingDetails(),
+                  paymentDetails: {
                     razorpayOrderId: response.razorpay_order_id,
                     razorpayPaymentId: response.razorpay_payment_id,
-                    orderStatus: "confirmed",
-                    paymentStatus: "paid",
-                    deliveryStatus: "pending",
-                  }),
+                    amount: finalTotal,
+                    currency: "INR",
+                    status: "paid",
+                    paidAt: Date.now(),
+                    paidBy: getCurrentShippingDetails().fullName,
+                    paymentMethod: "razorpay", // You can detect specific method from Razorpay response if needed
+                  },
+                  orderTotal: finalTotal,
+                  status: "confirmed",
                 });
 
-                const orderData = await orderResponse.json();
-                if (orderData.success) {
+                if (orderResult.success) {
                   showToastMessage(
                     "Payment successful! Order placed successfully."
                   );
+                  console.log("Order created:", orderResult);
+                  
                   // Clear cart after successful order
                   try {
-                    // Clear entire cart at once (more efficient)
                     await clearCartMutation({ userId: me._id });
                     console.log("Cart cleared successfully");
                   } catch (error) {
                     console.error("Error clearing cart:", error);
                     // Don't block the success flow if cart clearing fails
                   }
+                  
                   setTimeout(() => {
-                    router.push("/order-success");
+                    router.push(`/order-success?orderNumber=${orderResult.orderNumber}`);
                   }, 2000);
                 } else {
                   showToastMessage(
-                    "Order created but failed to save to database. Please contact support."
+                    "Order creation failed. Please contact support."
                   );
                 }
               } catch (error) {
-                console.error("Error creating order in database:", error);
+                console.error("Error creating order:", error);
                 showToastMessage(
                   "Payment successful but order creation failed. Please contact support."
                 );
@@ -1016,28 +1078,7 @@ export default function CheckoutPage() {
                 {/* Debug Section - Remove this after debugging */}
 
                 {/* Stock Validation Warning */}
-                {stockValidation &&
-                  stockValidation.results &&
-                  !stockValidation.allValid && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
-                      <div className="flex items-center space-x-2 text-red-800">
-                        <AlertCircle className="w-5 h-5" />
-                        <span className="font-medium">
-                          Stock Issues Detected
-                        </span>
-                      </div>
-                      <div className="mt-2 text-sm text-red-700">
-                        {stockValidation.results
-                          .filter((r) => !r.valid)
-                          .map((item, index) => (
-                            <div key={index} className="mt-1">
-                              • {item.productId} (Size {item.size}):{" "}
-                              {item.error}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
+               
 
                 {/* Security Badge */}
 
@@ -1045,10 +1086,15 @@ export default function CheckoutPage() {
                 <div className="flex justify-center sm:justify-end pt-6">
                     <button
     onClick={handlePayment}
-    disabled={!isFormValid() || isProcessing}
+    disabled={!isFormValid() || isProcessing || !cartProducts}
     className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 bg-gray-900 text-white rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-md sm:shadow-lg flex items-center justify-center space-x-2 sm:space-x-3"
   >
-    {isProcessing ? (
+    {!cartProducts ? (
+      <>
+        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <span>Loading...</span>
+      </>
+    ) : isProcessing ? (
       <>
         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         <span>Processing...</span>
@@ -1107,7 +1153,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm lg:text-base font-bold text-gray-700">
-                      Price (1 item)
+                      Price 
                     </span>
                     <div className="w-3 h-3 lg:w-4 lg:h-4 bg-gray-200 rounded-full flex items-center justify-center">
                       <span className="text-xs text-gray-600 font-bold">i</span>
@@ -1210,3 +1256,4 @@ export default function CheckoutPage() {
     </div>
   );
 } 
+

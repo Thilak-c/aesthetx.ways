@@ -6,6 +6,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link"; // Import Link for consistent navigation styling
 import { Eye, EyeOff } from "lucide-react"; // Import Eye and EyeOff icons
+import toast from "react-hot-toast";
 
 export default function Signup() {
   const router = useRouter();
@@ -16,11 +17,118 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  
+  // OTP states
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(0);
 
-  const onChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const onChange = (e) => {
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+    // Clear error when user modifies form fields
+    if (error) {
+      setError("");
+    }
+  };
 
-  async function onSubmit(e) {
-    e.preventDefault();
+  const sendOtp = async () => {
+    if (!form.name.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+    
+    if (!form.email || !form.email.includes('@')) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
+    if (!form.password || form.password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
+    try {
+      setIsSendingOtp(true);
+      const response = await fetch("/api/send-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: form.email }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setOtpSent(true);
+        setOtpTimer(300); // 5 minutes in seconds
+        toast.success("OTP sent to your email!");
+        
+        // Start countdown timer
+        const interval = setInterval(() => {
+          setOtpTimer((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        toast.error(data.message || "Failed to send OTP");
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      toast.error("Failed to send OTP. Please try again.");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    if (otpTimer > 0) return;
+    await sendOtp();
+  };
+
+  const verifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    try {
+      setIsVerifyingOtp(true);
+      const response = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          email: form.email, 
+          otp: otp.trim() 
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success("Email verified successfully!");
+        // Continue with account creation
+        await createAccount();
+      } else {
+        toast.error(data.message || "Invalid OTP");
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      toast.error("Failed to verify OTP. Please try again.");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const createAccount = async () => {
     setBusy(true);
     setError("");
     try {
@@ -29,14 +137,39 @@ export default function Signup() {
       document.cookie = `sessionToken=${sessionToken}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
       router.push("/onboarding");
     } catch (err) {
+      console.error('Signup error:', err);
       const msg = String(err?.message || "");
-      setError(
-        msg.toLowerCase().includes("already")
-          ? "That email is already in use. Try logging in instead."
-          : "Could not sign up. Please try again."
-      );
+      
+      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("duplicate")) {
+        setError("That email is already in use. Try logging in instead.");
+        // Reset OTP state so user can try with different email
+        setOtpSent(false);
+        setOtp("");
+        setOtpTimer(0);
+      } else if (msg.toLowerCase().includes("unique") || msg.toLowerCase().includes("constraint")) {
+        setError("This email is already registered. Please log in instead.");
+        setOtpSent(false);
+        setOtp("");
+        setOtpTimer(0);
+      } else {
+        setError("Could not create account. Please try again.");
+        setOtpSent(false);
+        setOtp("");
+        setOtpTimer(0);
+      }
     } finally {
       setBusy(false);
+    }
+  };
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    if (!otpSent) {
+      // First step: send OTP
+      await sendOtp();
+    } else {
+      // Second step: verify OTP
+      await verifyOtp();
     }
   }
 
@@ -63,8 +196,15 @@ export default function Signup() {
         {/* Logo and Brand Info */}
         <div className="text-center mb-7 sm:mb-9">
 
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-1 tracking-tight">Create your account</h1>
-          <p className="text-sm sm:text-base text-gray-700 font-medium">Join the <span className="text-gray-900 font-bold">AesthetX</span> community</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-1 tracking-tight">
+            {otpSent ? "Verify Your Email" : "Create your account"}
+          </h1>
+          <p className="text-sm sm:text-base text-gray-700 font-medium">
+            {otpSent 
+              ? "Enter the verification code sent to your email" 
+              : "Join the AesthetX community"
+            }
+          </p>
         </div>
 
         {/* Name Input */}
@@ -128,19 +268,103 @@ export default function Signup() {
           </div>
         </div>
 
-        {error && (
-          <p className="text-xs sm:text-sm text-red-700 bg-red-100 p-3 sm:p-4 rounded-xl border border-red-300 shadow-md text-center animate-shake">
-            {error}
-          </p>
+        {!otpSent ? (
+          // Signup form
+          <>
+            {error && (
+              <p className="text-xs sm:text-sm text-red-700 bg-red-100 p-3 sm:p-4 rounded-xl border border-red-300 shadow-md text-center animate-shake">
+                {error}
+              </p>
+            )}
+            
+            <button 
+              type="submit"
+              disabled={busy || isSendingOtp || !form.name.trim() || !form.email || !form.password || form.password.length < 8}
+              className="w-full bg-gradient-to-r from-gray-900 to-black text-white font-bold py-3.5 sm:py-4 rounded-xl hover:from-black hover:to-gray-950 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:scale-95"
+            >
+              {isSendingOtp ? "Sending OTP..." : "Send OTP & Continue"}
+            </button>
+          </>
+        ) : (
+          // OTP verification form
+          <>
+            {error && (
+              <p className="text-xs sm:text-sm text-red-700 bg-red-100 p-3 sm:p-4 rounded-xl border border-red-300 shadow-md text-center animate-shake">
+                {error}
+              </p>
+            )}
+
+            <div className="text-center space-y-3">
+              <p className="text-sm text-gray-600">
+                Enter the 6-digit code sent to <span className="font-semibold text-gray-800">{form.email}</span>
+              </p>
+              {otpTimer > 0 && (
+                <p className="text-xs text-gray-500">
+                  Code expires in {Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="otp" className="block text-sm font-semibold text-gray-800 mb-2">
+                Verification Code
+              </label>
+              <input 
+                type="text"
+                id="otp"
+                placeholder="Enter 6-digit OTP"
+                value={otp}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setOtp(value);
+                }}
+                className="w-full px-5 py-3.5 sm:px-6 sm:py-4 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-all shadow-md bg-white/90 text-gray-900 placeholder-gray-600 text-center text-lg font-mono tracking-widest"
+                maxLength={6}
+                required
+              />
+            </div>
+
+            <button 
+              type="submit"
+              disabled={!otp || otp.length !== 6 || isVerifyingOtp}
+              className="w-full bg-gradient-to-r from-gray-900 to-black text-white font-bold py-3.5 sm:py-4 rounded-xl hover:from-black hover:to-gray-950 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:scale-95"
+            >
+              {isVerifyingOtp ? "Verifying..." : "Verify & Create Account"}
+            </button>
+
+            <div className="text-center space-y-2">
+              <p className="text-sm text-gray-600">
+                Didn't receive the code?
+              </p>
+              <button
+                type="button"
+                onClick={resendOtp}
+                disabled={otpTimer > 0 || isSendingOtp}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:text-gray-400 transition-colors text-sm underline"
+              >
+                {otpTimer > 0 
+                  ? `Resend in ${Math.floor(otpTimer / 60)}:${(otpTimer % 60).toString().padStart(2, '0')}` 
+                  : "Resend OTP"
+                }
+              </button>
+              
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtp("");
+                    setOtpTimer(0);
+                    setError(""); // Clear error when going back
+                  }}
+                  className="px-3 py-1 text-gray-500 hover:text-gray-700 transition-colors text-sm"
+                >
+                  ← Back to form
+                </button>
+              </div>
+            </div>
+          </>
         )}
-        
-        <button 
-          type="submit"
-          disabled={busy}
-          className="w-full bg-gradient-to-r from-gray-900 to-black text-white font-bold py-3.5 sm:py-4 rounded-xl hover:from-black hover:to-gray-950 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:scale-95"
-        >
-          {busy ? "Creating..." : "Sign up"}
-        </button>
 
         <p className="text-xs sm:text-sm text-center text-gray-700 mt-3 sm:mt-4">
           Already have an account? 

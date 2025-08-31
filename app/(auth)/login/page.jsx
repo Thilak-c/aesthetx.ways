@@ -71,7 +71,26 @@ export default function Login() {
       setBusy(false);
       
     } catch (err) {
-      setError(err.message || "Invalid email or password. Please try again.");
+      // Convert technical errors to user-friendly messages
+      const errorMessage = err.message || "Login failed";
+      
+      if (errorMessage.includes("Invalid credentials")) {
+        setError("Incorrect email or password. Please check your details and try again.");
+      } else if (errorMessage.includes("User not found")) {
+        setError("No account found with this email. Please check your email or sign up.");
+      } else if (errorMessage.includes("Password")) {
+        setError("Incorrect password. Please try again.");
+      } else if (errorMessage.includes("Email")) {
+        setError("Please enter a valid email address.");
+      } else if (errorMessage.includes("Network") || errorMessage.includes("fetch")) {
+        setError("Connection error. Please check your internet and try again.");
+      } else if (errorMessage.includes("timeout")) {
+        setError("Request timed out. Please try again.");
+      } else {
+        // Generic fallback for unknown errors
+        setError("Unable to sign in. Please try again in a moment.");
+      }
+      
       setBusy(false);
     }
   };
@@ -156,9 +175,13 @@ export default function Login() {
         </div>
 
         {error && (
-          <p className="text-xs sm:text-sm text-red-700 bg-red-100 p-3 sm:p-4 rounded-xl border border-red-300 shadow-md text-center animate-shake">
-            {error}
-          </p>
+          <div className="  text-center">
+           
+            <p className="text-sm text-red-700 leading-relaxed">
+              {error}
+            </p>
+           
+          </div>
         )}
         
         <button 

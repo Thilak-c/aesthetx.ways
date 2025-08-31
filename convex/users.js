@@ -28,10 +28,21 @@ export const getUserByEmailInternal = internalQuery({
 	args: { email: v.string() },
 	handler: async (ctx, { email }) => {
 		const normalizedEmail = email.toLowerCase().trim();
-		return await ctx.db
+		const users = await ctx.db
 			.query("users")
 			.withIndex("by_email", (q) => q.eq("email", normalizedEmail))
-			.unique();
+			.collect();
+		
+		// Filter out deleted users
+		const activeUsers = users.filter(user => !user.isDeleted);
+		
+		// If multiple active users with same email, log error and return first one
+		if (activeUsers.length > 1) {
+			console.error(`Multiple active users found with email: ${normalizedEmail}`, activeUsers.map(u => u._id));
+		}
+		
+		// Return the first active user found
+		return activeUsers[0] || null;
 	},
 });
 
@@ -77,11 +88,20 @@ export const getActiveUserByEmail = internalQuery({
 	args: { email: v.string() },
 	handler: async (ctx, { email }) => {
 		const normalizedEmail = email.toLowerCase().trim();
-		return await ctx.db
+		const users = await ctx.db
 			.query("users")
 			.withIndex("by_email", (q) => q.eq("email", normalizedEmail))
-			.filter(q => q.eq(q.field("isDeleted"), undefined))
-			.unique();
+			.collect();
+		
+		// Filter out deleted users and return first active one
+		const activeUsers = users.filter(user => !user.isDeleted);
+		
+		// If multiple active users with same email, log error and return first one
+		if (activeUsers.length > 1) {
+			console.error(`Multiple active users found with email: ${normalizedEmail}`, activeUsers.map(u => u._id));
+		}
+		
+		return activeUsers[0] || null;
 	},
 });
 
@@ -145,6 +165,52 @@ export const insertUser = internalMutation({
 		});
 		
 		return { id: userId };
+	},
+});
+
+// Helper mutation for cleaning up duplicate users (internal use)
+export const cleanupDuplicateUsers = internalMutation({
+	args: {},
+	handler: async (ctx) => {
+		// Get all users grouped by email
+		const allUsers = await ctx.db.query("users").collect();
+		const emailGroups = {};
+		
+		// Group users by email
+		allUsers.forEach(user => {
+			const email = user.email.toLowerCase().trim();
+			if (!emailGroups[email]) {
+				emailGroups[email] = [];
+			}
+			emailGroups[email].push(user);
+		});
+		
+		let cleanedCount = 0;
+		
+		// Process each email group
+		for (const [email, users] of Object.entries(emailGroups)) {
+			if (users.length > 1) {
+				// Sort by creation date (newest first)
+				users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+				
+				// Keep the newest user, mark others as deleted
+				const [keepUser, ...duplicateUsers] = users;
+				
+				for (const duplicateUser of duplicateUsers) {
+					await ctx.db.patch(duplicateUser._id, {
+						isDeleted: true,
+						deletedAt: nowIso(),
+						deletedBy: keepUser._id,
+						deletionReason: "Duplicate user cleanup - keeping newest account"
+					});
+					cleanedCount++;
+				}
+				
+				console.log(`Cleaned up ${duplicateUsers.length} duplicate users for email: ${email}`);
+			}
+		}
+		
+		return { cleanedCount };
 	},
 });
 
@@ -928,6 +994,16 @@ export const emptyTrash = mutation({
 		}
 		
 		return { success: true, message: `Permanently deleted ${allTrashItems.length} items` };
+	},
+});
+
+// Public mutation to clean up duplicate users (admin use)
+export const cleanupDuplicates = mutation({
+	args: {},
+	handler: async (ctx) => {
+		// This should only be called by admins in production
+		// For now, allowing it for development
+		return await ctx.runMutation(internal.users.cleanupDuplicateUsers, {});
 	},
 });
 

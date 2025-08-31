@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { User, Settings, ChevronDown } from "lucide-react";
+import { User, Settings, ChevronDown, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -88,6 +88,15 @@ export default function UserNavigation() {
                 <p className="text-sm font-medium text-gray-900">{me.name || "User"}</p>
                 <p className="text-xs text-gray-500">{me.email}</p>
               </div>
+              
+              <Link
+                href="/orders"
+                onClick={() => setIsDropdownOpen(false)}
+                className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>My Orders</span>
+              </Link>
               
               <Link
                 href="/user/profile"

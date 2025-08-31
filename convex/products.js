@@ -113,7 +113,8 @@ export const getProductsByIds = query({
   handler: async (ctx, { productIds }) => {
     if (productIds.length === 0) return [];
     
-    const products = await ctx.db
+    // First try to get products by itemId
+    const productsByItemId = await ctx.db
       .query("products")
       .filter(q => q.and(
         q.neq(q.field("isDeleted"), true),
@@ -121,7 +122,23 @@ export const getProductsByIds = query({
       ))
       .collect();
     
-    return products;
+    // For any missing products, try to get by _id (document ID)
+    const foundItemIds = new Set(productsByItemId.map(p => p.itemId));
+    const missingIds = productIds.filter(id => !foundItemIds.has(id));
+    
+    const productsByDocId = [];
+    for (const id of missingIds) {
+      try {
+        const product = await ctx.db.get(id);
+        if (product && !product.isDeleted) {
+          productsByDocId.push(product);
+        }
+      } catch (error) {
+        // Invalid document ID, skip silently
+      }
+    }
+    
+    return [...productsByItemId, ...productsByDocId];
   },
 });
 

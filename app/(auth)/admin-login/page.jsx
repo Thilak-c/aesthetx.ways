@@ -73,8 +73,16 @@ export default function AdminLogin() {
         setError("Access denied. This account does not have admin privileges.");
       } else if (err.message.includes("Admin account is inactive")) {
         setError("Your admin account has been deactivated. Contact the super admin.");
+      } else if (err.message.includes("Invalid credentials")) {
+        setError("Incorrect email or password. Please check your details and try again.");
+      } else if (err.message.includes("User not found")) {
+        setError("No admin account found with this email.");
+      } else if (err.message.includes("Network") || err.message.includes("fetch")) {
+        setError("Connection error. Please check your internet and try again.");
+      } else if (err.message.includes("timeout")) {
+        setError("Request timed out. Please try again.");
       } else {
-        setError(err.message || "Login failed. Please try again.");
+        setError("Unable to sign in. Please try again in a moment.");
       }
       setBusy(false);
     }
@@ -165,8 +173,17 @@ export default function AdminLogin() {
           </div>
 
           {error && (
-            <div className="p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-300 text-sm">
-              {error}
+            <div className="bg-amber-900/30 border border-amber-500/50 rounded-lg p-4 text-center">
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                <span className="text-sm font-medium text-amber-200">Admin Sign In Issue</span>
+              </div>
+              <p className="text-sm text-amber-100 leading-relaxed">
+                {error}
+              </p>
+              <div className="mt-3 text-xs text-amber-300">
+                💡 Tip: Verify your admin credentials
+              </div>
             </div>
           )}
 

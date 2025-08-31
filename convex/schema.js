@@ -45,9 +45,14 @@ export default defineSchema({
 			fullAddress: v.string(),
 		})),
 		permanentAddressLocked: v.optional(v.boolean()),
-	}).index("by_email", ["email"])
-	 .index("by_role", ["role"])
-	 .index("by_deleted", ["isDeleted"]),
+	})
+	.index("by_email", ["email"])
+	.index("by_role", ["role"])
+	.index("by_deleted", ["isDeleted"])
+	.searchIndex("search_users", {
+		searchField: "email",
+		filterFields: ["isDeleted"]
+	}),
 
 	// Sessions table storing opaque session tokens
 	sessions: defineTable({
@@ -60,7 +65,7 @@ export default defineSchema({
 
 	// Trash table for storing deleted items that can be restored
 	trash: defineTable({
-		originalId: v.id("users"), // Original record ID
+		originalId: v.id("users"), // Original record ID 
 		tableName: v.string(), // Which table the item came from
 		originalData: v.any(), // Complete original record data
 		deletedAt: v.string(),
@@ -166,9 +171,10 @@ export default defineSchema({
 		items: v.array(v.object({
 		  productId: v.string(),
 		  name: v.string(),
-		  price: v.number(),
+		  price: v.float64(),
 		  image: v.string(),
-		  quantity: v.number(),
+		  quantity: v.float64(),
+		  size: v.string(),
 		})),
 		shippingDetails: v.object({
 		  fullName: v.string(),
@@ -183,13 +189,31 @@ export default defineSchema({
 		paymentDetails: v.object({
 		  razorpayOrderId: v.string(),
 		  razorpayPaymentId: v.string(),
-		  amount: v.number(),
+		  amount: v.float64(),
 		  currency: v.string(),
 		  status: v.string(), // 'pending', 'completed', 'failed'
+		  paidAt: v.optional(v.number()), // Payment timestamp
+		  paidBy: v.optional(v.string()), // Payment method or payer name
+		  paymentMethod: v.optional(v.string()), // 'upi', 'card', 'netbanking', 'wallet'
 		}),
-		orderTotal: v.number(),
+		orderTotal: v.float64(),
 		status: v.string(), // 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled'
+		// Delivery tracking
+		estimatedDeliveryDate: v.optional(v.number()), // Estimated delivery timestamp
+		deliveryDetails: v.optional(v.array(v.object({
+		  status: v.string(), // 'order_placed', 'processing', 'shipped', 'out_for_delivery', 'delivered'
+		  message: v.string(), // Status message
+		  location: v.optional(v.string()), // Current location
+		  timestamp: v.number(), // When this status was updated
+		  updatedBy: v.optional(v.string()), // Who updated this status
+		}))),
+		// Timestamps
 		createdAt: v.number(),
 		updatedAt: v.number(),
-	  }).index("by_user", ["userId"]).index("by_order_number", ["orderNumber"]),
+		shippedAt: v.optional(v.number()),
+		deliveredAt: v.optional(v.number()),
+	  }).index("by_user", ["userId"])
+	    .index("by_order_number", ["orderNumber"])
+	    .index("by_status", ["status"])
+	    .index("by_estimated_delivery", ["estimatedDeliveryDate"]),
 });

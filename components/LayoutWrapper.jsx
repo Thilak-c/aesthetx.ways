@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // import getConvexClient from "../convexClient"; // Removed import
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Toaster } from "react-hot-toast";
 
 export default function LayoutWrapper({ children }) {
   const [token, setToken] = useState(null);
@@ -33,41 +34,44 @@ export default function LayoutWrapper({ children }) {
 
   return (
     // <ConvexProvider client={client}> // Removed ConvexProvider wrapper
-      <AnimatePresence mode="wait">
-        {isLoading ? (
-          <motion.div
-            key="loading"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.5 } }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white text-gray-900"
-          >
-            <motion.img
-              src="/logo.png"
-              alt="Loading Logo"
-              className="w-32 h-32 mb-4 object-contain opacity-80"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{
-                duration: 1,
-                ease: "easeOut",
-                repeat: Infinity,
-                repeatType: "reverse",
-              }}
-            />
-           
-          </motion.div>
-        ) : (
-          <motion.div
-            key="content"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full w-full"
-          >
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <>
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.5 } }}
+              className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white text-gray-900"
+            >
+              <motion.img
+                src="/logo.png"
+                alt="Loading Logo"
+                className="w-32 h-32 mb-4 object-contain opacity-80"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 1,
+                  ease: "easeOut",
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                }}
+              />
+             
+            </motion.div>
+          ) : (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="h-full w-full"
+            >
+              {children}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <Toaster />
+      </>
     // </ConvexProvider> // Removed ConvexProvider wrapper
   );
 } 

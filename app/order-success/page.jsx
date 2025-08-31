@@ -10,6 +10,7 @@ export default function OrderSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [countdown, setCountdown] = useState(10);
+  const [hasNavigated, setHasNavigated] = useState(false);
   
   const orderNumber = searchParams.get('orderNumber');
   
@@ -22,16 +23,20 @@ export default function OrderSuccessPage() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
-        if (prev <= 1) {
+        if (prev <= 1 && !hasNavigated) {
+          setHasNavigated(true);
+          // Use setTimeout to avoid setState during render
+          setTimeout(() => {
           router.push('/');
+          }, 100);
           return 0;
         }
-        return prev - 1;
+        return prev > 0 ? prev - 1 : 0;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [router]);
+  }, [router, hasNavigated]);
 
   const formatDate = (timestamp) => {
     return new Date(timestamp).toLocaleDateString('en-IN', {
@@ -40,6 +45,14 @@ export default function OrderSuccessPage() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
+    });
+  };
+
+  const formatDeliveryDate = (timestamp) => {
+    return new Date(timestamp).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -104,6 +117,22 @@ export default function OrderSuccessPage() {
                   <MapPin className="w-5 h-5" />
                   <span>Delivery Address: <span className="font-semibold">{order.shippingDetails.address}, {order.shippingDetails.city}, {order.shippingDetails.state} - {order.shippingDetails.pincode}</span></span>
                 </div>
+
+                {/* Payment Info */}
+                {order.paymentDetails && (
+                  <div className="flex items-center space-x-3 text-gray-600">
+                    <Check className="w-5 h-5 text-green-500" />
+                    <span>Paid by: <span className="font-semibold">{order.paymentDetails.paidBy}</span> via <span className="font-semibold capitalize">{order.paymentDetails.paymentMethod}</span></span>
+                  </div>
+                )}
+
+                {/* Estimated Delivery */}
+                {order.estimatedDeliveryDate && (
+                  <div className="flex items-center space-x-3 text-gray-600">
+                    <Package className="w-5 h-5 text-blue-500" />
+                    <span>Expected Delivery: <span className="font-semibold text-blue-600">{formatDeliveryDate(order.estimatedDeliveryDate)}</span></span>
+                  </div>
+                )}
                 
                 {/* Order Items */}
                 <div className="border-t border-gray-200 pt-4">
@@ -111,7 +140,7 @@ export default function OrderSuccessPage() {
                   <div className="space-y-2">
                                          {order.items.map((item, index) => (
                        <div key={index} className="flex justify-between items-center text-sm">
-                         <span className="text-gray-600">{item.productName} x {item.quantity}</span>
+                         <span className="text-gray-600">{item.name} (Size: {item.size}) x {item.quantity}</span>
                          <span className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</span>
                        </div>
                      ))}
@@ -124,6 +153,33 @@ export default function OrderSuccessPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Delivery Tracking */}
+                {order.deliveryDetails && order.deliveryDetails.length > 0 && (
+                  <div className="border-t border-gray-200 pt-4">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+                      <Package className="w-5 h-5" />
+                      <span>Delivery Tracking</span>
+                    </h3>
+                    <div className="space-y-2">
+                      {order.deliveryDetails
+                        .sort((a, b) => b.timestamp - a.timestamp)
+                        .map((detail, index) => (
+                        <div key={index} className="flex items-start space-x-3 text-sm">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="flex-1">
+                            <p className="text-gray-900 font-medium capitalize">{detail.status.replace('_', ' ')}</p>
+                            <p className="text-gray-600">{detail.message}</p>
+                            {detail.location && (
+                              <p className="text-gray-500 text-xs">Location: {detail.location}</p>
+                            )}
+                            <p className="text-gray-400 text-xs">{formatDate(detail.timestamp)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -131,16 +187,28 @@ export default function OrderSuccessPage() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 max-w-md mx-auto">
             <button
-              onClick={() => router.push('/')}
-              className="flex-1 px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2"
+              onClick={() => {
+                if (!hasNavigated) {
+                  setHasNavigated(true);
+                  router.push('/');
+                }
+              }}
+              disabled={hasNavigated}
+              className="flex-1 px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 disabled:bg-gray-600 transition-colors flex items-center justify-center space-x-2"
             >
               <Home className="w-4 h-4" />
               <span>Go Home</span>
             </button>
             
             <button
-              onClick={() => router.push('/orders')}
-              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+              onClick={() => {
+                if (!hasNavigated) {
+                  setHasNavigated(true);
+                  router.push('/orders');
+                }
+              }}
+              disabled={hasNavigated}
+              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-green-400 transition-colors flex items-center justify-center space-x-2"
             >
               <ShoppingBag className="w-4 h-4" />
               <span>View Orders</span>
