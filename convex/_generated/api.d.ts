@@ -20,6 +20,7 @@ import type * as orders from "../orders.js";
 import type * as products from "../products.js";
 import type * as reviews from "../reviews.js";
 import type * as users from "../users.js";
+import type * as views from "../views.js";
 import type * as wishlist from "../wishlist.js";
 
 /**
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   products: typeof products;
   reviews: typeof reviews;
   users: typeof users;
+  views: typeof views;
   wishlist: typeof wishlist;
 }>;
 export declare const api: FilterApi<

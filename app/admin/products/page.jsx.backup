@@ -139,8 +139,8 @@ function StatCard({ title, value, icon: Icon, color, trend, delay = 0 }) {
   );
 }
 
-// Update the ProductCard component to include trash functionality
-function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock, onRestore, onPermanentDelete, index }) {
+// Update the ProductCard component to include the stock update button
+function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock, index }) {
   const [showActions, setShowActions] = useState(false);
   
   const getStockStatus = () => {
@@ -158,9 +158,7 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className={`bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 group ${
-        product.isDeleted ? 'opacity-60 bg-gray-50' : ''
-      }`}
+      className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 group"
     >
       <div className="p-6">
         {/* Product Image */}
@@ -176,12 +174,11 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
           </div>
           <div className="absolute top-2 right-2">
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              product.isDeleted ? 'bg-red-100 text-red-800' :
               stockInfo.color === 'green' ? 'bg-green-100 text-green-800' :
               stockInfo.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
               'bg-red-100 text-red-800'
             }`}>
-              {product.isDeleted ? 'In Trash' : stockInfo.status}
+              {stockInfo.status}
             </span>
           </div>
         </div>
@@ -203,59 +200,38 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
         {/* Actions */}
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {!product.isDeleted ? (
-              <>
-                <Link
-                  href={`/admin/edit/${product.itemId}`}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Edit Product"
-                >
-                  <Edit className="w-4 h-4" />
-                </Link>
-                <button
-                  onClick={() => onUpdateStock(product)}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  title="Update Stock"
-                >
-                  <Package className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onToggleHidden(product)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    product.isHidden 
-                      ? 'text-green-600 hover:bg-green-50' 
-                      : 'text-red-600 hover:bg-red-50'
-                  }`}
-                  title={product.isHidden ? 'Show Product' : 'Hide Product'}
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onDelete(product)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Move to Trash"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => onRestore(product)}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  title="Restore from Trash"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onPermanentDelete(product)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Permanently Delete"
-                >
-                  <XCircle className="w-4 h-4" />
-                </button>
-              </>
-            )}
+            <Link
+              href={`/admin/edit/${product.itemId}`}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit Product"
+            >
+              <Edit className="w-4 h-4" />
+            </Link>
+            <button
+              onClick={() => onUpdateStock(product)}
+              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              title="Update Stock"
+            >
+              <Package className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onToggleHidden(product)}
+              className={`p-2 rounded-lg transition-colors ${
+                product.isHidden 
+                  ? 'text-green-600 hover:bg-green-50' 
+                  : 'text-red-600 hover:bg-red-50'
+              }`}
+              title={product.isHidden ? 'Show Product' : 'Hide Product'}
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onDelete(product)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete Product"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
           
           <div className="relative">
@@ -274,66 +250,38 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="absolute right-0 top-10 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10"
                 >
-                  {!product.isDeleted ? (
-                    <>
-                      <Link
-                        href={`/product/${product.itemId}`}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Product
-                      </Link>
-                      <button
-                        onClick={() => onUpdateStock(product)}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        <Package className="w-4 h-4 mr-2" />
-                        Update Stock
-                      </button>
-                      <Link
-                        href={`/admin/product/${product.itemId}`}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Analytics
-                      </Link>
-                      <button
-                        onClick={() => onDelete(product)}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Move to Trash
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => onRestore(product)}
-                        className="flex items-center w-full px-4 py-2 text-sm text-green-600 hover:bg-green-50"
-                      >
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Restore from Trash
-                      </button>
-                      <button
-                        onClick={() => onPermanentDelete(product)}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Permanently Delete
-                      </button>
-                    </>
-                  )}
+                  <Link
+                    href={`/product/${product.itemId}`}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Product
+                  </Link>
+                  <button
+                    onClick={() => onUpdateStock(product)}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    Update Stock
+                  </button>
+                  <Link
+                    href={`/admin/product/${product.itemId}`}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Analytics
+                  </Link>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
-      </div>
+    </div>
     </motion.div>
   );
 }
 
-// Update the main component to include the trash functionality and a
+// Update the main component to include the stock update functionality
 export default function ProductDashboard() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
@@ -348,12 +296,12 @@ export default function ProductDashboard() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [stockData, setStockData] = useState({
     currentStock: 0,
+    totalAvailable: 0,
     inStock: true,
     sizeStock: {}
   });
   const [selectedSubcategory, setSelectedSubcategory] = useState("All");
   const [selectedType, setSelectedType] = useState("All");
-  const [showTrash, setShowTrash] = useState(false); // New state for trash filter
 
   // Queries
   const products = useQuery(api.products.getAll) || [];
@@ -364,8 +312,6 @@ export default function ProductDashboard() {
   const deleteProduct = useMutation(api.products.deleteProduct);
   const updateProduct = useMutation(api.products.update);
   const updateStock = useMutation(api.products.updateProductStock);
-  const moveToTrash = useMutation(api.products.moveToTrash);
-  const restoreFromTrash = useMutation(api.products.restoreFromTrash);
 
   // Category stats
   const categoryCounts = useMemo(() => {
@@ -415,10 +361,6 @@ export default function ProductDashboard() {
         if (stockFilter === "Low Stock") return p.currentStock !== undefined && p.currentStock < 10 && p.currentStock > 0;
         return true;
       })
-      .filter(p => {
-        if (showTrash) return p.isDeleted === true;
-        return p.isDeleted !== true; // Show non-deleted products by default
-      })
       .sort((a, b) => {
         if (sortBy === "name" || sortBy === "category") {
           return sortOrder === "asc"
@@ -429,7 +371,7 @@ export default function ProductDashboard() {
             ? (a[sortBy] || 0) - (b[sortBy] || 0)
             : (b[sortBy] || 0) - (a[sortBy] || 0);
         }
-      }), [products, search, sortBy, sortOrder, selectedCategory, selectedSubcategory, selectedType, stockFilter, showTrash]);
+      }), [products, search, sortBy, sortOrder, selectedCategory, selectedSubcategory, selectedType, stockFilter]);
 
   // Handlers
   const handleSort = (key) => {
@@ -451,36 +393,12 @@ export default function ProductDashboard() {
   };
 
   const handleDelete = async (product) => {
-    if (confirm(`Are you sure you want to move "${product.name}" to trash?`)) {
-      try {
-        await moveToTrash({ 
-          productId: product._id,
-          deletedBy: "admin", // Pass a string value
-          reason: "Moved to trash by admin"
-        });
-        setToast({ message: `Product "${product.name}" moved to trash!`, type: "success" });
-      } catch (error) {
-        setToast({ message: "Error moving product to trash", type: "error" });
-      }
-    }
-  };
-
-  const handleRestore = async (product) => {
-    try {
-      await restoreFromTrash({ productId: product._id });
-      setToast({ message: `Product "${product.name}" restored from trash!`, type: "success" });
-    } catch (error) {
-      setToast({ message: "Error restoring product", type: "error" });
-    }
-  };
-
-  const handlePermanentDelete = async (product) => {
-    if (confirm(`Are you sure you want to permanently delete "${product.name}"? This action cannot be undone.`)) {
+    if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
       try {
         await deleteProduct({ productId: product._id });
-        setToast({ message: `Product "${product.name}" permanently deleted!`, type: "success" });
+        setToast({ message: `Product "${product.name}" deleted successfully!`, type: "success" });
       } catch (error) {
-        setToast({ message: "Error permanently deleting product", type: "error" });
+        setToast({ message: "Error deleting product", type: "error" });
       }
     }
   };
@@ -509,6 +427,7 @@ export default function ProductDashboard() {
         productId: selectedProduct._id,
         stockData: {
           currentStock: parseInt(stockData.currentStock),
+          totalAvailable: parseInt(stockData.totalAvailable),
           inStock: stockData.inStock,
           sizeStock: stockData.sizeStock
         },
@@ -527,10 +446,11 @@ export default function ProductDashboard() {
     setSelectedProduct(product);
     setStockData({
       currentStock: product.currentStock || 0,
+      totalAvailable: product.totalAvailable || 0,
       inStock: product.inStock !== false,
       sizeStock: product.sizeStock || {}
     });
-    setShowStockModal(true); // Changed from false to true
+    setShowStockModal(true);
   };
 
   if (!products) {
@@ -548,27 +468,11 @@ export default function ProductDashboard() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {showTrash ? 'Trash' : 'Product Management'}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {showTrash ? 'Manage trashed products' : 'Manage your product catalog and inventory'}
-          </p>
-        </div>
+          <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
+          <p className="text-gray-600 mt-1">Manage your product catalog and inventory</p>
+      </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowTrash(!showTrash)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              showTrash 
-                ? 'bg-red-600 text-white hover:bg-red-700' 
-                : 'bg-white border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            <Trash2 className="w-4 h-4" />
-            {showTrash ? 'View Active' : 'View Trash'}
-          </button>
-          
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -576,51 +480,47 @@ export default function ProductDashboard() {
             <Filter className="w-4 h-4" />
             Filters
           </button>
-          
-          <button
+            <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Download className="w-4 h-4" />
             Export
-          </button>
-          
-          {!showTrash && (
-            <Link
-              href="/admin/upload/"
-              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add Product
-            </Link>
-          )}
+            </button>
+          <Link
+            href="/admin/upload/"
+            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </Link>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Products Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-300 hover:shadow-md transition-all duration-300 group"
+          className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-2xl shadow-sm border border-blue-200 hover:shadow-md transition-all duration-300 group"
         >
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Total Products</p>
-              <p className="text-3xl font-bold text-black">
+              <p className="text-sm font-medium text-blue-600">Total Products</p>
+              <p className="text-3xl font-bold text-blue-900">
                 <AnimatedNumber value={products.length} />
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-blue-500">
                 {filteredProducts.length} currently visible
               </p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <Package className="w-8 h-8 text-gray-700" />
+            <div className="p-4 bg-blue-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <Package className="w-8 h-8 text-white" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-xs text-gray-600">
+          <div className="mt-4 flex items-center text-xs text-blue-600">
             <TrendingUp className="w-4 h-4 mr-1" />
             <span>All time products</span>
           </div>
@@ -631,23 +531,23 @@ export default function ProductDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-300 hover:shadow-md transition-all duration-300 group"
+          className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-2xl shadow-sm border border-green-200 hover:shadow-md transition-all duration-300 group"
         >
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">In Stock</p>
-              <p className="text-3xl font-bold text-black">
+              <p className="text-sm font-medium text-green-600">In Stock</p>
+              <p className="text-3xl font-bold text-green-900">
                 <AnimatedNumber value={products.filter(p => p.inStock !== false && (p.currentStock === undefined || p.currentStock >= 10)).length} />
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-green-500">
                 {((products.filter(p => p.inStock !== false && (p.currentStock === undefined || p.currentStock >= 10)).length / products.length) * 100).toFixed(1)}% of total
               </p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <CheckCircle className="w-8 h-8 text-gray-700" />
+            <div className="p-4 bg-green-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-xs text-gray-600">
+          <div className="mt-4 flex items-center text-xs text-green-600">
             <Package className="w-4 h-4 mr-1" />
             <span>Available for sale</span>
           </div>
@@ -658,23 +558,23 @@ export default function ProductDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-300 hover:shadow-md transition-all duration-300 group"
+          className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-2xl shadow-sm border border-yellow-200 hover:shadow-md transition-all duration-300 group"
         >
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Low Stock</p>
-              <p className="text-3xl font-bold text-black">
+              <p className="text-sm font-medium text-yellow-600">Low Stock</p>
+              <p className="text-3xl font-bold text-yellow-900">
                 <AnimatedNumber value={products.filter(p => p.currentStock !== undefined && p.currentStock < 10 && p.currentStock > 0).length} />
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-yellow-500">
                 Need restocking
               </p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <AlertTriangle className="w-8 h-8 text-gray-700" />
+            <div className="p-4 bg-yellow-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <AlertTriangle className="w-8 h-8 text-white" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-xs text-gray-600">
+          <div className="mt-4 flex items-center text-xs text-yellow-600">
             <Clock className="w-4 h-4 mr-1" />
             <span>Requires attention</span>
           </div>
@@ -685,23 +585,23 @@ export default function ProductDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-300 hover:shadow-md transition-all duration-300 group"
+          className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-2xl shadow-sm border border-red-200 hover:shadow-md transition-all duration-300 group"
         >
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Out of Stock</p>
-              <p className="text-3xl font-bold text-black">
+              <p className="text-sm font-medium text-red-600">Out of Stock</p>
+              <p className="text-3xl font-bold text-red-900">
                 <AnimatedNumber value={products.filter(p => p.inStock === false || (p.currentStock !== undefined && p.currentStock <= 0)).length} />
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-red-500">
                 {((products.filter(p => p.inStock === false || (p.currentStock !== undefined && p.currentStock <= 0)).length / products.length) * 100).toFixed(1)}% of total
               </p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <XCircle className="w-8 h-8 text-gray-700" />
+            <div className="p-4 bg-red-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <XCircle className="w-8 h-8 text-white" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-xs text-gray-600">
+          <div className="mt-4 flex items-center text-xs text-red-600">
             <AlertTriangle className="w-4 h-4 mr-1" />
             <span>Needs restocking</span>
           </div>
@@ -715,23 +615,23 @@ export default function ProductDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-300 hover:shadow-md transition-all duration-300 group"
+          className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-2xl shadow-sm border border-purple-200 hover:shadow-md transition-all duration-300 group"
         >
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Total Sales</p>
-              <p className="text-2xl font-bold text-black">
+              <p className="text-sm font-medium text-purple-600">Total Sales</p>
+              <p className="text-2xl font-bold text-purple-900">
                 ₹<AnimatedNumber value={products.reduce((sum, p) => sum + (p.buys || 0) * (p.price || 0), 0)} />
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-purple-500">
                 Lifetime revenue
               </p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <DollarSign className="w-8 h-8 text-gray-700" />
+            <div className="p-4 bg-purple-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <DollarSign className="w-8 h-8 text-white" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-xs text-gray-600">
+          <div className="mt-4 flex items-center text-xs text-purple-600">
             <TrendingUp className="w-4 h-4 mr-1" />
             <span>All time sales</span>
           </div>
@@ -742,23 +642,23 @@ export default function ProductDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-300 hover:shadow-md transition-all duration-300 group"
+          className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-2xl shadow-sm border border-indigo-200 hover:shadow-md transition-all duration-300 group"
         >
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Average Price</p>
-              <p className="text-2xl font-bold text-black">
+              <p className="text-sm font-medium text-indigo-600">Average Price</p>
+              <p className="text-2xl font-bold text-indigo-900">
                 ₹<AnimatedNumber value={products.length > 0 ? products.reduce((sum, p) => sum + (p.price || 0), 0) / products.length : 0} />
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-indigo-500">
                 Per product
               </p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <BarChart3 className="w-8 h-8 text-gray-700" />
+            <div className="p-4 bg-indigo-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <BarChart3 className="w-8 h-8 text-white" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-xs text-gray-600">
+          <div className="mt-4 flex items-center text-xs text-indigo-600">
             <TrendingUp className="w-4 h-4 mr-1" />
             <span>Price analysis</span>
           </div>
@@ -769,23 +669,23 @@ export default function ProductDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-300 hover:shadow-md transition-all duration-300 group"
+          className="bg-gradient-to-br from-teal-50 to-teal-100 p-6 rounded-2xl shadow-sm border border-teal-200 hover:shadow-md transition-all duration-300 group"
         >
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Categories</p>
-              <p className="text-2xl font-bold text-black">
+              <p className="text-sm font-medium text-teal-600">Categories</p>
+              <p className="text-2xl font-bold text-teal-900">
                 <AnimatedNumber value={Object.keys(categoryCounts).length} />
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-teal-500">
                 Product categories
               </p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <ShoppingBag className="w-8 h-8 text-gray-700" />
+            <div className="p-4 bg-teal-500 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <ShoppingBag className="w-8 h-8 text-white" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-xs text-gray-600">
+          <div className="mt-4 flex items-center text-xs text-teal-600">
             <Package className="w-4 h-4 mr-1" />
             <span>Product variety</span>
           </div>
@@ -1012,8 +912,6 @@ export default function ProductDashboard() {
               onDelete={handleDelete}
               onEdit={() => {}}
               onUpdateStock={openStockModal}
-              onRestore={handleRestore}
-              onPermanentDelete={handlePermanentDelete}
               index={index}
             />
           ))}
@@ -1153,12 +1051,8 @@ export default function ProductDashboard() {
       {filteredProducts.length === 0 && (
         <div className="text-center py-12">
           <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {showTrash ? 'No trashed products found' : 'No products found'}
-          </h3>
-          <p className="text-gray-500">
-            {showTrash ? 'No products have been moved to trash yet.' : 'Try adjusting your filters or search criteria.'}
-          </p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+          <p className="text-gray-500">Try adjusting your filters or search criteria.</p>
         </div>
       )}
 
@@ -1211,6 +1105,22 @@ export default function ProductDashboard() {
                       }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter current stock"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Total Available
+                    </label>
+                    <input
+                      type="number"
+                      value={stockData.totalAvailable}
+                      onChange={(e) => setStockData(prev => ({ 
+                        ...prev, 
+                        totalAvailable: e.target.value 
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter total available stock"
                     />
                   </div>
 
@@ -1282,4 +1192,3 @@ export default function ProductDashboard() {
     </div>
   );
 }
-

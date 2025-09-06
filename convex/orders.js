@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { api } from "@/convex/_generated/api";
 
 // Helper function to get current timestamp
 const nowIso = () => new Date().toISOString();
@@ -331,4 +332,181 @@ export const getOrderById = query({
   handler: async (ctx, args) => {
     return await ctx.db.get(args.orderId);
   },
-}); 
+});
+
+// Get all orders for admin dashboard
+export const getAllOrders = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const orders = await ctx.db
+      .query("orders")
+      .order("desc")
+      .take(args.limit || 100);
+    
+    return orders;
+  },
+});
+
+// Get orders with filters for admin
+export const getOrdersWithFilters = query({
+  args: {
+    status: v.optional(v.string()),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+    searchQuery: v.optional(v.string()),
+    emailSearch: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    let query = ctx.db.query("orders");
+
+    // Apply status filter
+    if (args.status) {
+      query = query.filter(q => q.eq(q.field("status"), args.status));
+    }
+
+    // Apply date range filter
+    if (args.startDate) {
+      query = query.filter(q => q.gte(q.field("createdAt"), args.startDate));
+    }
+    if (args.endDate) {
+      query = query.filter(q => q.lte(q.field("createdAt"), args.endDate));
+    }
+
+    // Apply search query filter (order number)
+    if (args.searchQuery) {
+      query = query.filter(q => 
+        q.eq(q.field("orderNumber"), args.searchQuery)
+      );
+    }
+
+    // Apply email search filter
+    if (args.emailSearch) {
+      query = query.filter(q => 
+        q.eq(q.field("shippingDetails.email"), args.emailSearch)
+      );
+    }
+
+    const orders = await query
+      .order("desc")
+      .take(args.limit || 100);
+
+    return orders;
+  },
+});
+
+// Get order statistics for admin dashboard
+export const getOrderStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const orders = await ctx.db.query("orders").collect();
+    
+    const stats = {
+      total: orders.length,
+      pending: orders.filter(o => o.status === "pending").length,
+      confirmed: orders.filter(o => o.status === "confirmed").length,
+      shipped: orders.filter(o => o.status === "shipped").length,
+      delivered: orders.filter(o => o.status === "delivered").length,
+      cancelled: orders.filter(o => o.status === "cancelled").length,
+      totalRevenue: orders
+        .filter(o => o.status !== "cancelled")
+        .reduce((sum, o) => sum + o.orderTotal, 0),
+      todayOrders: orders.filter(o => {
+        const today = new Date();
+        const orderDate = new Date(o.createdAt);
+        return orderDate.toDateString() === today.toDateString();
+      }).length,
+    };
+    
+    return stats;
+  },
+});
+
+// Bulk update order status
+export const bulkUpdateOrderStatus = mutation({
+  args: {
+    orderIds: v.array(v.id("orders")),
+    status: v.string(),
+    updatedBy: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const updateData = {
+      status: args.status,
+      updatedAt: Date.now(),
+    };
+    
+    // Add timestamp for specific status changes
+    if (args.status === "shipped") {
+      updateData.shippedAt = Date.now();
+    } else if (args.status === "delivered") {
+      updateData.deliveredAt = Date.now();
+    }
+    
+    for (const orderId of args.orderIds) {
+      await ctx.db.patch(orderId, updateData);
+    }
+    
+    return { 
+      success: true, 
+      message: `Updated ${args.orderIds.length} orders to ${args.status}` 
+    };
+  },
+});
+
+// Cancel order with reason
+export const cancelOrder = mutation({
+  args: {
+    orderId: v.id("orders"),
+    reason: v.string(),
+    updatedBy: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const order = await ctx.db.get(args.orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+    
+    // Add cancellation to delivery details
+    const cancellationUpdate = {
+      status: "cancelled",
+      message: `Order cancelled: ${args.reason}`,
+      timestamp: Date.now(),
+      updatedBy: args.updatedBy || "admin",
+    };
+    
+    const updatedDeliveryDetails = [
+      ...(order.deliveryDetails || []),
+      cancellationUpdate
+    ];
+    
+    await ctx.db.patch(args.orderId, {
+      status: "cancelled",
+      deliveryDetails: updatedDeliveryDetails,
+      updatedAt: Date.now(),
+    });
+    
+    return { 
+      success: true, 
+      message: "Order cancelled successfully" 
+    };
+  },
+});
+
+// Add this function to your orders.js file
+export const updateProductSalesOnOrderComplete = mutation({
+  args: { orderId: v.id("orders") },
+  handler: async (ctx, args) => {
+    const order = await ctx.db.get(args.orderId);
+    if (!order) return;
+
+    // Update sales count for each product in the order
+    for (const item of order.items) {
+      await ctx.runMutation(api.products.updateProductSalesCount, {
+        productId: item.productId,
+        quantity: item.quantity,
+      });
+    }
+  },
+});

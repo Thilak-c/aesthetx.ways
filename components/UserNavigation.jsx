@@ -71,7 +71,7 @@ export default function UserNavigation() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="fixed inset-0 z-10"
+              className="  fixed inset-0 z-10"
               onClick={() => setIsDropdownOpen(false)}
             />
             
@@ -82,7 +82,7 @@ export default function UserNavigation() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute right-0 mt-2 w-48 py-2 z-20 border bg-white/70 backdrop-blur-xl shadow-lg rounded-xl origin-top-right"
+              className="absolute right-0 mt-2 w-48 py-2 z-20 border bg-white/100 backdrop-blur-md shadow-lg rounded-xl origin-top-right"
             >
               <div className="px-4 py-2 border-b border-gray-100">
                 <p className="text-sm font-medium text-gray-900">{me.name || "User"}</p>

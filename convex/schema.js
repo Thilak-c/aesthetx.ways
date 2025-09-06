@@ -45,11 +45,10 @@ export default defineSchema({
 			fullAddress: v.string(),
 		})),
 		permanentAddressLocked: v.optional(v.boolean()),
-	})
-	.index("by_email", ["email"])
-	.index("by_role", ["role"])
-	.index("by_deleted", ["isDeleted"])
-	.searchIndex("search_users", {
+	}).index("by_email", ["email"])
+	 .index("by_role", ["role"])
+	 .index("by_deleted", ["isDeleted"])
+	 .searchIndex("search_users", {
 		searchField: "email",
 		filterFields: ["isDeleted"]
 	}),
@@ -72,6 +71,8 @@ export default defineSchema({
 		deletedBy: v.id("users"), // Who deleted it
 		deletionReason: v.optional(v.string()),
 		canRestore: v.optional(v.boolean()), // Whether item can be restored
+		updatedAt: v.optional(v.string()), // Changed from v.number() to v.string()
+		updatedBy: v.optional(v.string()),
 	}).index("by_table", ["tableName"])
 	 .index("by_deleted_by", ["deletedBy"])
 	 .index("by_deleted_at", ["deletedAt"]),
@@ -108,6 +109,9 @@ export default defineSchema({
 		isDeleted: v.optional(v.boolean()),
 		deletedAt: v.optional(v.string()),
 		deletedBy: v.optional(v.id("users")),
+		// Add these missing fields
+		updatedAt: v.optional(v.string()),
+		updatedBy: v.optional(v.string()),
 	}).index("by_deleted", ["isDeleted"]),
 
 	// Reviews table for product reviews
@@ -216,4 +220,42 @@ export default defineSchema({
 	    .index("by_order_number", ["orderNumber"])
 	    .index("by_status", ["status"])
 	    .index("by_estimated_delivery", ["estimatedDeliveryDate"]),
+
+	// Add this table definition to your schema
+	recentlyViewed: defineTable({
+	  userId: v.id("users"),
+	  productId: v.string(),
+	  productName: v.string(),
+	  productImage: v.string(),
+	  productPrice: v.number(),
+	  productCategory: v.string(),
+	  viewedAt: v.string(),
+	}).index("by_user", ["userId"])
+	 .index("by_user_viewed", ["userId", "viewedAt"])
+	 .index("by_product", ["productId"]),
+
+	// Views table for tracking product views
+	views: defineTable({
+		productId: v.string(), // itemId of the product
+		userId: v.optional(v.id("users")), // Optional - for anonymous views
+		ipAddress: v.optional(v.string()), // For anonymous tracking
+		userAgent: v.optional(v.string()), // Browser/device info
+		referrer: v.optional(v.string()), // Where the user came from
+		viewedAt: v.string(), // When the view occurred
+		sessionId: v.optional(v.string()), // For grouping views in same session
+		// View context
+		viewType: v.optional(v.string()), // 'product_page', 'search_result', 'category_page', etc.
+		searchQuery: v.optional(v.string()), // If viewed from search
+		category: v.optional(v.string()), // Product category
+		// Soft delete
+		isDeleted: v.optional(v.boolean()),
+		deletedAt: v.optional(v.string()),
+		deletedBy: v.optional(v.id("users")),
+	}).index("by_product", ["productId"])
+	 .index("by_user", ["userId"])
+	 .index("by_viewed_at", ["viewedAt"])
+	 .index("by_product_viewed", ["productId", "viewedAt"])
+	 .index("by_view_type", ["viewType"])
+	 .index("by_category", ["category"])
+	 .index("by_deleted", ["isDeleted"]),
 });

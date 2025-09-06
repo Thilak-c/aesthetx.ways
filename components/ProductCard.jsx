@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Poppins, Inter } from "next/font/google";
+import { useProductView } from "@/hooks/useProductView";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -13,6 +14,9 @@ const inter = Inter({
 });
 
 export default function ProductCard({ img, name, category, price, productId, className = "" }) {
+  // This will automatically track views when the card is rendered
+  useProductView(productId);
+
   return (
     <Link href={`/product/${productId}`} className="block">
       <div

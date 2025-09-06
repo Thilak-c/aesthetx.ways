@@ -6,6 +6,8 @@ import {
   Users,
   Globe,
   Megaphone,
+  Check,
+  Zap,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -111,23 +113,50 @@ const ALL_INTERESTS = [
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
 const REFERRAL_SOURCES = [
-  {     label: "Google",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width={25}
-      height={25} viewBox="0 0 256 256" role="img" aria-label="Google G">
-      <title>Google G</title>
-      <g fill="none" fill-rule="evenodd">
-        <path fill="#4285F4" d="M255.6 131.2c0-8.8-.8-17.2-2.6-25.3H130v47.8h70.1c-3 16-11.9 29.6-25.5 38.7v32h41.7c24.3-22.4 38.3-55.6 38.3-93.2z"/>
-        <path fill="#34A853" d="M130 256c34.7 0 63.9-11.5 85.2-31.3l-41.7-32c-11.6 7.8-26.5 12.4-43.5 12.4-33.5 0-61.9-22.6-72.1-53.1H15.6v33.6C36.9 224.4 80 256 130 256z"/>
-        <path fill="#FBBC05" d="M57.9 153.6c-4.9-14.8-4.9-30.8 0-45.6V74.4H15.6C5.6 96.6 0 113.6 0 132s5.6 35.4 15.6 57.6l42.3-36z"/>
-        <path fill="#EA4335" d="M130 50.4c20.7 0 39.3 7.1 54 21L205 29.6C176.4 6.8 154.1 0 130 0 80 0 36.9 31.6 15.6 74.4l42.3 33.6C68.1 73 96.5 50.4 130 50.4z"/>
-      </g>
+  {
+    label: "Google",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
     </svg>`
   },
- // search icon
-  { label: "Instagram", icon: "M7 20h10a2 2 0 002-2V6a2 2 0..." }, // camera icon
-  { label: "Friend", icon: "M17 20h5V4H2v16h5m10-6h6" }, // user icon
-  { label: "Facebook", icon: "M18 2h-3a5 5..." },
-  { label: "Other", icon: "M12 20h9" },
+  {
+    label: "Instagram",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+      <path d="m16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    </svg>`
+  },
+  {
+    label: "Friend",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>`
+  },
+  {
+    label: "Facebook",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+    </svg>`
+  },
+  {
+    label: "YouTube",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#FF0000"/>
+    </svg>`
+  },
+  {
+    label: "Other",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="1"></circle>
+      <circle cx="19" cy="12" r="1"></circle>
+      <circle cx="5" cy="12" r="1"></circle>
+    </svg>`
+  },
 ];
 
 export default function Onboarding() {
@@ -349,23 +378,11 @@ export default function Onboarding() {
     >
       <div className="flex items-center justify-center space-x-3 mb-4">
         <motion.div
-          className="w-12 h-12 bg-gradient-to-br from-gray-800 to-black rounded-2xl flex items-center justify-center shadow-2xl backdrop-blur-sm border border-gray-700"
+          className="w-12 h-12 bg-transparent rounded-2xl flex items-center justify-center shadow-2xl backdrop-blur-sm "
           whileHover={{ scale: 1.15, rotate: 6 }}
           transition={{ type: "spring", stiffness: 260, damping: 15 }}
         >
-          <svg
-            className="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-            />
-          </svg>
+         <Image src="/favicon.png" alt="AesthetX" width={150} height={100} />
         </motion.div>
         <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
           Welcome to <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">AesthetX</span>
@@ -975,7 +992,7 @@ export default function Onboarding() {
               >
                 <div className="flex items-center justify-center space-x-3 mb-4">
                   <motion.div
-                    className="w-12 h-12 bg-gradient-to-r from-gray-700 to-black rounded-full flex items-center justify-center shadow-lg"
+                    className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-lg"
                     whileHover={{ scale: 1.1, rotate: 5 }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
@@ -985,12 +1002,14 @@ export default function Onboarding() {
                     How did you find us?
                   </h2>
                 </div>
-                <p className="text-gray-600">This helps us improve our reach</p>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  This helps us improve our reach and connect with more people like you
+                </p>
               </motion.div>
 
               {/* Referral Source Options */}
               <motion.div
-                className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -1000,24 +1019,107 @@ export default function Onboarding() {
                     key={source.label}
                     type="button"
                     onClick={() => setReferralSource(source.label)}
-                    className={`px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 ${
+                    className={`group relative px-6 py-4 rounded-xl border-2 font-medium transition-all duration-300 ${
                       referralSource === source.label
-                        ? "border-purple-500 bg-purple-50 text-purple-700 scale-105 shadow-lg"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:scale-105"
+                        ? "border-purple-500 bg-gradient-to-r from-purple-50 to-blue-50 text-purple-700 scale-105 shadow-lg ring-2 ring-purple-200"
+                        : "border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:bg-purple-50 hover:scale-105 hover:shadow-md"
                     }`}
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <span className="w-7" dangerouslySetInnerHTML={{ __html: source.icon }} />
+                    {/* Icon */}
+                    <div className="flex items-center justify-center space-x-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        referralSource === source.label 
+                          ? "bg-purple-100" 
+                          : "bg-gray-100 group-hover:bg-purple-100"
+                      }`}>
+                        <span 
+                          className="w-5 h-5" 
+                          dangerouslySetInnerHTML={{ __html: source.icon }} 
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{source.label}</span>
+                    </div>
                     
-                    
-                    
-                     {source.label}
+                    {/* Selection indicator */}
+                    {referralSource === source.label && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute top-2 right-2 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center"
+                      >
+                        <Check className="w-3 h-3 text-white" />
+                      </motion.div>
+                    )}
                   </motion.button>
                 ))}
+              </motion.div>
+
+              {/* Additional Options */}
+              <motion.div
+                className="space-y-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 mb-3">Don't see your source?</p>
+                  <button
+                    onClick={() => setReferralSource("Other")}
+                    className={`px-4 py-2 text-sm rounded-lg border transition-all ${
+                      referralSource === "Other"
+                        ? "border-purple-500 bg-purple-50 text-purple-700"
+                        : "border-gray-300 text-gray-600 hover:border-purple-300"
+                    }`}
+                  >
+                    Select "Other" above
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* Fun fact section */}
+              <motion.div
+                className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-100"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.0 }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-purple-900">Fun Fact!</p>
+                    <p className="text-xs text-purple-700">
+                      {referralSource === "Google" && "Most of our users discover us through search!"}
+                      {referralSource === "Instagram" && "Instagram users love our trendy collections!"}
+                      {referralSource === "Friend" && "Word of mouth is our best marketing!"}
+                      {referralSource === "Facebook" && "Facebook community helps us grow!"}
+                      {referralSource === "YouTube" && "YouTube viewers appreciate our style guides!"}
+                      {referralSource === "Other" && "We love hearing about new discovery channels!"}
+                      {!referralSource && "Your choice will help us understand our reach better!"}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Progress indicator */}
+              <motion.div
+                className="text-center space-y-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-purple-300 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                </div>
+                <p className="text-xs text-gray-500">Almost there! One more step...</p>
               </motion.div>
 
               {/* Finish Button */}
@@ -1028,24 +1130,58 @@ export default function Onboarding() {
                 <motion.button
                   onClick={finish}
                   disabled={!referralSource}
-                  className="px-10 py-4 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:from-green-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium shadow-xl flex items-center gap-2"
+                  className="group relative px-12 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium shadow-xl flex items-center gap-3 overflow-hidden"
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  Complete Setup
+                  {/* Animated background */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "100%" }}
+                    transition={{ duration: 0.6 }}
+                  />
+                  
+                  {/* Content */}
+                  <span className="relative z-10 flex items-center gap-3">
+                    <motion.div
+                      animate={{ rotate: referralSource ? 360 : 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </motion.div>
+                    Complete Setup
+                    <motion.div
+                      animate={{ x: referralSource ? 5 : 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </motion.div>
+                  </span>
                 </motion.button>
               </motion.div>
             </motion.div>

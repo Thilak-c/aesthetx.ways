@@ -98,6 +98,14 @@ export default function AddProductPage() {
     e.preventDefault();
     setLoading(true);
 
+    // Calculate total stock from all available sizes
+    const totalStock = Object.entries(form.sizeStock)
+      .filter(([size]) => form.availableSizes.includes(size))
+      .reduce((sum, [_, stock]) => sum + (parseInt(stock) || 0), 0);
+
+    // Calculate if product is in stock based on total stock
+    const inStock = totalStock > 0;
+
     await addProduct({
       itemId: crypto.randomUUID(),
       name: form.name,
@@ -116,6 +124,9 @@ export default function AddProductPage() {
           stock ? parseInt(stock) : 0
         ])
       ),
+      // Add these fields
+      currentStock: totalStock,
+      inStock: inStock,
     });
 
     alert("✅ Product Added Successfully!");

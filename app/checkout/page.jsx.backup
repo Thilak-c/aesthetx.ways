@@ -506,44 +506,6 @@ export default function CheckoutPage() {
                   showToastMessage(
                     "Payment successful! Order placed successfully."
                   );
-
-                  // Send order confirmation email
-                  try {
-                    const emailResponse = await fetch("/api/send-order-confirmation", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                        userEmail: getCurrentShippingDetails().email,
-                        userName: getCurrentShippingDetails().fullName,
-                        orderNumber: orderResult.orderNumber,
-                        orderItems: mappedItems,
-                        orderTotal: finalTotal,
-                        shippingDetails: getCurrentShippingDetails(),
-                        paymentDetails: {
-                          razorpayOrderId: response.razorpay_order_id,
-                          razorpayPaymentId: response.razorpay_payment_id,
-                          amount: finalTotal,
-                          currency: "INR",
-                          status: "paid",
-                          paidAt: Date.now(),
-                          paidBy: getCurrentShippingDetails().fullName,
-                          paymentMethod: "razorpay",
-                        },
-                      }),
-                    });
-
-                    const emailData = await emailResponse.json();
-                    if (emailData.success) {
-                      console.log("Order confirmation email sent successfully");
-                    } else {
-                      console.error("Failed to send order confirmation email:", emailData.message);
-                    }
-                  } catch (emailError) {
-                    console.error("Error sending order confirmation email:", emailError);
-                    // Don't block the success flow if email sending fails
-                  }
                   console.log("Order created:", orderResult);
 
                   // Clear cart after successful order (only for cart-based purchases)
