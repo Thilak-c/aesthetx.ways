@@ -40,13 +40,15 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} antialiased`}
       >
         <ConvexProvider client={convex}>
+              <AccessGate>
           <Suspense fallback={<div>Loading page...</div>}>
             {" "}
             {/* Add Suspense boundary */}
             <LayoutWrapper>
-              <AccessGate>{children}</AccessGate>
+              {children}
             </LayoutWrapper>
           </Suspense>
+              </AccessGate>
         </ConvexProvider>
       </body>
     </html>
