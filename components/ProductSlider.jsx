@@ -3,7 +3,7 @@ import Image from "next/image";
 
 const slides = [
   {
-    img: "/poster-img-hero-home/6d77f1ef7a8e26964e0fd22f055b660a.jpg",
+    img: "/poster-img-hero-home/IMG_3401.JPG",
     title: "BEN 10 ALIEN FORCE",
     subtitle: "FIRST TIME EVER IN INDIA",
     cta: "TAP TO UNLOCK",
@@ -12,7 +12,7 @@ const slides = [
     pieces: 600,
   },
   {
-    img: "/poster-img-hero-home/39dc8c77f0460ea45ad55ef3293e0858.jpg",
+    img: "/poster-img-hero-home/IMG_1725.PNG",
     title: "ALIEN FORCE DROP",
     subtitle: "COLLECTOR'S ITEM",
     cta: "SHOP NOW",
@@ -21,7 +21,7 @@ const slides = [
     pieces: 400,
   },
   {
-    img: "/poster-img-hero-home/546dc46eb0510b4adb65bbcedd64dd21.jpg",
+    img: "/poster-img-hero-home/IMG_3402 (1).JPG",
     title: "LIMITED TEE",
     subtitle: "DON'T MISS OUT",
     cta: "BUY NOW",
@@ -30,7 +30,15 @@ const slides = [
     pieces: 300,
   },
   {
-    img: "/poster-img-hero-home/cb9baa797e7b724f079f4c10ea5b8e19.jpg",
+    img: "/poster-img-hero-home/IMG_3403.JPG",
+    title: "EXCLUSIVE DROP",
+    subtitle: "NEW ARRIVAL",
+    cta: "EXPLORE",
+    description: "FRESH DESIGNS",
+    limited: "JUST LAUNCHED",
+    pieces: 200,
+  },  {
+    img: "/poster-img-hero-home/IMG_3414.JPG",
     title: "EXCLUSIVE DROP",
     subtitle: "NEW ARRIVAL",
     cta: "EXPLORE",

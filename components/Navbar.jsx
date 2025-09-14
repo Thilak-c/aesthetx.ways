@@ -114,7 +114,7 @@ export default function Navbar() {
           <div className="relative" ref={searchRef}>
             <form
               onSubmit={handleSearchSubmit}
-              className="flex items-center border border-white/20 rounded-full px-3 py-1 w-72 bg-white/10 backdrop-blur-sm"
+              className="relative flex items-center border border-white/20 rounded-full px-3 py-1 w-72 bg-white/10 backdrop-blur-sm"
             >
               <input
                 type="text"
@@ -125,7 +125,7 @@ export default function Navbar() {
               />
               <button
                 type="submit"
-                className="ml-2 hover:opacity-70 transition-opacity"
+                className="absolute ml-2 right-2 hover:opacity-70 transition-opacity"
               >
                 <Image
                   src="/icons/search.png"
@@ -353,7 +353,7 @@ export function NavbarMobile() {
                   }}
                   className="mr-2 flex justify-center items-center text-xl"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-arrow-left-icon lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left-icon lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                 </button>
 
                 <input

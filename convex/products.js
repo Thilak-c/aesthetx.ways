@@ -16,35 +16,33 @@ export const insert = mutation(async ({ db }, product) => {
 
 // Move product to trash (store in trash table AND mark as deleted)
 export const moveToTrash = mutation({
-  args: { 
-    productId: v.id("products"),
-    deletedBy: v.optional(v.string()),
-    reason: v.optional(v.string())
+  args: {
+    productId: v.string(),          // ID of the product to delete
+    deletedBy: v.optional(v.string()), // Optional, who deleted it
+    reason: v.optional(v.string()), // Optional, reason for deletion
   },
-  handler: async (ctx, { productId, deletedBy, reason = "Moved to trash by admin" }) => {
-    const product = await ctx.db.get(productId);
-    if (!product) throw new Error("Product not found");
-    
-    // Store original data in trash table
-    await ctx.db.insert("trash", {
-      originalId: productId, // This will be converted to string automatically
+  handler: async (ctx, { productId, deletedBy, reason }) => {
+    // 1. Fetch the product from the products table
+    const product = await ctx.db.get("products", productId);
+    if (!product) {
+      throw new Error("Product not found.");
+    }
+
+    // 2. Insert into trashforproduct
+    await ctx.db.insert("trashforproduct", {
+      originalId: productId,
       tableName: "products",
       originalData: product,
       deletedAt: nowIso(),
-      deletedBy: deletedBy || "admin", // Use provided deletedBy or default to "admin"
-      deletionReason: reason,
+      deletedBy: deletedBy || "admin",
+      deletionReason: reason || "",
       canRestore: true,
     });
-    
-    // Mark product as deleted
-    await ctx.db.patch(productId, { 
-      isDeleted: true,
-      deletedAt: nowIso(),
-      deletedBy: deletedBy || "admin", // Use string value
-      updatedAt: nowIso() // Ensure this is a string
-    });
-    
-    return { success: true, message: "Product moved to trash successfully" };
+
+    // 3. Delete the product from products table
+    await ctx.db.delete("products", productId);
+
+    return { success: true, message: "Product deleted and moved to trash." };
   },
 });
 
