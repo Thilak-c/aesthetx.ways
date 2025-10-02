@@ -550,7 +550,7 @@ export default function ProductPage() {
           <motion.div variants={itemVariants} className="space-y-3 sm:space-y-4 lg:space-y-6">
             <div className="relative group">
               <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-lg sm:shadow-xl lg:shadow-2xl">
-                <Image
+                <img
                   src={selectedImage === 0 ? product.mainImage : product.otherImages[selectedImage - 1]}
                   alt={product.name}
                   fill
@@ -585,7 +585,7 @@ export default function ProductPage() {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <Image
+                  <img
                     src={img}
                     alt={`${product.name} ${index + 1}`}
                     fill

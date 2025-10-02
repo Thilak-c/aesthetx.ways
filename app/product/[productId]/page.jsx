@@ -563,11 +563,9 @@ export default function ProductPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
         >
           <div className="w-16 h-16 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto"></div>
           <p className="text-gray-600 text-lg font-medium">
-            Loading your product...
           </p>
         </motion.div>
       </div>
@@ -866,14 +864,13 @@ export default function ProductPage() {
               </button>
 
               <div className="relative aspect-[4/5] lg:aspect-[3/4] bg-white rounded-2xl overflow-hidden">
-                <Image
+                <img
                   src={
                     modalImageIndex === 0
                       ? product?.mainImage
                       : product?.otherImages[modalImageIndex - 1]
                   }
                   alt={product?.name}
-                  fill
                   className="object-cover object-center"
                 />
               </div>
@@ -891,7 +888,7 @@ export default function ProductPage() {
                           : "border-white/50"
                       }`}
                     >
-                      <Image
+                      <img
                         src={img}
                         alt={`${product?.name} ${index + 1}`}
                         width={64}
@@ -979,7 +976,7 @@ export default function ProductPage() {
                     }}
                     className="absolute inset-0"
                   >
-                    <Image
+                    <img
                       src={
                         selectedImage === 0
                           ? product?.mainImage
@@ -1182,7 +1179,7 @@ export default function ProductPage() {
                             : "border-gray-200 hover:border-gray-300 "
                         }`}
                       >
-                        <Image
+                        <img
                           src={img}
                           alt={`${product?.name} ${index + 1}`}
                           fill
@@ -1308,7 +1305,7 @@ export default function ProductPage() {
                         whileTap={{ scale: isOutOfStock ? 1 : 0.95 }}
                         onClick={() => !isOutOfStock && setSelectedSize(size)}
                         disabled={isOutOfStock}
-                        className={`relative px-3 py-2 lg:px-4 lg:py-3 rounded-xl lg:rounded-2xl border-2 font-medium transition-all duration-200 text-xs lg:text-sm ${
+                        className={`relative px-3 py-2 lg:px-4 lg:py-3 rounded-sm lg:rounded-2xl border-2 font-medium transition-all duration-200 text-xs lg:text-sm ${
                           isSelected
                             ? "border-gray-900 bg-gray-900 text-white"
                             : isOutOfStock
@@ -1318,7 +1315,7 @@ export default function ProductPage() {
                       >
                         <span>{size}</span>
                         {sizeStock > 0 && sizeStock < 10 && (
-                          <div className="absolute -top-1 -right-1 w-2 h-2 lg:w-3 lg:h-3 bg-orange-500 rounded-full"></div>
+                          <div className="absolute -top-1 -right-1 w-2 h-2 lg:w-3 lg:h-3 bg-orange-200 rounded-full"></div>
                         )}
                         {isOutOfStock && (
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -2171,7 +2168,7 @@ export default function ProductPage() {
             <div className="flex overflow-x-auto gap-4 pb-4 max-w-full">
               {relatedProducts.map((relatedProduct, index) => (
                 <motion.div
-                  key={relatedProduct.itemId}
+                  key={relatedProduct._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}

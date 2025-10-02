@@ -259,7 +259,7 @@ export default function CartPage() {
                     <div className="flex items-start space-x-2.5 lg:space-x-4">
                       {/* Product Image */}
                       <div className="relative w-[80px] h-[100px] sm:w-14 sm:h-14 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-lg lg:rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                        <Image
+                        <img
                           src={item.productImage}
                           alt={item.productName}
                           fill

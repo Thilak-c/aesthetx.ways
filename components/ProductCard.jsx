@@ -37,7 +37,7 @@ export default function ProductCard({
   if (!loading) {
     useProductView(productId);
   }
-
+console.log(img)
   if (loading) {
     return (
       <div
@@ -60,16 +60,16 @@ export default function ProductCard({
   }
 
   return (
-    <div className="block">
+    <div className="block ">
       <div
         className={`flex-shrink-0 w-[180px] md:w-[200px] lg:w-[250px]
-        bg-white rounded-xl overflow-hidden group flex flex-col cursor-pointer transition duration-300 ${className}`}
+         rounded-xl overflow-hidden group flex flex-col cursor-pointer transition duration-300 ${className}`}
       >
-        <div className="relative rounded-t-xl w-full aspect-[3/4] bg-gray-100 overflow-hidden">
-          <Image
+        <div className="relative  rounded-t-xl w-full aspect-[3/4] bg-gray-100 overflow-hidden">
+          <img
             src={img}
             alt={name}
-            fill
+            fill={name}
             className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-110"
           />
         </div>

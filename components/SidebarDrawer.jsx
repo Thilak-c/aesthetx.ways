@@ -57,7 +57,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-xs" 
         {/* Header */}
         <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-white rounded-tr-xl">
           <div className="flex items-center justify-center gap-2">
-            <Image src="/logo.png" alt="Logo" width={90} height={24} className="" />
+            <img src="/logo.png" alt="Logo" width={90} height={24} className="" />
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-lg font-bold transition-colors p-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 w-7 h-7 flex items-center justify-center">
             ×
@@ -98,7 +98,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-xs" 
           <div className="flex overflow-x-auto gap-2 p-2 pb-1">
             {menCards.map((card) => (
               <div key={card.name} className="flex-shrink-0 w-16 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-                <Image
+                <img
                   src={card.img}
                   alt={card.name}
                   width={64}
@@ -120,7 +120,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-xs" 
                 onClick={() => toggleSection(cat)}
               >
                 {cat}
-                <Image
+                <img
                   src="/icons/arow.png"
                   alt="Toggle"
                   width={12}
@@ -133,7 +133,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-xs" 
                 <div className="flex overflow-x-auto gap-2 pb-2">
                   {accessories.map((item) => (
                     <div key={item.name} className="flex-shrink-0 w-16 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-                      <Image
+                      <img
                         src={item.img}
                         alt={item.name}
                         width={64}

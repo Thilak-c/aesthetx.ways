@@ -40,7 +40,7 @@
 - **Pagination**: Efficient data loading with pagination
 - **Memoization**: React.memo and useMemo for optimal rendering
 - **Code Splitting**: Lazy loading of components
-- **Image Optimization**: Next.js Image component with lazy loading
+- **imgptimization**: Next.js imimgponent with lazy loading
 - **Bundle Optimization**: Tree shaking and dead code elimination
 
 ### 🛠 **TECHNICAL EXCELLENCE**

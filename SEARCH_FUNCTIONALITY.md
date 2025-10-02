@@ -8,7 +8,7 @@ This project now includes a comprehensive search functionality integrated with C
 - **Real-time search**: As you type, products are searched in real-time using Convex
 - **Debounced queries**: Search requests are debounced to avoid excessive API calls
 - **Dropdown results**: Shows up to 8 search results in a dropdown below the search bar
-- **Product preview**: Each result shows product image, name, category, and price
+- **Product preview**: Each result shows product imgcategory, and price
 - **Direct navigation**: Click on any result to go directly to the product page
 - **View all results**: Option to see all search results on a dedicated page
 
@@ -77,7 +77,7 @@ This project now includes a comprehensive search functionality integrated with C
 - **Debounced queries**: Prevents excessive API calls
 - **Limited results**: Shows reasonable number of results initially
 - **Lazy loading**: Results load only when needed
-- **Optimized images**: Uses Next.js Image component for optimization
+- **Optimized imgs Next.js imimimimimgptimization
 
 ## Future Enhancements
 

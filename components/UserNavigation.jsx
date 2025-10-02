@@ -24,7 +24,7 @@ export default function UserNavigation() {
       <div className="flex items-center space-x-4">
         <Link
           href="/login"
-          className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+          className="text-gray-700 rounded-full transition-all delay-200 hover:border-t-2 hover:border-r-2 border-black/5 bg-transparent  hover:shadow-[10px_-10px_15px_rgba(0,0,0,0.15)] px-2 hover:text-gray-900 px- py-2 -md text-sm font-medium -colors"
         >
           <img className="w-7" src="/user.png" alt="" />
         </Link>
@@ -41,7 +41,7 @@ export default function UserNavigation() {
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
       >
-        {me.photoUrl ? (
+       {me.photoUrl ? (
           <img
             src={me.photoUrl}
             alt="Profile"
@@ -77,7 +77,7 @@ export default function UserNavigation() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute right-0 mt-2 w-48 py-2 z-20 border bg-white/100 backdrop-blur-md shadow-lg rounded-xl origin-top-right"
+              className="absolute right-0 mt-2 w-48 py-2 z-20 border overflow-hidden bg-white/100 backdrop-blur-md shadow-lg rounded-xl origin-top-right"
             >
               <div className="px-4 py-2 border-b border-gray-100">
                 <p className="text-sm font-medium text-gray-900">{me.name || "User"}</p>

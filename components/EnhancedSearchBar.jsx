@@ -381,7 +381,7 @@ export default function EnhancedSearchBar() {
                       className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors group"
                     >
                       <div className="w-12 h-12 relative flex-shrink-0 rounded-lg overflow-hidden">
-                        <Image
+                        <img
                           src={product.mainImage}
                           alt={product.name}
                           fill

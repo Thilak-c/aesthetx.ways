@@ -19,7 +19,7 @@ export default function Footer() {
           
           {/* Logo + About */}
           <div>
-            <Image
+            <img
               src="/logo.png"
               alt="My Logo"
               width={200}

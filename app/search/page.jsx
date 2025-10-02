@@ -481,7 +481,7 @@ export default function EnhancedSearchPage() {
                     }`}
                   >
                     <div className={`${viewMode === "grid" ? "aspect-square" : "w-24 h-24"} relative flex-shrink-0 overflow-hidden`}>
-                      <Image
+                      <img
                         src={product.mainImage}
                         alt={product.name}
                         fill

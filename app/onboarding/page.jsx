@@ -347,7 +347,7 @@ export default function Onboarding() {
           transition={{ delay: 0.2, duration: 0.6 }}
         >
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <Image src="/logo.png" alt="AesthetX" width={150} height={100} />
+            <img src="/logo.png" alt="AesthetX" width={150} height={100} />
           </div>
 
           <div className="flex items-center justify-center space-x-2">
@@ -382,7 +382,7 @@ export default function Onboarding() {
           whileHover={{ scale: 1.15, rotate: 6 }}
           transition={{ type: "spring", stiffness: 260, damping: 15 }}
         >
-         <Image src="https://aesthetxways.com/favicon.png" alt="AesthetX" width={150} height={100} />
+         <img src="https://aesthetxways.com/favicon.png" alt="AesthetX" width={150} height={100} />
         </motion.div>
         <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
           Welcome to <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">AesthetX</span>

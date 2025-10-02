@@ -68,7 +68,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div ref={searchRef} className="relative">
+    <div ref={searchRef} className="z-50 relative">
       {/* Search Input */}
       <form onSubmit={handleSearch} className="relative flex items-center border border-white/20 rounded-full px-3 py-1 w-72 bg-white/10 backdrop-blur-sm text-white">
         <input
@@ -89,7 +89,7 @@ export default function SearchBar() {
           type="submit" 
           className=" absolute right-0 z-50 cursor-pointer"
         >
-          <Image
+          <img
             src="/icons/search.png"
             alt="Search"
             width={20}
@@ -112,7 +112,7 @@ export default function SearchBar() {
                   className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
                 >
                   <div className="w-12 h-12 relative flex-shrink-0">
-                    <Image
+                    <img
                       src={product.mainImage}
                       alt={product.name}
                       fill

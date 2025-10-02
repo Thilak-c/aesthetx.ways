@@ -166,7 +166,7 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
         {/* Product Image */}
         <div className="relative mb-4">
           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-            <Image
+            <img
               src={product.images?.[0] || '/placeholder-product.jpg'}
               alt={product.name}
               width={200}
@@ -1061,7 +1061,7 @@ export default function ProductDashboard() {
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                          <Image
+                          <img
                             src={product.images?.[0] || '/placeholder-product.jpg'}
                             alt={product.name}
                             width={48}

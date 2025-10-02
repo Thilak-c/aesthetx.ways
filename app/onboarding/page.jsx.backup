@@ -399,7 +399,7 @@ export default function Onboarding() {
           transition={{ delay: 0.2, duration: 0.6 }}
         >
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <Image src="/logo.png" alt="AesthetX" width={150} height={100} />
+            <img="/logo.png" alt="AesthetX" width={150} height={100} />
           </div>
 
           <div className="flex items-center justify-center space-x-2">

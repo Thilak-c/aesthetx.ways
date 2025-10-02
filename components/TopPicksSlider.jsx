@@ -112,7 +112,7 @@ const router = useRouter();
   };
 
   return (
-    <section className="w-full flex flex-col items-center py-12 bg-white">
+    <section className="w-full flex flex-col items-center py-12 ">
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-gray-800">
           TOP PICKS OF THE WEEK

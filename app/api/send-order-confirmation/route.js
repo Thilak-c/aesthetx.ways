@@ -35,7 +35,7 @@ export async function POST(request) {
     const itemsHtml = orderItems.map(item => `
       <div style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #e2e8f0;">
         <div style="width: 60px; height: 60px; background: #f8fafc; border-radius: 8px; margin-right: 15px; overflow: hidden;">
-          <img src="https://aesthetxways.com${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" />
+          <img src="${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
         <div style="flex: 1;">
           <h4 style="margin: 0 0 5px 0; font-size: 16px; color: #1e293b; font-weight: 600;">${item.name}</h4>
@@ -59,9 +59,9 @@ export async function POST(request) {
 
     // Email content
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: `AesthetX Ways <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: `Order Confirmation || AESTHETX WAYS`,
+      subject: `Order Confirmation`,
       html: `
 <body style="margin:0; padding:0; background-color:#f8f9fa; font-family: Arial, sans-serif;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8f9fa">

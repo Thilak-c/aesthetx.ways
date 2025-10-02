@@ -57,9 +57,9 @@ export async function POST(request) {
 
     // Email content
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+ from: `AesthetX Ways <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'AesthetX Ways - Email Verification OTP',
+      subject: 'Email Verification OTP',
       html: `
   <body style="margin:0; padding:0; font-family: Arial, sans-serif; background:#f8f9fa;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8f9fa">

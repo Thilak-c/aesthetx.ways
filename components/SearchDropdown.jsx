@@ -60,13 +60,13 @@ export default function SearchDropdown({ searchTerm, isOpen, onClose }) {
           {searchResults.map((product) => (
             <Link
               key={product._id}
-              href={`/product/${product.itemId}`}
+              href={`/product/${product._id}`}
               onClick={onClose}
               className="flex items-center gap-3 px-4 py-3 hover:bg-black/5 transition-colors border-b border-gray-100 last:border-b-0"
             >
               {/* Product Image */}
               <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                <Image
+                <img
                   src={product.mainImage}
                   alt={product.name}
                   width={48}

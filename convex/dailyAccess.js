@@ -32,7 +32,7 @@ export const requestAccess = mutation({
       .filter(q => q.eq(q.field("date"), today))
       .collect();
 
-    if (count.length >= 100) {
+    if (count.length >= 500) {
       return { success: false };
     }
 

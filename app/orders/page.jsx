@@ -378,7 +378,7 @@ function OrderCard({
                   key={idx}
                   className="w-[100px]  border-2 border-white rounded-lg overflow-hidden"
                 >
-                  <Image
+                  <img
                     src={item.image || "/products/placeholder.jpg"}
                     alt={item.name}
                     width={80}
@@ -434,7 +434,7 @@ function OrderCard({
                   {order.items.map((item, idx) => (
                     <div key={idx} className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-4 bg-white rounded-lg border border-gray-200">
                       <div className="w-[100px] rounded-lg overflow-hidden flex-shrink-0">
-                        <Image
+                        <img
                           src={item.image || "/products/placeholder.jpg"}
                           alt={item.name}
                           width={80}

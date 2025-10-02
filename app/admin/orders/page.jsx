@@ -586,7 +586,7 @@ export default function AdminOrdersPage() {
                       <div className="space-y-3">
                         {order.items.map((item, itemIndex) => (
                           <div key={itemIndex} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                            <Image
+                            <img
                               src={item.image}
                               alt={item.name}
                               width={60}

@@ -14,6 +14,141 @@ export const insert = mutation(async ({ db }, product) => {
   });
 });
 
+
+
+
+// Bulletproof case-insensitive category search
+export const getProductsByCategoryOrType = query({
+  args: { 
+    searchTerm: v.string(),
+    searchType: v.optional(v.union(v.literal("category"), v.literal("type"), v.literal("both")))
+  },
+  handler: async (ctx, args) => {
+    try {
+      const normalizedTerm = args.searchTerm?.trim();
+      const searchType = args.searchType || "both";
+      
+      if (!normalizedTerm) {
+        return [];
+      }
+
+      // Get all non-deleted, visible, in-stock products
+      const allProducts = await ctx.db
+        .query("products")
+        .filter((q) => 
+          q.and(
+            q.eq(q.field("isDeleted"), false),
+            q.eq(q.field("isHidden"), false),
+            q.eq(q.field("inStock"), true)
+          )
+        )
+        .collect();
+      
+      return allProducts.filter(product => {
+        const termLower = normalizedTerm.toLowerCase();
+        
+        // Check category (case-insensitive)
+        const categoryMatch = searchType !== "type" && 
+          product.category?.toLowerCase() === termLower;
+        
+        // Check type array (case-insensitive)
+        const typeMatch = searchType !== "category" && 
+          product.type && 
+          Array.isArray(product.type) && 
+          product.type.some(t => t?.toLowerCase() === termLower);
+        
+        return categoryMatch || typeMatch;
+      });
+      
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      return [];
+    }
+  },
+});
+
+// Also keep the original for backward compatibility
+export const getProductsByCategory = query({
+  args: { category: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      const normalizedCategory = args.category?.trim();
+      
+      if (!normalizedCategory) {
+        return [];
+      }
+
+      const allProducts = await ctx.db
+        .query("products")
+        .filter((q) => 
+          q.and(
+            q.eq(q.field("isDeleted"), false),
+            q.eq(q.field("isHidden"), false),
+            q.eq(q.field("inStock"), true)
+          )
+        )
+        .collect();
+      
+      // Case-insensitive category matching
+      return allProducts.filter(product => 
+        product.category?.toLowerCase() === normalizedCategory.toLowerCase()
+      );
+      
+    } catch (error) {
+      console.error("Error fetching products by category:", error);
+      return [];
+    }
+  },
+});
+
+// Get products by subcategory (case-insensitive)
+export const getProductsBySubcategory = query({
+  args: { subcategory: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      const normalizedSubcategory = args.subcategory?.trim();
+      
+      if (!normalizedSubcategory) {
+        return [];
+      }
+
+      const products = await ctx.db
+        .query("products")
+        .filter((q) => 
+          q.and(
+            q.eq(q.field("isDeleted"), false),
+            q.eq(q.field("isHidden"), false),
+            q.eq(q.field("inStock"), true)
+          )
+        )
+        .collect();
+      
+      // Case-insensitive subcategory matching
+      return products.filter(product => 
+        product.subcategories?.toLowerCase() === normalizedSubcategory.toLowerCase()
+      );
+      
+    } catch (error) {
+      console.error("Error fetching products by subcategory:", error);
+      return [];
+    }
+  },
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Move product to trash (store in trash table AND mark as deleted)
 export const moveToTrash = mutation({
   args: {

@@ -25,7 +25,7 @@ export default function Navbar() {
             onClick={() => setSidebarOpen(true)}
             className="p-4 hover:bg-white/10 rounded-xl transition"
           >
-            <Image
+            <img
               src="/icons/hamburger.png"
               alt="Menu"
               width={24}
@@ -59,7 +59,7 @@ export default function Navbar() {
 
         {/* Center: Logo */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <Image
+          <img
             src="/logo.png"
             alt="The Souled Store"
             width={200}
@@ -78,7 +78,7 @@ export default function Navbar() {
               className="outline-none flex-1 bg-transparent text-sm placeholder-black/60 text-black"
             />
             <button className="ml-2">
-              <Image
+              <img
                 src="/icons/search.png"
                 alt="Search"
                 width={24}
@@ -97,7 +97,7 @@ export default function Navbar() {
               key={idx}
               className="hover:bg-white/10 rounded-full p-2 transition-colors"
             >
-              <Image src={icon.src} alt={icon.alt} width={24} height={24} />
+              <imgrc={icon.src} alt={icon.alt} width={24} height={24} />
             </button>
           ))}
         </div>
@@ -161,7 +161,7 @@ export function NavbarMobile() {
           className="p-2 z-10 rounded-lg hover:bg-white/10 transition-colors"
           onClick={() => setSidebarOpen(true)}
         >
-          <Image src="/icons/hamburger.png" alt="Menu" width={24} height={24} />
+          <imgrc="/icons/hamburger.png" alt="Menu" width={24} height={24} />
         </button>
 
         {/* Icons */}
@@ -174,7 +174,7 @@ export function NavbarMobile() {
               key={idx}
               className="p-1 rounded-full hover:bg-white/10 transition-colors"
             >
-              <Image src={icon.src} alt={icon.alt} width={24} height={24} />
+              <imgrc={icon.src} alt={icon.alt} width={24} height={24} />
             </button>
           ))}
           <UserNavigation />

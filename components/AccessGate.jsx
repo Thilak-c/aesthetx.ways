@@ -59,16 +59,16 @@ export default function AccessGate({ children }) {
           onClick={() => setShowPopup(true)}
           className="fixed z-50 top-[55%] right-0 -translate-y-1/2 transform -rotate-90 origin-bottom-right border-black/20 border-1 bg-white text-black py-1 px-3 font-extrabold rounded"
         >
-          Trial Site: {dailyCount ?? 0}/100
+          Trial Site: {dailyCount ?? 0}/500
         </footer>
         <div className="bg-gray-100 p-8 rounded-xl text-center max-w-md">
           <h1 className="text-2xl text-red-600 font-bold mb-4">
             Access Denied
           </h1>
-          <p className="mb-4 text-black">Daily limit of 100 users reached.</p>
+          <p className="mb-4 text-black">Daily limit of 500 users reached.</p>
           <p className="text-sm text-gray-700">Try again tomorrow.</p>
           <div className="mt-6 text-xs text-red-500">
-            Today’s usage: {dailyCount ?? 0}/100
+            Today’s usage: {dailyCount ?? 0}/500
           </div>
         </div>
       </div>
@@ -91,7 +91,7 @@ export default function AccessGate({ children }) {
         onClick={() => setShowPopup(true)}
         className="fixed z-50 top-[55%] right-0 -translate-y-1/2 transform -rotate-90 origin-bottom-right border-black/20 border-1 bg-white text-black py-1 px-3 font-extrabold rounded"
       >
-        Trial Site: {dailyCount ?? 0}/100
+        Trial Site: {dailyCount ?? 0}/500
       </footer>
 
       {/* Trial Popup */}

@@ -57,7 +57,7 @@ export default function SidebarDrawer({ open, onClose, width }) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-tr-2xl">
           <div className="flex items-center justify-center gap-3">
-            <Image src="/logo.png" alt="Logo" width={150} height={40} className="" />
+            <img src="/logo.png" alt="Logo" width={150} height={40} className="" />
 
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300">
@@ -97,7 +97,7 @@ export default function SidebarDrawer({ open, onClose, width }) {
           <div className="flex overflow-x-auto gap-16 p-8 pb-2 ">
             {menCards.map((card) => (
               <div key={card.name} className="flex-shrink-0 w-24 bg-white rounded-xl shadow hover:shadow-md transition-shadow duration-200">
-                <Image
+                <img
                   src={card.img}
                   alt={card.name}
                   width={96}
@@ -119,7 +119,7 @@ export default function SidebarDrawer({ open, onClose, width }) {
                 onClick={() => toggleSection(cat)}
               >
                 {cat}
-                <Image
+                <img
                   src="/icons/arow.png"
                   alt="Toggle"
                   width={16}
@@ -132,7 +132,7 @@ export default function SidebarDrawer({ open, onClose, width }) {
                 <div className="flex px-8 overflow-x-auto gap-16 pb-3">
                   {accessories.map((item) => (
                     <div key={item.name} className="flex-shrink-0 w-24 bg-white rounded-xl shadow hover:shadow-md transition-shadow duration-200">
-                      <Image
+                      <img
                         src={item.img}
                         alt={item.name}
                         width={96}
@@ -158,7 +158,7 @@ export default function SidebarDrawer({ open, onClose, width }) {
               className="w-full flex  items-center py-3 text-[14px] font-extrabold text-black hover:text-teal-700 transition-colors"
             >
               Track My Order
-              <Image
+              <img
                 src="/icons/track-order.png"
                 alt="Toggle"
                 width={20}
@@ -175,7 +175,7 @@ export default function SidebarDrawer({ open, onClose, width }) {
               className="w-full flex  items-center py-3  text-[14px] font-extrabold text-black hover:text-teal-700 transition-colors"
             >
               Stores Near Me
-              <Image
+              <img
                 src="/icons/stores.png"
                 alt="Toggle"
                 width={20}
@@ -190,7 +190,7 @@ export default function SidebarDrawer({ open, onClose, width }) {
               className="w-full flex  items-center py-3  text-[14px] font-extrabold text-black hover:text-teal-700 transition-colors"
             >
              More
-              <Image
+              <img
                 src="/icons/more.png"
                 alt="Toggle"
                 width={20}

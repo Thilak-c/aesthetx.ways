@@ -180,7 +180,7 @@ export default function MobileSearchModal({ isOpen, onClose }) {
                   >
                     {/* Product Image */}
                     <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      <Image
+                      <img
                         src={product.mainImage}
                         alt={product.name}
                         width={64}

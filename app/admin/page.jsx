@@ -173,7 +173,7 @@ export default function AdminHomePage() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredProducts.map(p => (
         <div key={p.itemId} className="bg-white rounded-xl shadow-md hover:shadow-xl transition transform hover:scale-105 relative overflow-hidden group">
-          <img src={p.mainImage} alt={p.name} className="w-full h-40 object-cover rounded-t-xl" />
+          <img src={p.mainimg} alt={p.name} className="w-full h-40 object-cover rounded-t-xl" />
           
           <div className="p-4">
             <h3 className="font-semibold text-lg">{p.name}</h3>

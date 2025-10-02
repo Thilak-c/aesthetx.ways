@@ -868,7 +868,7 @@ export default function OrderDetailsPage({ params }) {
                 {order.items.map((item, idx) => (
                   <div key={idx} className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4 p-4 border rounded-lg">
                     <div className="w-[100px] sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
-                      <Image
+                      <im
                         src={item.image || "/placeholder.jpg"}
                         alt={item.name}
                         width={80}
