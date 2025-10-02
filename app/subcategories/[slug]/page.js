@@ -26,7 +26,7 @@ const slugToSubcategoryMap = {
   "caps": "Caps",
   "hats": "Caps",
 };
-
+//giigg
 export default function SubcategoryPage({ params }) {
   // Unwrap the params Promise using React.use()
   const { slug } = use(params);
