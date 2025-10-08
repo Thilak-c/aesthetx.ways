@@ -49,7 +49,8 @@ const createInitialDeliveryTracking = (orderTimestamp) => {
 // Create a new order
 export const createOrder = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.any(),
+    
     items: v.array(v.object({
       productId: v.string(),
       name: v.string(),
@@ -103,6 +104,7 @@ export const createOrder = mutation({
       // Create the order
       const orderId = await ctx.db.insert("orders", {
         userId: args.userId,
+  
         orderNumber,
         items: args.items,
         shippingDetails: args.shippingDetails,
@@ -168,11 +170,10 @@ export const createOrder = mutation({
       };
     } catch (error) {
       console.error("Error creating order:", error);
-      throw new Error("Failed to create order");
+      throw new Error(error);
     }
   },
 });
-
 // Get user's orders
 export const getUserOrders = query({
   args: {

@@ -185,7 +185,7 @@ export default defineSchema({
     .index("by_user_product", ["userId", "productId"])
     .index("by_active", ["isActive"]),
   orders: defineTable({
-    userId: v.id("users"),
+    userId: v.any(),
     orderNumber: v.string(),
     items: v.array(
       v.object({

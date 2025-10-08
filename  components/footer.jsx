@@ -15,7 +15,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto h-full flex flex-col justify-between px-6 py-12">
         
         {/* Top Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
+        <div className="justify-between flex-col">
           
           {/* Logo + About */}
           <div>
@@ -32,33 +32,13 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-<div>
-  <h3 className="font-bold text-base mb-3">Quick Links</h3>
-  <ul className="grid grid-cols-2 gap-y-1 text-gray-600 text-sm">
-    <li><a href="/" className="hover:text-black transition">Home</a></li>
-    <li><a href="/about" className="hover:text-black transition">About</a></li>
-    <li><a href="/services" className="hover:text-black transition">Services</a></li>
-    <li><a href="/contact" className="hover:text-black transition">Contact</a></li>
-    <li><a href="/trackorder" className="hover:text-black transition">Track Order</a></li>
-    <li><a href="/profile" className="hover:text-black transition">Profile</a></li>
-  </ul>
-</div>
 
 
-          {/* Social Links */}
-          <div>
-            <h3 className="font-semibold text-base mb-3">Follow Us</h3>
-            <div className="flex space-x-4 text-xl text-gray-600">
-              <a href="https://www.instagram.com/aesthetx.ways_/" target="_blank" className="hover:text-pink-500 transition"><FaInstagram /></a>
-              <a href="/comingsoon" target="_blank" className="hover:text-red-500 transition"><FaYoutube /></a>
-              <a href="/comingsoon" target="_blank" className="hover:text-blue-500 transition"><FaFacebook /></a>
-              <a href="/comingsoon" target="_blank" className="hover:text-sky-400 transition"><FaTwitter /></a>
-            </div>
-          </div>
+
 
           {/* Newsletter */}
           <div>
-            <h3 className="font-semibold text-base mb-3">Subscribe</h3>
+            <h3 className="font-semibold text-base mb-3 mt-10">Subscribe</h3>
             <p className="text-xs text-gray-600 mb-3">Get the latest updates and offers.</p>
             <form className="flex">
               <input

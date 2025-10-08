@@ -32,15 +32,15 @@ export default function CheckoutPage() {
   const isDirectPurchase = searchParams.get("action") === "buyNow";
   const directPurchaseItem = isDirectPurchase
     ? {
-        productId: searchParams.get("productId"),
-        productName: searchParams.get("productName"),
-        productImage: searchParams.get("productImage"),
-        price: parseFloat(searchParams.get("price")),
-        size: searchParams.get("size"),
-        quantity: parseInt(searchParams.get("quantity")),
-        category: searchParams.get("category"),
-        brand: searchParams.get("brand"),
-      }
+      productId: searchParams.get("productId"),
+      productName: searchParams.get("productName"),
+      productImage: searchParams.get("productImage"),
+      price: parseFloat(searchParams.get("price")),
+      size: searchParams.get("size"),
+      quantity: parseInt(searchParams.get("quantity")),
+      category: searchParams.get("category"),
+      brand: searchParams.get("brand"),
+    }
     : null;
 
   const [showToast, setShowToast] = useState(false);
@@ -370,8 +370,10 @@ export default function CheckoutPage() {
           currency: "INR",
           receipt: `order_${Date.now()}`,
           notes: {
-            userId: me._id,
-            userEmail: shippingDetails.email,
+            userId: me?._id || "guest",
+            userEmail: getCurrentShippingDetails().email,
+            userName: getCurrentShippingDetails().fullName,
+            isGuestCheckout: !me,
           },
         }),
       });
@@ -387,7 +389,6 @@ export default function CheckoutPage() {
       throw error;
     }
   };
-
   const handlePayment = async () => {
     if (!isFormValid()) {
       showToastMessage("Please fill all required fields");
@@ -485,7 +486,8 @@ export default function CheckoutPage() {
                 console.log("Creating order with items:", mappedItems);
 
                 const orderResult = await createOrderMutation({
-                  userId: me._id,
+                  userId: me?._id || null, // null for guest users
+               
                   items: mappedItems,
                   shippingDetails: getCurrentShippingDetails(),
                   paymentDetails: {
@@ -733,31 +735,31 @@ export default function CheckoutPage() {
 
   const { subtotal, deliveryFee, protectPromiseFee, finalTotal } = orderTotals;
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center px-3">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4 max-w-sm mx-auto"
-        >
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-            <Lock className="w-8 h-8 text-gray-600" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900">Login Required</h2>
-          <p className="text-sm text-gray-600">
-            Please login to proceed with checkout.
-          </p>
-          <button
-            onClick={() => router.push("/login")}
-            className="px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
-          >
-            Login
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
+  // if (!isLoggedIn) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center px-3">
+  //       <motion.div
+  //         initial={{ opacity: 0, y: 20 }}
+  //         animate={{ opacity: 1, y: 0 }}
+  //         className="text-center space-y-4 max-w-sm mx-auto"
+  //       >
+  //         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+  //           <Lock className="w-8 h-8 text-gray-600" />
+  //         </div>
+  //         <h2 className="text-xl font-bold text-gray-900">Login Required</h2>
+  //         <p className="text-sm text-gray-600">
+  //           Please login to proceed with checkout.
+  //         </p>
+  //         <button
+  //           onClick={() => router.push("/login")}
+  //           className="px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+  //         >
+  //           Login
+  //         </button>
+  //       </motion.div>
+  //     </div>
+  //   );
+  // }
 
   // Check if we have items to checkout
   if (
@@ -943,62 +945,82 @@ export default function CheckoutPage() {
 
                   <div className="space-y-3 sm:space-y-4">
                     {/* Default Address */}
-                    <label
-                      onClick={() => handleAddressToggle(true)}
-                      className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${
-                        useDefaultAddress
-                          ? "border-gray-900 bg-gray-100 shadow-md"
-                          : "border-gray-200 hover:border-gray-400"
-                      }`}
-                    >
-                      {/* Radio */}
-                      <div className="flex-shrink-0">
-                        <div
-                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${
-                            useDefaultAddress
-                              ? "border-gray-50 bg-gray-900"
-                              : "border-gray-300"
+                    {/* Conditional Address Section - Only shows if user is logged in */}
+                    {me ? (
+                      <label
+                        onClick={() => handleAddressToggle(true)}
+                        className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${useDefaultAddress
+                            ? "border-gray-900 bg-gray-100 shadow-md"
+                            : "border-gray-200 hover:border-gray-400"
                           }`}
-                        >
-                          {useDefaultAddress && (
-                            <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                          )}
+                      >
+                        {/* Radio */}
+                        <div className="flex-shrink-0">
+                          <div
+                            className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${useDefaultAddress
+                                ? "border-gray-50 bg-gray-900"
+                                : "border-gray-300"
+                              }`}
+                          >
+                            {useDefaultAddress && (
+                              <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Icon + Text */}
-                      <div className="flex items-center space-x-2">
-                        <Home className="w-5 h-5 text-gray-700" />
-                        <div>
-                          <p className="font-semibold text-sm sm:text-lg">
-                            Deliver to Default Address
-                          </p>
-                          <p className="text-gray-600 text-xs sm:text-sm">
-                            {me?.address?.fullAddress ||
-                              me?.address ||
-                              "No default address set"}
-                          </p>
+                        {/* Icon + Text */}
+                        <div className="flex items-center space-x-2">
+                          <Home className="w-5 h-5 text-gray-700" />
+                          <div>
+                            <p className="font-semibold text-sm sm:text-lg">
+                              Deliver to Default Address
+                            </p>
+                            <p className="text-gray-600 text-xs sm:text-sm">
+                              {me?.address?.fullAddress ||
+                                me?.address ||
+                                "No default address set"}
+                            </p>
+                          </div>
+                        </div>
+                      </label>
+                    ) : (
+                      // Disabled state when not logged in
+                      <div className="flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed">
+                        {/* Radio */}
+                        <div className="flex-shrink-0">
+                          <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-gray-300" />
+                        </div>
+
+                        {/* Icon + Text */}
+                        <div className="flex items-center space-x-2">
+                          <Home className="w-5 h-5 text-gray-400" />
+                          <div>
+                            <p className="font-semibold text-sm sm:text-lg text-gray-400">
+                              Deliver to Default Address
+                            </p>
+                            <p className="text-gray-400 text-xs sm:text-sm">
+                              Please log in to use default address
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </label>
+                    )}
 
                     {/* Custom Address */}
                     <label
                       onClick={() => handleAddressToggle(false)}
-                      className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${
-                        !useDefaultAddress
+                      className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${!useDefaultAddress
                           ? "border-gray-900 bg-gray-100 shadow-md"
                           : "border-gray-200 hover:border-gray-400"
-                      }`}
+                        }`}
                     >
                       {/* Radio */}
                       <div className="flex-shrink-0">
                         <div
-                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${
-                            !useDefaultAddress
+                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${!useDefaultAddress
                               ? "border-gray-900 bg-gray-900"
                               : "border-gray-300"
-                          }`}
+                            }`}
                         >
                           {!useDefaultAddress && (
                             <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
@@ -1322,7 +1344,7 @@ export default function CheckoutPage() {
                     className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 bg-gray-900 text-white rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-md sm:shadow-lg flex items-center justify-center space-x-2 sm:space-x-3"
                   >
                     {(!cartProducts && !isDirectPurchase) ||
-                    (isDirectPurchase && !directPurchaseProduct) ? (
+                      (isDirectPurchase && !directPurchaseProduct) ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         <span>Loading...</span>

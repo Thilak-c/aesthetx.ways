@@ -1,31 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
 
-const navTabs = ["MEN", "WOMEN", "SNEAKERS"];
-const categories = [
-  "Topwear",
-  "Bottomwear",
-  "Official Merch",
-  "Bestsellers",
-  "All Accessories",
-  "Juniors",
-  "Markdowns",
-
-];
-
-const accessories = [
-  { name: "Backpacks", img: "/sidebar-img/backpack.png" },
-  { name: "Perfumes", img: "/sidebar-img/perfumes.png" },
-  { name: "Socks", img: "/sidebar-img/socks.png" },
-  { name: "Cap", img: "/sidebar-img/cap.png" },
-];
-
-const menCards = [
-  { name: "New Arrivals", img: "/sidebar-img/Daredevil-No-Fear.jpg" },
-  { name: "Korean Edit", img: "/sidebar-img/Korean-Pants-Mocha.jpg" },
-  { name: "Cotton Linen", img: "/sidebar-img/Cotton-Linen-Soft-Pink.jpg" },
-  { name: "Hot Merch", img: "/sidebar-img/logo.png" },
-];
 
 export default function SidebarDrawer({ open, onClose, width }) {
   const [activeTab, setActiveTab] = useState(0);

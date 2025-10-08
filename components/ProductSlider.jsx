@@ -3,15 +3,6 @@ import Image from "next/image";
 
 const slides = [
   {
-    img: "/poster-img-hero-home/IMG_3401.JPG",
-    title: "BEN 10 ALIEN FORCE",
-    subtitle: "FIRST TIME EVER IN INDIA",
-    cta: "TAP TO UNLOCK",
-    description: "THE ULTIMATE ALIEN FORCE TEE",
-    limited: "LIMITED EDITION DROP",
-    pieces: 600,
-  },
-  {
     img: "/poster-img-hero-home/IMG_1725.PNG",
     title: "ALIEN FORCE DROP",
     subtitle: "COLLECTOR'S ITEM",
@@ -19,6 +10,15 @@ const slides = [
     description: "EXCLUSIVE MERCH RELEASE",
     limited: "ONLY THIS WEEK",
     pieces: 400,
+  },
+  {
+    img: "/poster-img-hero-home/IMG_3401.JPG",
+    title: "BEN 10 ALIEN FORCE",
+    subtitle: "FIRST TIME EVER IN INDIA",
+    cta: "TAP TO UNLOCK",
+    description: "THE ULTIMATE ALIEN FORCE TEE",
+    limited: "LIMITED EDITION DROP",
+    pieces: 600,
   },
   {
     img: "/poster-img-hero-home/IMG_3402 (1).JPG",

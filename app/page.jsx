@@ -132,11 +132,11 @@ export default function Home() {
     <div
       className={`min-h-screen bg-gradient-to-br bg-[#fff] ${fontClasses.poppins}`}
     >
-      <div className="md:block h-[80px] md:h-[100px]"></div>
-      <div className="md:hidden">
+      <div className="xl:block hidden h-[80px] xl:h-[100px]"></div>
+      <div className="xl:hidden">
         <NavbarMobile />
       </div>
-      <div className="hidden md:block">
+      <div className="hidden  xl:block">
         <Navbar />
       </div>
       <motion.section
@@ -354,7 +354,7 @@ export default function Home() {
               <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
                 {trendingProducts.map((trendingItem, index) => (
                   <motion.div
-                    key={trendingItem._id}
+                    key={trendingItem.itemId}
                     variants={itemVariants}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -539,7 +539,6 @@ export default function Home() {
         </motion.section>
       )}
 
-      <Footer />
     </div>
   );
 }

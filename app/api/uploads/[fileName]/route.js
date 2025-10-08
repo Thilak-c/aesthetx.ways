@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 export async function GET(req, { params }) {
   try {
-    const { fileName } = params; // from URL
+    const { fileName } = await params; // from URL
 
     if (!fileName) {
       return NextResponse.json({ error: "No file specified" }, { status: 400 });

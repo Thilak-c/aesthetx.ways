@@ -8,14 +8,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { ArrowLeftIcon, ShoppingBag , Heart, Search, Menu } from "lucide-react";
+import { ArrowLeftIcon, ShoppingBag, Heart, Search, Menu } from "lucide-react";
 
 import { useSearchParams, useRouter } from "next/navigation";
 // ---------- Desktop Navbar (unchanged / same as before) ----------
 export default function Navbar() {
   const navLinks = ["MEN", "WOMEN", "SNEAKERS"];
   const [hovered, setHovered] = useState(null);
-    const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   // const [active, setActive] = useState("MEN");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function Navbar() {
   const active = navLinks.indexOf(param) >= null ? navLinks.indexOf(param) : null;
   // Search state (desktop)
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
+  const [searchDropdownOpen, setSearchDropdownOpen] = useState(true);
   const searchRef = useRef(null);
 
   useEffect(() => {
@@ -72,31 +72,32 @@ export default function Navbar() {
         {/* Left */}
         <div className="flex items-center gap-6">
           <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-4 hover:bg-white/10 rounded-xl transition"
+           
           >
-            <Menu/>
+            <Link href={"/"}>
+            <img src="/favicon.ico" className="w-[35px]" alt="" />
+            </Link>
           </button>
 
           <div className="flex items-center gap-6 font-semibold">
-            {[{lib:"Men",link:"men"}, {lib:"Women",link:"women"}, {lib:"Sneakers",link:"sneakers"}].map((link) => (
+            {[{ lib: "Men", link: "men" }, { lib: "Women", link: "women" }, { lib: "Sneakers", link: "sneakers" }].map((link) => (
               <div
                 key={link.lib}
                 className="flex flex-col p-3 font-bold items-center cursor-pointer group rounded-full w-[100px]  transition-all delay-200 hover:border-t-2 hover:border-r-2 border-black/5   hover:shadow-[10px_-10px_15px_rgba(0,0,0,0.15)] px-2"
                 onMouseEnter={() => setHovered(link)}
                 onMouseLeave={() => setHovered(null)}
-                  onClick={() => {
-              const params = ("ct", link.link)
-              // params.set("ct", navKeys[idx]);
-              router.replace(
-                `/shop?ct=${params.toString()}`
-              );
-            }}
+                onClick={() => {
+                  const params = ("ct", link.link)
+                  // params.set("ct", navKeys[idx]);
+                  router.replace(
+                    `/shop?ct=${params.toString()}`
+                  );
+                }}
               >
                 <span className="tracking-wide text-black group-hover:text-black/70">
                   {link.lib}
                 </span>
-                
+
               </div>
             ))}
           </div>
@@ -146,7 +147,7 @@ export default function Navbar() {
 
           <Link href="/wishlist">
             <button className="relative hover:bg-white/10 rounded-full p-2  ">
-            <Heart/>
+              <Heart />
               {wishlistSummary?.itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-bold">
                   {wishlistSummary.itemCount > 99
@@ -159,7 +160,7 @@ export default function Navbar() {
 
           <Link href="/cart">
             <button className="relative hover:bg-white/10 rounded-full p-2 transition-colors">
-             <ShoppingBag/>
+              <ShoppingBag />
               {me && cartSummary?.totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-bold">
                   {cartSummary.totalItems > 99 ? "99+" : cartSummary.totalItems}
@@ -266,16 +267,85 @@ export function NavbarMobile() {
   return (
     <>
       {/* top mobile navbar */}
-      <nav className="fixed top-1 left-[2px] z-[50] w-[99%] flex items-center justify-between pl-4 pr- py-1 shadow-lg border border-white/20 bg-white/10 backdrop-blur-md rounded-3xl md:hidden">
+      <nav className="fixed  z-[40] w-[100%] flex items-center justify-between pl-4 pr- py-1 shadow-lg border border-white bg-white backdrop-blur-md  md:hidden">
         <button
-          aria-label="Open Menu"
-          className="p-2 z-10 rounded-full hover:bg-white/10 transition-colors"
-          onClick={() => setSidebarOpen(true)}
+         
         >
-          <Menu />
+          <Link href={"/"}>
+          <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradiet-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center shad-lg">
+               <img src="/fav.png" alt="" />
+              </div>
+              <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                AesthetX
+              </span>
+            </div>
+          </Link>
         </button>
 
         {/* search icon */}
+        {/* search icon */}
+
+        {/* Full-screen search overlay */}
+        <AnimatePresence>
+          {showSearch && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] bg-white md:hidden"
+            >
+              <div className="flex flex-col h-full">
+                {/* Search Header */}
+                <div className="flex items-center gap-3 px-4 py-4 border-b border-black/10">
+                  <button
+                    onClick={() => {
+                      setShowSearch(false);
+                      setSearchTerm("");
+                      setSearchDropdownOpen(false);
+                    }}
+                    className="p-2 hover:bg-black/5 rounded-full transition-colors"
+                  >
+                    <ArrowLeftIcon size={20} />
+                  </button>
+
+                  <form onSubmit={handleSearchSubmit} className="flex-1">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      placeholder="What are you looking for?"
+                      className="w-full outline-none bg-transparent text-base placeholder-black/50 text-black"
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                    />
+                  </form>
+
+                  {searchTerm && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSearchDropdownOpen(false);
+                      }}
+                      className="text-black/50 hover:text-black text-sm font-medium"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Search Results/Dropdown */}
+                <div className="flex-1 overflow-y-auto">
+                  <SearchDropdown
+                    searchTerm={searchTerm}
+                    isOpen={searchDropdownOpen}
+                    onClose={() => setSearchDropdownOpen(false)}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex-1 flex relative justify-center">
           {!showSearch && (
             <button
@@ -283,18 +353,17 @@ export function NavbarMobile() {
               className="p-2 absolute top-1/2 -translate-y-1/2 right-0 rounded-full hover:bg-white/10 transition-colors"
               onClick={() => setShowSearch(true)}
             >
-             <Search/>
+              <Search size={30} />
             </button>
           )}
         </div>
-
         <div className="flex items-center gap-0 z-10">
           <Link href="/cart">
             <button
               aria-label="Cart"
               className="relative p-1 rounded-full hover:bg-white/10 transition-colors"
             >
-              <ShoppingBag/>
+              <ShoppingBag size={30} />
             </button>
           </Link>
           <UserNavigation />
@@ -312,11 +381,10 @@ export function NavbarMobile() {
         {navLinks.map((link, idx) => (
           <button
             key={link}
-            className={`flex-1 py-2 text-sm relative rounded-full ${
-              activeIdx === idx
-                ? "text-black font-bold bg-white shadow-md scale-105"
-                : "text-black/70 hover:bg-black/5 hover:scale-[1.02]"
-            }`}
+            className={`flex-1 py-2 text-sm relative rounded-full ${activeIdx === idx
+              ? "text-black font-bold bg-white shadow-md scale-105"
+              : "text-black/70 hover:bg-black/5 hover:scale-[1.02]"
+              }`}
             onClick={() => {
               const params = ("ct", navKeys[idx])
               // params.set("ct", navKeys[idx]);

@@ -320,14 +320,14 @@ export default function ProductPage() {
   };
 
   const handleBuyNow = async () => {
-    if (!isLoggedIn || !me) {
-      // Redirect to login page with return URL
-      const currentUrl = window.location.pathname + window.location.search;
-      router.push(
-        `/login?returnUrl=${encodeURIComponent(currentUrl)}&action=buy`
-      );
-      return;
-    }
+    // if (!isLoggedIn || !me) {
+    //   // Redirect to login page with return URL
+    //   const currentUrl = window.location.pathname + window.location.search;
+    //   router.push(
+    //     `/login?returnUrl=${encodeURIComponent(currentUrl)}&action=buy`
+    //   );
+    //   return;
+    // }
 
     if (!selectedSize) {
       setToastMessage("Please select a size first");
@@ -983,7 +983,7 @@ export default function ProductPage() {
                           : product?.otherImages[selectedImage - 1]
                       }
                       alt={product?.name}
-                      fill
+                      
                       className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     />
                   </motion.div>
@@ -1182,7 +1182,6 @@ export default function ProductPage() {
                         <img
                           src={img}
                           alt={`${product?.name} ${index + 1}`}
-                          fill
                           className="object-cover object-center"
                         />
 
@@ -1448,7 +1447,7 @@ export default function ProductPage() {
                 className="w-full bg-white text-gray-900 py-3 lg:py-5 px-6 lg:px-8 rounded-2xl lg:rounded-3xl font-extrabold text-base lg:text-lg border-3 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-900"
               >
                 <span>
-                  {!isLoggedIn
+                  {/* {!isLoggedIn
                     ? "Buy Now" // Always shows "Buy Now" - no "Login to Buy Now"
                     : !selectedSize &&
                         product?.availableSizes &&
@@ -1456,7 +1455,8 @@ export default function ProductPage() {
                       ? "Select Size to Buy Now"
                       : selectedSize && product?.sizeStock?.[selectedSize] === 0
                         ? `Size ${selectedSize} Out of Stock`
-                        : `Buy Now`}
+                        : `Buy Now`} */}
+                        Buy Now
                 </span>
               </motion.button>
             </motion.div>
@@ -1667,9 +1667,9 @@ export default function ProductPage() {
                       </h4>
                       <div className="space-y-3 sm:space-y-4">
                         {[
-                          { label: "Material", value: "100% Premium Cotton" },
-                          { label: "Weight", value: "180 GSM (Lightweight)" },
-                          { label: "Weave", value: "Single Jersey" },
+                          { label: "Material", value: "-% Premium Cotton" },
+                          { label: "Weight", value: "- GSM (Lightweight)" },
+                          { label: "Weave", value: "Single -" },
                           { label: "Construction", value: "20s Single Yarn" },
                           { label: "Finish", value: "Soft Touch" },
                         ].map((spec, index) => (
@@ -1697,10 +1697,10 @@ export default function ProductPage() {
                       </h4>
                       <div className="space-y-3 sm:space-y-4">
                         {[
-                          { label: "Fit Type", value: "Regular Fit" },
-                          { label: "Sleeve Length", value: "Full Sleeve" },
-                          { label: "Neck Style", value: "Round Neck" },
-                          { label: "Hem Style", value: "Straight Hem" },
+                          { label: "Fit Type", value: "- Fit" },
+                          { label: "Sleeve Length", value: "- Sleeve" },
+                          { label: "Neck Style", value: "- Neck" },
+                          { label: "Hem Style", value: "- Hem" },
                           {
                             label: "Care Instructions",
                             value: "Machine Washable",
