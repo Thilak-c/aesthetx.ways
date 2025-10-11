@@ -182,7 +182,7 @@ export default function Footer() {
 
             {/* copyright */}
             <div className="border-t border-black/10 dark:border-white/10 mt-10 pt-5 text-center text-xs text-black/60 dark:text-white/60">
-              © {new Date().getFullYear()} AesthetX WAYS — v{('0.0.1' || 'local').slice(0, 7)} — All Rights Reserved.
+              © {new Date().getFullYear()} AesthetX WAYS — v{('0.1.0' || 'local').slice(0, 7)} — All Rights Reserved.
             </div>
           </div>
         </footer>
@@ -203,7 +203,7 @@ export default function Footer() {
           </motion.button>
         )}
       </AnimatePresence>
-
+{/* iiii */}
       <div className="w-full h-[700px]">
         <Galaxy />
       </div>
