@@ -76,7 +76,10 @@ export default function ProductPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [imageDirection, setImageDirection] = useState(null);
-
+  useEffect(() => {
+    // Scroll to top when page loads
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
   useEffect(() => {
     if (typeof document !== "undefined") {
       const match = document.cookie.match(/(?:^|; )sessionToken=([^;]+)/);
@@ -188,11 +191,11 @@ export default function ProductPage() {
     api.products.getRelatedProducts,
     product
       ? {
-          productId: productId,
-          category: product.category,
-          price: product.price,
-          limit: 4,
-        }
+        productId: productId,
+        category: product.category,
+        price: product.price,
+        limit: 4,
+      }
       : "skip"
   );
 
@@ -564,9 +567,11 @@ export default function ProductPage() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <div className="w-16 h-16 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600 text-lg font-medium">
-          </p>
+          <img
+            src="/fav.png"
+            className="w-[45px] h-[45px] animate-spin-slow mx-auto"
+            alt="Loading"
+          />
         </motion.div>
       </div>
     );
@@ -714,7 +719,7 @@ export default function ProductPage() {
   // Add personalized products query for the user
 
   // Add debug logging
-
+console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Responsive Header */}
@@ -793,11 +798,10 @@ export default function ProductPage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleWishlistToggle}
                 disabled={isWishlisting || !isLoggedIn}
-                className={`p-2 lg:p-3 rounded-lg lg:rounded-xl transition-all duration-200 ${
-                  isWishlisted
+                className={`p-2 lg:p-3 rounded-lg lg:rounded-xl transition-all duration-200 ${isWishlisted
                     ? "text-red-500 hover:text-red-600 hover:bg-red-50"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                } ${isWishlisting ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${isWishlisting ? "opacity-50 cursor-not-allowed" : ""}`}
                 title={
                   isLoggedIn
                     ? isWishlisted
@@ -882,11 +886,10 @@ export default function ProductPage() {
                     <button
                       key={index}
                       onClick={() => setModalImageIndex(index)}
-                      className={`w-12 h-12 lg:w-16 lg:h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
-                        modalImageIndex === index
+                      className={`w-12 h-12 lg:w-16 lg:h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${modalImageIndex === index
                           ? "border-white"
                           : "border-white/50"
-                      }`}
+                        }`}
                     >
                       <img
                         src={img}
@@ -983,7 +986,7 @@ export default function ProductPage() {
                           : product?.otherImages[selectedImage - 1]
                       }
                       alt={product?.name}
-                      
+
                       className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     />
                   </motion.div>
@@ -1024,36 +1027,36 @@ export default function ProductPage() {
 
                 {selectedImage <
                   [product?.mainImage, ...product?.otherImages].length - 1 && (
-                  <motion.button
-                    initial={{ opacity: 0, x: 30, scale: 0.8 }}
-                    animate={{
-                      opacity: 1,
-                      x: 0,
-                      scale: 1,
-                      transition: {
-                        delay: 0.2,
-                        type: "spring",
-                        stiffness: 200,
-                      },
-                    }}
-                    whileHover={{
-                      scale: 1.1,
-                      x: 2,
-                      transition: { duration: 0.2 },
-                    }}
-                    whileTap={{
-                      scale: 0.9,
-                      transition: { duration: 0.1 },
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      changeImage("next");
-                    }}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-xl hover:bg-white hover:shadow-2xl transition-all duration-300 border border-gray-200 hidden lg:block"
-                  >
-                    <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
-                  </motion.button>
-                )}
+                    <motion.button
+                      initial={{ opacity: 0, x: 30, scale: 0.8 }}
+                      animate={{
+                        opacity: 1,
+                        x: 0,
+                        scale: 1,
+                        transition: {
+                          delay: 0.2,
+                          type: "spring",
+                          stiffness: 200,
+                        },
+                      }}
+                      whileHover={{
+                        scale: 1.1,
+                        x: 2,
+                        transition: { duration: 0.2 },
+                      }}
+                      whileTap={{
+                        scale: 0.9,
+                        transition: { duration: 0.1 },
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        changeImage("next");
+                      }}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-xl hover:bg-white hover:shadow-2xl transition-all duration-300 border border-gray-200 hidden lg:block"
+                    >
+                      <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
+                    </motion.button>
+                  )}
 
                 {/* Mobile Navigation Arrows - Hidden on desktop */}
                 {selectedImage > 0 && (
@@ -1083,29 +1086,29 @@ export default function ProductPage() {
 
                 {selectedImage <
                   [product?.mainImage, ...product?.otherImages].length - 1 && (
-                  <motion.button
-                    initial={{ opacity: 0, x: 40, scale: 0.5 }}
-                    animate={{
-                      opacity: 1,
-                      x: 0,
-                      scale: 1,
-                      transition: {
-                        delay: 0.3,
-                        type: "spring",
-                        stiffness: 200,
-                      },
-                    }}
-                    whileHover={{ scale: 1.15, x: 5 }}
-                    whileTap={{ scale: 0.85 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      changeImage("next");
-                    }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-2xl hover:bg-white hover:shadow-3xl transition-all duration-300 border border-gray-200 lg:hidden"
-                  >
-                    <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
-                  </motion.button>
-                )}
+                    <motion.button
+                      initial={{ opacity: 0, x: 40, scale: 0.5 }}
+                      animate={{
+                        opacity: 1,
+                        x: 0,
+                        scale: 1,
+                        transition: {
+                          delay: 0.3,
+                          type: "spring",
+                          stiffness: 200,
+                        },
+                      }}
+                      whileHover={{ scale: 1.15, x: 5 }}
+                      whileTap={{ scale: 0.85 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        changeImage("next");
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-2xl hover:bg-white hover:shadow-3xl transition-all duration-300 border border-gray-200 lg:hidden"
+                    >
+                      <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
+                    </motion.button>
+                  )}
 
                 {/* Enhanced Zoom Button */}
                 <motion.button
@@ -1173,11 +1176,10 @@ export default function ProductPage() {
                             setImageDirection(null);
                           }, 500);
                         }}
-                        className={`relative w-20 h-20 lg:w-24 lg:h-24 rounded-xl lg:rounded-2xl overflow-hidden border-2 transition-all duration-300 shadow-lg flex-shrink-0 ${
-                          selectedImage === index
+                        className={`relative w-20 h-20 lg:w-24 lg:h-24 rounded-xl lg:rounded-2xl overflow-hidden border-2 transition-all duration-300 shadow-lg flex-shrink-0 ${selectedImage === index
                             ? "border-gray-900 ring-4 ring-gray-900/20 shadow-2xl"
                             : "border-gray-200 hover:border-gray-300 "
-                        }`}
+                          }`}
                       >
                         <img
                           src={img}
@@ -1227,11 +1229,10 @@ export default function ProductPage() {
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
-                          className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                            star <= (reviewStats?.averageRating || 0)
+                          className={`w-4 h-4 lg:w-5 lg:h-5 ${star <= (reviewStats?.averageRating || 0)
                               ? "fill-yellow-400 text-yellow-400"
                               : "text-gray-300"
-                          }`}
+                            }`}
                         />
                       ))}
                       <span className="text-sm lg:text-base text-gray-600 ml-2 font-medium">
@@ -1304,13 +1305,12 @@ export default function ProductPage() {
                         whileTap={{ scale: isOutOfStock ? 1 : 0.95 }}
                         onClick={() => !isOutOfStock && setSelectedSize(size)}
                         disabled={isOutOfStock}
-                        className={`relative px-3 py-2 lg:px-4 lg:py-3 rounded-sm lg:rounded-2xl border-2 font-medium transition-all duration-200 text-xs lg:text-sm ${
-                          isSelected
+                        className={`relative px-3 py-2 lg:px-4 lg:py-3 rounded-sm lg:rounded-2xl border-2 font-medium transition-all duration-200 text-xs lg:text-sm ${isSelected
                             ? "border-gray-900 bg-gray-900 text-white"
                             : isOutOfStock
                               ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
                               : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                          }`}
                       >
                         <span>{size}</span>
                         {sizeStock > 0 && sizeStock < 10 && (
@@ -1456,7 +1456,7 @@ export default function ProductPage() {
                       : selectedSize && product?.sizeStock?.[selectedSize] === 0
                         ? `Size ${selectedSize} Out of Stock`
                         : `Buy Now`} */}
-                        Buy Now
+                  Buy Now
                 </span>
               </motion.button>
             </motion.div>
@@ -1501,11 +1501,10 @@ export default function ProductPage() {
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex flex-col items-center space-y-1 py-4 px-2 border-b-2 font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
-                      activeTab === tab.id
+                    className={`flex flex-col items-center space-y-1 py-4 px-2 border-b-2 font-semibold text-sm transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
                         ? "border-gray-900 text-gray-900"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span className="text-xs">{tab.label}</span>
@@ -1746,26 +1745,24 @@ export default function ProductPage() {
                                 >
                                   <div className="flex items-center justify-center space-x-2 mb-2">
                                     <div
-                                      className={`w-4 h-4 rounded-full ${
-                                        sizeStock > 10
+                                      className={`w-4 h-4 rounded-full ${sizeStock > 10
                                           ? "bg-gray-500"
                                           : sizeStock > 0
                                             ? "bg-gray-500"
                                             : "bg-red-500"
-                                      }`}
+                                        }`}
                                     ></div>
                                     <h5 className="font-extrabold text-lg text-gray-900">
                                       Size {size}
                                     </h5>
                                   </div>
                                   <p
-                                    className={`text-sm font-medium ${
-                                      sizeStock > 10
+                                    className={`text-sm font-medium ${sizeStock > 10
                                         ? "text-gray-600"
                                         : sizeStock > 0
                                           ? "text-gray-600"
                                           : "text-red-600"
-                                    }`}
+                                      }`}
                                   >
                                     {sizeStock === 0
                                       ? "Out of Stock"
@@ -1850,143 +1847,143 @@ export default function ProductPage() {
               )}
 
               {activeTab === "reviews" && (
-            <motion.div
-  key="reviews"
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  exit={{ opacity: 0, y: -20 }}
-  transition={{ duration: 0.3 }}
-  className="space-y-6"
->
-  {/* Heading */}
-  <div className="text-center mb-4 sm:mb-6">
-    <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-gray-900">
-      Customer Reviews
-    </h3>
-    <p className="text-xs sm:text-sm md:text-base text-gray-600 max-w-md mx-auto">
-      See what our customers are saying
-    </p>
-  </div>
+                <motion.div
+                  key="reviews"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
+                  {/* Heading */}
+                  <div className="text-center mb-4 sm:mb-6">
+                    <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-gray-900">
+                      Customer Reviews
+                    </h3>
+                    <p className="text-xs sm:text-sm md:text-base text-gray-600 max-w-md mx-auto">
+                      See what our customers are saying
+                    </p>
+                  </div>
 
-  {/* Review Statistics */}
-  <div className="bg-gray-50 rounded-xl p-3 sm:p-6 border border-gray-200 mb-6">
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
-      {/* Average Rating */}
-      <div className="text-center">
-        <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900">
-          {reviewStats ? reviewStats.averageRating.toFixed(1) : "0.0"}
-        </div>
-        <div className="flex justify-center space-x-1 mt-1">
-          {[1,2,3,4,5].map(star => (
-            <Star
-              key={star}
-              className={`w-4 sm:w-5 md:w-6 lg:w-7 h-4 sm:h-5 md:h-6 lg:h-7 ${star <= (reviewStats?.averageRating||0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-            />
-          ))}
-        </div>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600">
-          {reviewStats?.totalReviews || 0} reviews
-        </p>
-      </div>
+                  {/* Review Statistics */}
+                  <div className="bg-gray-50 rounded-xl p-3 sm:p-6 border border-gray-200 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+                      {/* Average Rating */}
+                      <div className="text-center">
+                        <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900">
+                          {reviewStats ? reviewStats.averageRating.toFixed(1) : "0.0"}
+                        </div>
+                        <div className="flex justify-center space-x-1 mt-1">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <Star
+                              key={star}
+                              className={`w-4 sm:w-5 md:w-6 lg:w-7 h-4 sm:h-5 md:h-6 lg:h-7 ${star <= (reviewStats?.averageRating || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-xs sm:text-sm md:text-base text-gray-600">
+                          {reviewStats?.totalReviews || 0} reviews
+                        </p>
+                      </div>
 
-      {/* Rating Distribution */}
-      <div className="sm:col-span-2 space-y-1">
-        {[5,4,3,2,1].map(rating => {
-          const count = reviewStats?.ratingDistribution?.[rating] || 0;
-          const perc = reviewStats?.totalReviews ? Math.round((count/reviewStats.totalReviews)*100) : 0;
-          return (
-            <div key={rating} className="flex items-center space-x-2 text-xs sm:text-sm md:text-base">
-              <div className="flex items-center w-12 sm:w-16 md:w-20">
-                <span>{rating}</span>
-                <Star className="w-3 sm:w-4 md:w-5 h-3 sm:h-4 md:h-5 fill-yellow-400 text-yellow-400"/>
-              </div>
-              <div className="flex-1 bg-gray-200 rounded-full h-2 sm:h-3 md:h-4">
-                <div className="bg-yellow-400 h-2 sm:h-3 md:h-4 rounded-full transition-all duration-500" style={{width: `${perc}%`}}/>
-              </div>
-              <span className="w-6 sm:w-8 md:w-12 text-right">{count}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  </div>
+                      {/* Rating Distribution */}
+                      <div className="sm:col-span-2 space-y-1">
+                        {[5, 4, 3, 2, 1].map(rating => {
+                          const count = reviewStats?.ratingDistribution?.[rating] || 0;
+                          const perc = reviewStats?.totalReviews ? Math.round((count / reviewStats.totalReviews) * 100) : 0;
+                          return (
+                            <div key={rating} className="flex items-center space-x-2 text-xs sm:text-sm md:text-base">
+                              <div className="flex items-center w-12 sm:w-16 md:w-20">
+                                <span>{rating}</span>
+                                <Star className="w-3 sm:w-4 md:w-5 h-3 sm:h-4 md:h-5 fill-yellow-400 text-yellow-400" />
+                              </div>
+                              <div className="flex-1 bg-gray-200 rounded-full h-2 sm:h-3 md:h-4">
+                                <div className="bg-yellow-400 h-2 sm:h-3 md:h-4 rounded-full transition-all duration-500" style={{ width: `${perc}%` }} />
+                              </div>
+                              <span className="w-6 sm:w-8 md:w-12 text-right">{count}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
 
-  {/* Reviews List */}
-  <div className="space-y-2">
-    {reviews === undefined ? (
-      <div className="text-center py-4">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-2"></div>
-        <p className="text-xs sm:text-sm text-gray-600">Loading reviews...</p>
-      </div>
-    ) : reviews.length > 0 ? (
-      reviews.map((r, i) => {
-        const daysAgo = Math.ceil(Math.abs(new Date() - new Date(r.createdAt)) / (1000*60*60*24));
-        return (
-          <motion.div
-            key={r._id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i*0.05 }}
-            className="border rounded-lg p-2 sm:p-3 md:p-4 bg-white shadow text-xs sm:text-sm md:text-base"
-          >
-            <div className="flex justify-between mb-1">
-              <p className="font-medium truncate">{r.userName}</p>
-              <span className="text-gray-500 text-[8px] sm:text-xs md:text-sm">{daysAgo===1?"1 day ago":`${daysAgo} days ago`}</span>
-            </div>
-            <div className="flex space-x-0.5 mb-1">
-              {[1,2,3,4,5].map(s => (
-                <Star key={s} className={`w-3 sm:w-4 md:w-5 h-3 sm:h-4 md:h-5 ${s <= r.rating ? "fill-yellow-400 text-yellow-400":"text-gray-300"}`} />
-              ))}
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 leading-snug">{r.comment}</p>
-            {r.size && <span className="text-[10px] sm:text-xs md:text-sm bg-gray-100 px-1 rounded">Size {r.size}</span>}
-          </motion.div>
-        )
-      })
-    ) : (
-      <div className="text-center py-4">
-        <Star className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-1"/>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600">No reviews yet. Be the first!</p>
-      </div>
-    )}
-  </div>
+                  {/* Reviews List */}
+                  <div className="space-y-2">
+                    {reviews === undefined ? (
+                      <div className="text-center py-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-2"></div>
+                        <p className="text-xs sm:text-sm text-gray-600">Loading reviews...</p>
+                      </div>
+                    ) : reviews.length > 0 ? (
+                      reviews.map((r, i) => {
+                        const daysAgo = Math.ceil(Math.abs(new Date() - new Date(r.createdAt)) / (1000 * 60 * 60 * 24));
+                        return (
+                          <motion.div
+                            key={r._id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="border rounded-lg p-2 sm:p-3 md:p-4 bg-white shadow text-xs sm:text-sm md:text-base"
+                          >
+                            <div className="flex justify-between mb-1">
+                              <p className="font-medium truncate">{r.userName}</p>
+                              <span className="text-gray-500 text-[8px] sm:text-xs md:text-sm">{daysAgo === 1 ? "1 day ago" : `${daysAgo} days ago`}</span>
+                            </div>
+                            <div className="flex space-x-0.5 mb-1">
+                              {[1, 2, 3, 4, 5].map(s => (
+                                <Star key={s} className={`w-3 sm:w-4 md:w-5 h-3 sm:h-4 md:h-5 ${s <= r.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                              ))}
+                            </div>
+                            <p className="text-gray-700 dark:text-gray-300 leading-snug">{r.comment}</p>
+                            {r.size && <span className="text-[10px] sm:text-xs md:text-sm bg-gray-100 px-1 rounded">Size {r.size}</span>}
+                          </motion.div>
+                        )
+                      })
+                    ) : (
+                      <div className="text-center py-4">
+                        <Star className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-1" />
+                        <p className="text-xs sm:text-sm md:text-base text-gray-600">No reviews yet. Be the first!</p>
+                      </div>
+                    )}
+                  </div>
 
-  {/* Add Review Form */}
-  {token && me && (!reviews.find(r => r.userId===me._id)) && (
-    <motion.div className="mt-4 bg-white/80 p-3 sm:p-4 md:p-6 rounded-xl border border-gray-200 shadow-sm">
-      <h4 className="text-sm sm:text-base md:text-lg font-extrabold mb-2 text-center">Write a Review</h4>
-      <div className="flex justify-center mb-2 space-x-1">
-        {[1,2,3,4,5].map(s => (
-          <motion.button key={s} onClick={()=>updateForm("rating", s)} className="p-1 sm:p-1.5">
-            <Star className={`w-4 sm:w-5 md:w-6 h-4 sm:h-5 md:h-6 ${s <= reviewForm.rating ? "fill-yellow-400 text-yellow-400":"text-gray-300"}`} />
-          </motion.button>
-        ))}
-      </div>
-      <input type="text" value={reviewForm.title} onChange={e=>updateForm("title", e.target.value)} placeholder="Title" maxLength={50} className="w-full px-2 py-1 sm:py-2 md:py-2 border rounded text-xs sm:text-sm md:text-base mb-1"/>
-      <textarea value={reviewForm.comment} onChange={e=>updateForm("comment", e.target.value)} placeholder="Review" rows={3} maxLength={300} className="w-full px-2 py-1 sm:py-2 md:py-2 border rounded text-xs sm:text-sm md:text-base resize-none mb-1"/>
-      <motion.button
-        onClick={handleAddReview}
-        disabled={!reviewForm.title.trim() || !reviewForm.comment.trim() || isSubmittingReview}
-        className="w-full bg-gray-800 text-white rounded text-xs sm:text-sm md:text-base py-1 sm:py-2 md:py-2 flex justify-center items-center gap-1"
-      >
-        {isSubmittingReview ? <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> : <Check className="w-3 sm:w-4 sm:h-4"/>}
-        <span>Submit</span>
-      </motion.button>
-    </motion.div>
-  )}
+                  {/* Add Review Form */}
+                  {token && me && (!reviews.find(r => r.userId === me._id)) && (
+                    <motion.div className="mt-4 bg-white/80 p-3 sm:p-4 md:p-6 rounded-xl border border-gray-200 shadow-sm">
+                      <h4 className="text-sm sm:text-base md:text-lg font-extrabold mb-2 text-center">Write a Review</h4>
+                      <div className="flex justify-center mb-2 space-x-1">
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <motion.button key={s} onClick={() => updateForm("rating", s)} className="p-1 sm:p-1.5">
+                            <Star className={`w-4 sm:w-5 md:w-6 h-4 sm:h-5 md:h-6 ${s <= reviewForm.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                          </motion.button>
+                        ))}
+                      </div>
+                      <input type="text" value={reviewForm.title} onChange={e => updateForm("title", e.target.value)} placeholder="Title" maxLength={50} className="w-full px-2 py-1 sm:py-2 md:py-2 border rounded text-xs sm:text-sm md:text-base mb-1" />
+                      <textarea value={reviewForm.comment} onChange={e => updateForm("comment", e.target.value)} placeholder="Review" rows={3} maxLength={300} className="w-full px-2 py-1 sm:py-2 md:py-2 border rounded text-xs sm:text-sm md:text-base resize-none mb-1" />
+                      <motion.button
+                        onClick={handleAddReview}
+                        disabled={!reviewForm.title.trim() || !reviewForm.comment.trim() || isSubmittingReview}
+                        className="w-full bg-gray-800 text-white rounded text-xs sm:text-sm md:text-base py-1 sm:py-2 md:py-2 flex justify-center items-center gap-1"
+                      >
+                        {isSubmittingReview ? <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Check className="w-3 sm:w-4 sm:h-4" />}
+                        <span>Submit</span>
+                      </motion.button>
+                    </motion.div>
+                  )}
 
-  {/* Login Required */}
-  {!token && (
-    <motion.div className="mt-4 border-t pt-4 text-center">
-      <Lock className="w-6 sm:w-8 h-6 sm:h-8 text-gray-600 mx-auto mb-1"/>
-      <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-2">Login to write a review</p>
-      <div className="flex justify-center gap-2 text-xs sm:text-sm">
-        <Link href="/login"><button className="px-2 py-1 sm:px-3 sm:py-2 bg-gray-900 text-white rounded">Login</button></Link>
-        <Link href="/signup"><button className="px-2 py-1 sm:px-3 sm:py-2 border border-gray-900 rounded">Sign Up</button></Link>
-      </div>
-    </motion.div>
-  )}
-</motion.div>
+                  {/* Login Required */}
+                  {!token && (
+                    <motion.div className="mt-4 border-t pt-4 text-center">
+                      <Lock className="w-6 sm:w-8 h-6 sm:h-8 text-gray-600 mx-auto mb-1" />
+                      <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-2">Login to write a review</p>
+                      <div className="flex justify-center gap-2 text-xs sm:text-sm">
+                        <Link href="/login"><button className="px-2 py-1 sm:px-3 sm:py-2 bg-gray-900 text-white rounded">Login</button></Link>
+                        <Link href="/signup"><button className="px-2 py-1 sm:px-3 sm:py-2 border border-gray-900 rounded">Sign Up</button></Link>
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
 
 
               )}
@@ -2173,7 +2170,7 @@ export default function ProductPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className="flex-shrink-0"
-                   onClick={() => handleClickProduct(relatedProduct.itemId)}
+                  onClick={() => handleClickProduct(relatedProduct._id)}
                 >
                   <ProductCard
                     img={relatedProduct.mainImage}
@@ -2217,7 +2214,7 @@ export default function ProductPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className="flex-shrink-0 relative"
-                   onClick={() => handleClickProduct(trendingItem.itemId)}
+                  onClick={() => handleClickProduct(trendingItem.itemId)}
                 >
                   {/* Trending Badge */}
 
@@ -2265,7 +2262,7 @@ export default function ProductPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className="flex-shrink-0 relative"
-                   onClick={() => handleClickProduct(recentlyViewed.itemId)}
+                  onClick={() => handleClickProduct(recentlyViewed._id)}
                 >
                   <ProductCard
                     img={item.productImage}
@@ -2310,7 +2307,7 @@ export default function ProductPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="flex-shrink-0 relative"
- onClick={() => handleClickProduct(personalizedProduct.itemId)}
+                onClick={() => handleClickProduct(personalizedProduct.itemId)}
               >
                 <ProductCard
                   img={personalizedProduct.mainImage}

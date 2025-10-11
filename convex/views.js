@@ -32,12 +32,7 @@ export const addView = mutation({
         isDeleted: false,
       });
 
-      console.log(`View recorded for product ${args.productId}`, {
-        viewId,
-        userId: args.userId,
-        sessionId: args.sessionId,
-        viewType: args.viewType
-      });
+
 
       return { success: true, viewId };
     } catch (error) {
@@ -170,7 +165,7 @@ export const getMostViewedProducts = query({
           return acc;
         }, {});
 
-        console.log('Product view counts:', Object.keys(productViewCounts));
+        // console.log('Product view counts:', Object.keys(productViewCounts));
 
         // Convert to array and sort by view count
         const sortedProducts = Object.values(productViewCounts)
@@ -182,13 +177,13 @@ export const getMostViewedProducts = query({
           .sort((a, b) => b.viewCount - a.viewCount)
           .slice(0, args.limit || 6);
 
-        console.log('Sorted products:', sortedProducts.length);
+        // console.log('Sorted products:', sortedProducts.length);
 
         // Fetch product details for each trending product
         const productsWithDetails = [];
         
         for (const item of sortedProducts) {
-          console.log(`Looking for product with itemId: ${item.productId}`);
+          // console.log(`Looking for product with itemId: ${item.productId}`);
           
           try {
             // Try to find by itemId first
@@ -198,7 +193,7 @@ export const getMostViewedProducts = query({
               .filter((q) => q.neq(q.field("isDeleted"), true))
               .first();
 
-            console.log(`Found product by itemId for ${item.productId}:`, product ? 'Yes' : 'No');
+            // console.log(`Found product by itemId for ${item.productId}:`, product ? 'Yes' : 'No');
 
             if (!product) {
               // Try to find by _id as fallback
@@ -208,7 +203,7 @@ export const getMostViewedProducts = query({
                 .filter((q) => q.neq(q.field("isDeleted"), true))
                 .first();
 
-              console.log(`Found product by _id for ${item.productId}:`, product ? 'Yes' : 'No');
+              // console.log(`Found product by _id for ${item.productId}:`, product ? 'Yes' : 'No');
             }
 
             if (product) {
@@ -235,7 +230,7 @@ export const getMostViewedProducts = query({
         return productsWithDetails;
       } else {
         // Fallback: Get regular products from the same category
-        console.log('No views found, falling back to regular products');
+        // console.log('No views found, falling back to regular products');
         
         let productsQuery = ctx.db
           .query("products")
@@ -249,7 +244,7 @@ export const getMostViewedProducts = query({
           .order("desc")
           .take(args.limit || 6);
 
-        console.log('Found fallback products:', products.length);
+        // console.log('Found fallback products:', products.length);
 
         // Add mock view counts for display
         const productsWithMockCounts = products.map((product, index) => ({
@@ -263,7 +258,7 @@ export const getMostViewedProducts = query({
           uniqueSessions: Math.floor(Math.random() * 25) + 5,
         }));
 
-        console.log('Returning fallback products:', productsWithMockCounts.length);
+        // console.log('Returning fallback products:', productsWithMockCounts.length);
         return productsWithMockCounts;
       }
     } catch (error) {

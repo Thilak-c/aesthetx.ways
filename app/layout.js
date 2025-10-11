@@ -47,7 +47,7 @@ export default function RootLayout({ children }) {
             {/* Add Suspense boundary */}
             <LayoutWrapper>
               {children}
-              {/* <Footer/> */}
+              <Footer/>
             </LayoutWrapper>
           </Suspense>
               {/* </AccessGate> */}
