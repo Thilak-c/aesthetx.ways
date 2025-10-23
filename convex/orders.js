@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "@/convex/_generated/api";
+import { api } from "./_generated/api";
 
 // Helper function to get current timestamp
 const nowIso = () => new Date().toISOString();
@@ -116,6 +116,27 @@ export const createOrder = mutation({
         createdAt: orderTimestamp,
         updatedAt: orderTimestamp,
       });
+
+      // Send email notification to admin
+      try {
+        await ctx.runAction(api.emailNotifications.sendOrderNotificationEmail, {
+          orderData: {
+            orderNumber,
+            customerName: args.shippingDetails.fullName,
+            customerEmail: args.shippingDetails.email,
+            orderTotal: args.orderTotal,
+            items: args.items.map(item => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            shippingAddress: `${args.shippingDetails.address}, ${args.shippingDetails.city}, ${args.shippingDetails.state} - ${args.shippingDetails.pincode}`,
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send order notification email:", emailError);
+        // Don't fail the order creation if email fails
+      }
 
       // Update stock for each item
       for (const item of args.items) {

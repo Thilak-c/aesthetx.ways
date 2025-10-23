@@ -31,7 +31,7 @@ export default function Footer() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: sugg }),
-    }).catch(() => {});
+    }).catch(() => { });
     setSuggStatus('ty');
     setSugg('');
     setTimeout(() => setSuggStatus('idle'), 3000);
@@ -56,70 +56,68 @@ export default function Footer() {
     setStatus(res.ok ? 'success' : 'idle');
   }
 
-  const playPop = () => new Audio('/pop.mp3').play().catch(() => {});
+  const playPop = () => new Audio('/pop.mp3').play().catch(() => { });
 
   return (
     <>
-    <div
-  className="relative w-full py-6 px-4 flex justify-center bg-black/80 bg-cover bg-center"
-  style={{ backgroundImage: "url('/logo.png')" }}
->
-  {/* Optional dark overlay for better contrast */}
-  <div className="absolute inset-0 bg-black/70"></div>
-
-  <div className="relative w-full max-w-md z-10">
-    <p className="text-xs text-white mb-3 text-center">
-      Got an idea to make us better? We’re all ears (and grateful).
-    </p>
-
-    <form onSubmit={sendSuggestion} className="flex gap-2">
-      <input
-        value={sugg}
-        onChange={(e) => setSugg(e.target.value)}
-        maxLength={140}
-        required
-        placeholder="Suggest anything…"
-        className="flex-1 px-4 py-2 border border-transparent roued-lg bg-white dark:bg-black/30 backdrop-blur text-sm placeholder-black/50 dark:placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 dark:focus:ring-white/40"
-      />
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="bg-black text-white border px-4 py-2 round-lg text-sm grid place-items-center"
-        aria-label="Send suggestion"
+      <div
+        className="relative w-full py-6 px-4 flex justify-center bg-black/80 bg-cover bg-center"
+        style={{ backgroundImage: "url('/logo.png')" }}
       >
-       { 
-  suggStatus === "loading" 
-    ? (
-        <img 
-          src="/favicon.png" 
-          className="w-[15px] h-[15px] animate-spin-slow mx-auto" 
-          alt="Loading" 
-        />
-      ) 
-    : <FaPaperPlane /> 
-}
+        {/* Optional dark overlay for better contrast */}
+        <div className="absolute inset-0 bg-black/70"></div>
 
-      </motion.button>
-    </form>
+        <div className="relative w-full max-w-md z-10">
+          <p className="text-xs text-white mb-3 text-center">
+            Got an idea to make us better? We’re all ears (and grateful).
+          </p>
 
-    {suggStatus === "ty" && (
-      <motion.p
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-xs text-emerald-500 dark:text-emerald-400 mt-2 text-center"
-      >
-        Thanks for the sparkle — smile delivered!
-      </motion.p>
-    )}
-  </div>
-</div>
+          <form onSubmit={sendSuggestion} className="flex gap-2">
+            <input
+              value={sugg}
+              onChange={(e) => setSugg(e.target.value)}
+              maxLength={140}
+              required
+              placeholder="Suggest anything…"
+              className="flex-1 px-4 py-2 border border-transparent roued-lg bg-white dark:bg-black/30 backdrop-blur text-sm placeholder-black/50 dark:placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 dark:focus:ring-white/40"
+            />
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-black text-white border px-4 py-2 round-lg text-sm grid place-items-center"
+              aria-label="Send suggestion"
+            >
+              {
+                suggStatus === "loading"
+                  ? (
+                    <img
+                      src="/favicon.png"
+                      className="w-[15px] h-[15px] animate-spin-slow mx-auto"
+                      alt="Loading"
+                    />
+                  )
+                  : <FaPaperPlane />
+              }
+
+            </motion.button>
+          </form>
+
+          {suggStatus === "ty" && (
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs text-emerald-500 dark:text-emerald-400 mt-2 text-center"
+            >
+              Thanks for the sparkle — smile delivered!
+            </motion.p>
+          )}
+        </div>
+      </div>
 
       <div className="h-[700px] w-full absolute z-40 bg-gradient-to-b from-white/60 via-white/10 to-transparent pointer-events-none" />
 
       <div className="absolute z-30 top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        {meteorArr.map((m, i) => (
-          <span key={i} className="meteor" style={{ left: `${m.left}%`, animationDelay: `${m.delay}s` }} />
-        ))}
+
       </div>
 
       <div className="absolute z-50 w-full h-[700px] flex items-end">
@@ -130,11 +128,11 @@ export default function Footer() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* logo + about */}
 
-              <div className='fflex'>
-                <div className='flex self-center'>
+              <div className='gflex'>
+                <div className='flex self-center mb-4'>
 
-                <img src="/logo.png" alt="AesthetX" width={200} height={55} className="mb-4" />
-               <img src="/fav.png" className="w-[45px] h-[45px] animate-spin-slow mx-auto " alt="" />
+                  <img src="/logo.png" alt="AesthetX" width={200} height={55} className=" self-center mb-" />
+                  <img src="/fav.png" className="w-[45px] h-[45px] self-center animate-spin-slow mxb-3 " alt="" />
                 </div>
                 <p className="text-sm text-black/70 dark:text-white/70 leading-relaxed max-w-xs">
                   Helping you grow your social presence with style, reach, and authenticity.
@@ -176,7 +174,7 @@ export default function Footer() {
               </div>
 
               {/* --------------  NEW: Plan & Smile -------------- */}
-          
+
               {/* -------------------------------------------------- */}
             </div>
 
@@ -189,21 +187,21 @@ export default function Footer() {
       </div>
 
       {/* scroll-to-top */}
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {showScrl && (
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-24 right-6 w-10 h-10 rounded-full bg-white dark:bg-white/80 text-white dark:text-black grid place-items-center backdrop-blur shadow-lg z-50"
+            className="fixed bottom-7 right-6 w-10 h-10 rounded-full bg-white dark:bg-white/80 text-white dark:text-black grid place-items-center backdrop-blur shadow-lg z-50"
             aria-label="Back to top"
           >
             <FaRocket className="text-black w-4 h-4" />
           </motion.button>
         )}
-      </AnimatePresence>
-{/* iiii */}
+      </AnimatePresence> */}
+      {/* iiii */}
       <div className="w-full h-[700px]">
         <Galaxy />
       </div>

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Toaster } from "react-hot-toast";
+import HelpChatWidget from "./HelpChatWidget";
 
 export default function LayoutWrapper({ children }) {
   const [token, setToken] = useState(null);
@@ -71,6 +72,7 @@ export default function LayoutWrapper({ children }) {
           )}
         </AnimatePresence>
         <Toaster />
+        <HelpChatWidget />
       </>
     // </ConvexProvider> // Removed ConvexProvider wrapper
   );

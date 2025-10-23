@@ -292,4 +292,227 @@ export default defineSchema({
     fileUrl: v.string(),     // optional uploaded file URL
     createdAt: v.number(),   // timestamp
   }),
+
+  // Chat Sessions table for managing chat conversations
+  chatSessions: defineTable({
+    sessionId: v.string(), // Unique session identifier
+    userId: v.optional(v.id("users")), // Linked user account (optional for anonymous)
+    guestInfo: v.optional(v.object({
+      name: v.string(),
+      email: v.string(),
+      phone: v.optional(v.string()),
+    })),
+    status: v.string(), // 'active', 'waiting', 'closed'
+    priority: v.string(), // 'low', 'medium', 'high', 'urgent'
+    category: v.optional(v.string()), // 'general', 'order', 'product', 'technical'
+    assignedTo: v.optional(v.id("users")), // Admin user ID
+    createdAt: v.string(),
+    updatedAt: v.string(),
+    lastMessageAt: v.string(),
+    isActive: v.boolean(),
+  })
+    .index("by_status", ["status"])
+    .index("by_assigned", ["assignedTo"])
+    .index("by_created", ["createdAt"])
+    .index("by_last_message", ["lastMessageAt"])
+    .index("by_session_id", ["sessionId"])
+    .index("by_user", ["userId"])
+    .index("by_priority", ["priority"])
+    .index("by_category", ["category"]),
+
+  // Chat Messages table for storing individual messages
+  chatMessages: defineTable({
+    sessionId: v.string(), // Reference to chat session
+    senderId: v.optional(v.id("users")), // User ID (null for anonymous)
+    senderType: v.string(), // 'user', 'admin', 'system'
+    senderName: v.string(), // Display name
+    message: v.string(), // Message content
+    messageType: v.string(), // 'text', 'image', 'file', 'system'
+    isRead: v.boolean(),
+    readAt: v.optional(v.string()),
+    createdAt: v.string(),
+    editedAt: v.optional(v.string()),
+    isDeleted: v.optional(v.boolean()),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_session_created", ["sessionId", "createdAt"])
+    .index("by_sender", ["senderId"])
+    .index("by_sender_type", ["senderType"])
+    .index("by_read_status", ["isRead"]),
+
+  // Support Tickets table for tracking customer support requests
+  supportTickets: defineTable({
+    ticketNumber: v.string(), // Auto-generated ticket number
+    sessionId: v.string(), // Reference to chat session
+    userId: v.optional(v.id("users")),
+    subject: v.string(),
+    description: v.string(),
+    status: v.string(), // 'open', 'in_progress', 'resolved', 'closed'
+    priority: v.string(), // 'low', 'medium', 'high', 'urgent'
+    category: v.string(),
+    assignedTo: v.optional(v.id("users")),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+    resolvedAt: v.optional(v.string()),
+    closedAt: v.optional(v.string()),
+    resolutionNotes: v.optional(v.string()),
+    customerSatisfaction: v.optional(v.number()), // 1-5 rating
+  })
+    .index("by_status", ["status"])
+    .index("by_assigned", ["assignedTo"])
+    .index("by_priority", ["priority"])
+    .index("by_category", ["category"])
+    .index("by_ticket_number", ["ticketNumber"])
+    .index("by_session", ["sessionId"])
+    .index("by_user", ["userId"])
+    .index("by_created", ["createdAt"]),
+
+  // Report Templates table for defining report structures
+  reportTemplates: defineTable({
+    name: v.string(),
+    description: v.string(),
+    category: v.string(), // 'sales', 'orders', 'products', 'customers', 'inventory', 'marketing'
+    type: v.string(), // 'summary', 'detailed', 'analytical'
+    dataSource: v.string(), // Main table/collection to query
+    fields: v.array(v.object({
+      name: v.string(),
+      label: v.string(),
+      type: v.string(), // 'string', 'number', 'date', 'currency'
+      aggregation: v.optional(v.string()), // 'sum', 'avg', 'count', 'min', 'max'
+      format: v.optional(v.string()),
+    })),
+    filters: v.array(v.object({
+      name: v.string(),
+      label: v.string(),
+      type: v.string(), // 'date', 'select', 'multiselect', 'text', 'number'
+      options: v.optional(v.array(v.string())),
+      required: v.boolean(),
+      defaultValue: v.optional(v.any()),
+    })),
+    chartConfig: v.optional(v.object({
+      type: v.string(), // 'bar', 'line', 'pie', 'table'
+      xAxis: v.string(),
+      yAxis: v.string(),
+      groupBy: v.optional(v.string()),
+    })),
+    permissions: v.array(v.string()), // Roles that can access this template
+    isActive: v.boolean(),
+    createdBy: v.id("users"),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_category", ["category"])
+    .index("by_created_by", ["createdBy"])
+    .index("by_active", ["isActive"])
+    .index("by_created", ["createdAt"]),
+
+  // Report Instances table for generated reports
+  reportInstances: defineTable({
+    templateId: v.id("reportTemplates"),
+    name: v.string(),
+    parameters: v.object({
+      filters: v.any(),
+      dateRange: v.object({
+        start: v.string(),
+        end: v.string(),
+      }),
+      groupBy: v.optional(v.string()),
+      sortBy: v.optional(v.string()),
+      limit: v.optional(v.number()),
+    }),
+    status: v.string(), // 'pending', 'generating', 'completed', 'failed'
+    data: v.optional(v.any()), // Generated report data
+    metadata: v.object({
+      recordCount: v.number(),
+      generationTime: v.number(), // milliseconds
+      dataSize: v.number(), // bytes
+    }),
+    generatedBy: v.id("users"),
+    generatedAt: v.string(),
+    expiresAt: v.optional(v.string()),
+  })
+    .index("by_template", ["templateId"])
+    .index("by_generated_by", ["generatedBy"])
+    .index("by_status", ["status"])
+    .index("by_generated", ["generatedAt"]),
+
+  // Scheduled Reports table for automated report generation
+  scheduledReports: defineTable({
+    templateId: v.id("reportTemplates"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    schedule: v.object({
+      frequency: v.string(), // 'daily', 'weekly', 'monthly', 'custom'
+      cronExpression: v.string(),
+      timezone: v.string(),
+    }),
+    parameters: v.object({
+      filters: v.any(),
+      recipients: v.array(v.string()), // Email addresses
+      formats: v.array(v.string()), // 'csv', 'pdf', 'json'
+    }),
+    isActive: v.boolean(),
+    lastRun: v.optional(v.string()),
+    nextRun: v.string(),
+    runCount: v.number(),
+    createdBy: v.id("users"),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_template", ["templateId"])
+    .index("by_active", ["isActive"])
+    .index("by_next_run", ["nextRun"])
+    .index("by_created_by", ["createdBy"]),
+
+  // Report Exports table for tracking export files
+  reportExports: defineTable({
+    reportInstanceId: v.id("reportInstances"),
+    format: v.string(), // 'csv', 'pdf', 'json'
+    fileName: v.string(),
+    fileSize: v.number(),
+    downloadUrl: v.string(),
+    status: v.string(), // 'generating', 'completed', 'failed', 'expired'
+    generatedBy: v.id("users"),
+    generatedAt: v.string(),
+    expiresAt: v.string(),
+    downloadCount: v.number(),
+  })
+    .index("by_report_instance", ["reportInstanceId"])
+    .index("by_generated_by", ["generatedBy"])
+    .index("by_status", ["status"])
+    .index("by_expires", ["expiresAt"]),
+
+  // Report Subscriptions table for user preferences
+  reportSubscriptions: defineTable({
+    userId: v.id("users"),
+    scheduledReportId: v.id("scheduledReports"),
+    isActive: v.boolean(),
+    preferences: v.object({
+      formats: v.array(v.string()),
+      deliveryTime: v.optional(v.string()),
+      includeCharts: v.boolean(),
+    }),
+    subscribedAt: v.string(),
+    lastDelivery: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_scheduled_report", ["scheduledReportId"])
+    .index("by_active", ["isActive"]),
+
+  // Email Notifications table for tracking email sends
+  emailNotifications: defineTable({
+    type: v.string(), // 'order_notification', 'order_confirmation', 'shipping_update', etc.
+    orderNumber: v.optional(v.string()),
+    recipientEmail: v.string(),
+    subject: v.string(),
+    status: v.string(), // 'sent', 'failed', 'pending'
+    error: v.optional(v.string()),
+    sentAt: v.string(),
+    metadata: v.optional(v.any()), // Additional data like order details, etc.
+  })
+    .index("by_order", ["orderNumber"])
+    .index("by_recipient", ["recipientEmail"])
+    .index("by_status", ["status"])
+    .index("by_type", ["type"])
+    .index("by_sent_at", ["sentAt"]),
 });
