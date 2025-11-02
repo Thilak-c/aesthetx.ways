@@ -68,14 +68,14 @@ export default function Navbar() {
         width={"w-1/3"}
       />
 
-      <nav className="z-50 fixed top-1 w-[99%] left-2 rounded-3xl flex items-center justify-between px-6 py-2 border border-white/20 bg-white/10 backdrop-blur-md shadow-lg hidden md:flex">
+      <nav className="z-50 fixed top-1 w-[99%] left-2 rounded-3xl items-center justify-between px-6 py-2 border border-white/20 bg-white/10 backdrop-blur-md shadow-lg hidden md:flex">
         {/* Left */}
         <div className="flex items-center gap-6">
           <button
-           
+
           >
             <Link href={"/"}>
-            <img src="/favicon.ico" className="w-[35px]" alt="" />
+              <img src="/favicon.ico" className="w-[35px]" alt="" />
             </Link>
           </button>
 
@@ -130,10 +130,9 @@ export default function Navbar() {
               />
               <button
                 type="submit"
-                className="absolute ml-2 right-2 hover:opacity-70 transition-opacity"
+                className="absolute ml-2 right-2 opacity-80 hover:opacity-100 transition-opacity"
               >
-                <Search
-                />
+                <Search strokeWidth={1.5} />
               </button>
             </form>
             <SearchDropdown
@@ -146,8 +145,8 @@ export default function Navbar() {
           <UserNavigation />
 
           <Link href="/wishlist">
-            <button className="relative hover:bg-white/10 rounded-full p-2  ">
-              <Heart />
+            <button className="relative hover:bg-white/10 rounded-full p-2 opacity-80 hover:opacity-100 transition-all">
+              <Heart strokeWidth={1.5} />
               {wishlistSummary?.itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-bold">
                   {wishlistSummary.itemCount > 99
@@ -159,8 +158,8 @@ export default function Navbar() {
           </Link>
 
           <Link href="/cart">
-            <button className="relative hover:bg-white/10 rounded-full p-2 transition-colors">
-              <ShoppingBag />
+            <button className="relative hover:bg-white/10 rounded-full p-2 opacity-80 hover:opacity-100 transition-all">
+              <ShoppingBag strokeWidth={1.5} />
               {me && cartSummary?.totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-bold">
                   {cartSummary.totalItems > 99 ? "99+" : cartSummary.totalItems}
@@ -264,111 +263,116 @@ export function NavbarMobile() {
     setSearchDropdownOpen(searchTerm.trim().length >= 2);
   }, [searchTerm]);
 
+  const cartSummary = useQuery(
+    api.cart.getCartSummary,
+    me ? { userId: me._id } : "skip"
+  );
+
   return (
     <>
       {/* top mobile navbar */}
-      <nav className="fixed  z-[40] w-[100%] flex items-center justify-between pl-4 pr- py-1 shadow-lg border border-white bg-white backdrop-blur-md  md:hidden">
+      <nav className="fixed top-0 left-0 z-[40] w-full flex items-center justify-between px-3 py-2 bg-white/100 backdrop-blur-md md:hidden">
+        {/* Left: Hamburger Menu */}
         <button
-         
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-80 hover:opacity-100"
+          aria-label="Open Menu"
         >
-          <Link href={"/"}>
-          <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradiet-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center shad-lg">
-               <img src="/fav.png" alt="" />
-              </div>
-              <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                AesthetX
-              </span>
-            </div>
-          </Link>
+          <Menu size={24} strokeWidth={1.5} />
         </button>
 
-        {/* search icon */}
-        {/* search icon */}
+        {/* Center: Logo */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <Link href="/">
+            <img src="/favicon.ico" alt="Logo" className="w-[35px] h-[35px]" />
+          </Link>
+        </div>
 
-        {/* Full-screen search overlay */}
-        <AnimatePresence>
-          {showSearch && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-white md:hidden"
+        {/* Right: Search + Cart */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowSearch(true)}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-80 hover:opacity-100"
+            aria-label="Open Search"
+          >
+            <Search size={24} strokeWidth={1.5} />
+          </button>
+
+          <Link href="/cart">
+            <button
+              className="relative p-2 hover:bg-white/10 rounded-lg transition-colors opacity-80 hover:opacity-100"
+              aria-label="Cart"
             >
-              <div className="flex flex-col h-full">
-                {/* Search Header */}
-                <div className="flex items-center gap-3 px-4 py-4 border-b border-black/10">
+              <ShoppingBag size={24} strokeWidth={1.5} />
+              {me && cartSummary?.totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-bold">
+                  {cartSummary.totalItems > 99 ? "99+" : cartSummary.totalItems}
+                </span>
+              )}
+            </button>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Full-screen search overlay */}
+      <AnimatePresence>
+        {showSearch && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-white md:hidden"
+          >
+            <div className="flex flex-col h-full">
+              {/* Search Header */}
+              <div className="flex items-center gap-3 px-4 py-4 border-b border-black/10">
+                <button
+                  onClick={() => {
+                    setShowSearch(false);
+                    setSearchTerm("");
+                    setSearchDropdownOpen(false);
+                  }}
+                  className="p-2 hover:bg-black/5 rounded-full transition-colors"
+                >
+                  <ArrowLeftIcon size={20} strokeWidth={1.5} />
+                </button>
+
+                <form onSubmit={handleSearchSubmit} className="flex-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="What are you looking for?"
+                    className="w-full outline-none bg-transparent text-base placeholder-black/50 text-black"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                  />
+                </form>
+
+                {searchTerm && (
                   <button
                     onClick={() => {
-                      setShowSearch(false);
                       setSearchTerm("");
                       setSearchDropdownOpen(false);
                     }}
-                    className="p-2 hover:bg-black/5 rounded-full transition-colors"
+                    className="text-black/50 hover:text-black text-sm font-medium"
                   >
-                    <ArrowLeftIcon size={20} />
+                    Clear
                   </button>
-
-                  <form onSubmit={handleSearchSubmit} className="flex-1">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      placeholder="What are you looking for?"
-                      className="w-full outline-none bg-transparent text-base placeholder-black/50 text-black"
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                    />
-                  </form>
-
-                  {searchTerm && (
-                    <button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSearchDropdownOpen(false);
-                      }}
-                      className="text-black/50 hover:text-black text-sm font-medium"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                {/* Search Results/Dropdown */}
-                <div className="flex-1 overflow-y-auto">
-                  <SearchDropdown
-                    searchTerm={searchTerm}
-                    isOpen={searchDropdownOpen}
-                    onClose={() => setSearchDropdownOpen(false)}
-                  />
-                </div>
+                )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        <div className="flex-1 flex relative justify-center">
-          {!showSearch && (
-            <button
-              aria-label="Open Search"
-              className="p-2 absolute top-1/2 -translate-y-1/2 right-0 rounded-full hover:bg-white/10 transition-colors"
-              onClick={() => setShowSearch(true)}
-            >
-              <Search size={30} />
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-0 z-10">
-          <Link href="/cart">
-            <button
-              aria-label="Cart"
-              className="relative p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
-              <ShoppingBag size={30} />
-            </button>
-          </Link>
-          <UserNavigation />
-        </div>
-      </nav>
+              {/* Search Results/Dropdown */}
+              <div className="flex-1 overflow-y-auto">
+                <SearchDropdown
+                  searchTerm={searchTerm}
+                  isOpen={searchDropdownOpen}
+                  onClose={() => setSearchDropdownOpen(false)}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} width={"w-[85%]"} />
 

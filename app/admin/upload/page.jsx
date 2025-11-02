@@ -32,7 +32,11 @@ export default function AddProductPage() {
       const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
       setForm((prev) => ({ ...prev, [name]: selectedOptions }));
     } else {
-    setForm((prev) => ({ ...prev, [name]: value }));
+      // Auto-capitalize text inputs (except price, description, and category dropdown)
+      const capitalizedValue = (name === "price" || name === "description" || name === "category")
+        ? value
+        : value.toUpperCase();
+      setForm((prev) => ({ ...prev, [name]: capitalizedValue }));
     }
   };
 
@@ -120,7 +124,7 @@ export default function AddProductPage() {
       availableSizes: form.availableSizes,
       sizeStock: Object.fromEntries(
         Object.entries(form.sizeStock).map(([size, stock]) => [
-          size, 
+          size,
           stock ? parseInt(stock) : 0
         ])
       ),
@@ -139,7 +143,7 @@ export default function AddProductPage() {
       description: "",
       mainImage: "",
       otherImages: [],
-      availableSizes: ["S", "M", "L", "XL","XXL"],
+      availableSizes: ["S", "M", "L", "XL", "XXL"],
       sizeStock: {
         S: "10",
         M: "",
@@ -156,7 +160,7 @@ export default function AddProductPage() {
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6">
         <h1 className="text-2xl font-bold mb-6">Add New Product</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          
+
           {/* Name */}
           <div>
             <label className="block text-sm font-medium mb-1">Product Name</label>
@@ -204,11 +208,10 @@ export default function AddProductPage() {
                         : [...prev.type, type]
                     }));
                   }}
-                  className={`px-3 py-2 lg:px-4 lg:py-2.5 text-sm lg:text-base font-medium rounded-lg border transition-all duration-200 ${
-                    form.type.includes(type)
-                      ? 'bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:scale-105'
-                  }`}
+                  className={`px-3 py-2 lg:px-4 lg:py-2.5 text-sm lg:text-base font-medium rounded-lg border transition-all duration-200 ${form.type.includes(type)
+                    ? 'bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:scale-105'
+                    }`}
                 >
                   {type}
                 </button>
@@ -245,14 +248,19 @@ export default function AddProductPage() {
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
-            <input
-              type="text"
+            <label className="block text-sm font-medium mb-1">Category *</label>
+            <select
               name="category"
               value={form.category}
               onChange={handleChange}
-              className="w-full border rounded-lg px-3 py-2"
-            />
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+            >
+              <option value="" disabled>-- Select Category --</option>
+              <option value="Men">Men</option>
+              <option value="Women">Women</option>
+              <option value="Sneakers">Sneakers</option>
+            </select>
           </div>
 
           {/* Price */}
@@ -295,7 +303,7 @@ export default function AddProductPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Size Selection */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-gray-700">Available Sizes</h4>
@@ -305,28 +313,26 @@ export default function AddProductPage() {
                     key={size}
                     type="button"
                     onClick={() => handleSizeToggle(size)}
-                    className={`px-3 py-2 rounded-lg border-2 font-medium transition-all ${
-                      form.availableSizes.includes(size)
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                        : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300"
-                    }`}
+                    className={`px-3 py-2 rounded-lg border-2 font-medium transition-all ${form.availableSizes.includes(size)
+                      ? "border-blue-500 bg-blue-50 text-blue-700"
+                      : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300"
+                      }`}
                   >
                     {size}
                   </button>
                 ))}
               </div>
             </div>
-            
+
             {/* Size Stock Inputs */}
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-gray-700">Stock for Each Size</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {["S", "M", "L", "XL", "XXL"].map((size) => (
-                  <div key={size} className={`p-4 rounded-lg border-2 transition-all ${
-                    form.availableSizes.includes(size)
-                      ? "border-blue-200 bg-blue-50"
-                      : "border-gray-200 bg-gray-50 opacity-50"
-                  }`}>
+                  <div key={size} className={`p-4 rounded-lg border-2 transition-all ${form.availableSizes.includes(size)
+                    ? "border-blue-200 bg-blue-50"
+                    : "border-gray-200 bg-gray-50 opacity-50"
+                    }`}>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Size {size}
                       {form.availableSizes.includes(size) && (
@@ -339,11 +345,10 @@ export default function AddProductPage() {
                       onChange={(e) => handleSizeStockChange(size, e.target.value)}
                       min="0"
                       disabled={!form.availableSizes.includes(size)}
-                      className={`w-full border rounded-lg px-3 py-2 ${
-                        form.availableSizes.includes(size)
-                          ? "border-blue-300 focus:border-blue-500 focus:ring-blue-200"
-                          : "border-gray-200 bg-gray-100"
-                      }`}
+                      className={`w-full border rounded-lg px-3 py-2 ${form.availableSizes.includes(size)
+                        ? "border-blue-300 focus:border-blue-500 focus:ring-blue-200"
+                        : "border-gray-200 bg-gray-100"
+                        }`}
                       placeholder="0"
                     />
                     {form.availableSizes.includes(size) && form.sizeStock[size] && (
@@ -355,7 +360,7 @@ export default function AddProductPage() {
                 ))}
               </div>
             </div>
-            
+
             {/* Stock Summary */}
             {form.availableSizes.length > 0 && (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

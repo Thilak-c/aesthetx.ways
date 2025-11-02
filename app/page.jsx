@@ -148,6 +148,8 @@ export default function Home() {
       >
         <ProductSlider />
       </motion.section>
+      <div className="p-2">
+
       <motion.section
         variants={sectionVariants}
         initial="hidden"
@@ -167,6 +169,8 @@ export default function Home() {
       >
         <NewArrivalsSlider />
       </motion.section>
+            </div>
+
       <motion.section
         variants={sectionVariants}
         initial="hidden"
@@ -185,7 +189,7 @@ export default function Home() {
           viewport={{ once: true, margin: "-100px" }}
           className=""
         >
-          <div className="md:max-w-[74%] mx-auto px-4 lg:px-8">
+          <div className="md:max-w-[74%] mx-auto px-2 lg:px-8">
             {/* Heading */}
             <motion.div
               variants={containerVariants}
@@ -215,28 +219,55 @@ export default function Home() {
               viewport={{ once: true }}
               className="relative"
             >
-              <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
+              {/* Desktop: Horizontal scroll */}
+              <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
                 {/* Skeleton loading if allProducts is undefined */}
                 {!allProducts &&
                   Array.from({ length: 8 }).map((_, idx) => (
-                    <div
-                      key={`also-like-skeleton-${idx}`}
-                      className=""
-                    >
+                    <div key={`also-like-skeleton-${idx}`}>
                       <ProductCard loading />
                     </div>
                   ))}
 
                 {/* Real products */}
-                {allProducts.slice(0, 8).map((product, index) => (
+                {allProducts?.slice(0, 8).map((product, index) => (
                   <motion.div
                     key={product._id}
                     variants={itemVariants}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className=""
-                     onClick={() => handleClickProduct(product.itemId)}
+                    onClick={() => handleClickProduct(product.itemId)}
+                  >
+                    <ProductCard
+                      img={product.mainImage}
+                      name={product.name}
+                      category={product.category}
+                      price={product.price}
+                      productId={product.itemId}
+                      className="transition-all duration-300"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Mobile: 2 column grid */}
+              <div className="md:hidden grid grid-cols-2 gap-4">
+                {/* Skeleton loading */}
+                {!allProducts &&
+                  Array.from({ length: 6 }).map((_, idx) => (
+                    <ProductCard key={`also-like-skeleton-mobile-${idx}`} loading />
+                  ))}
+
+                {/* Real products */}
+                {allProducts?.slice(0, 8).map((product, index) => (
+                  <motion.div
+                    key={product._id}
+                    variants={itemVariants}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.4 }}
+                    onClick={() => handleClickProduct(product.itemId)}
                   >
                     <ProductCard
                       img={product.mainImage}
@@ -351,7 +382,8 @@ export default function Home() {
               animate="visible"
               className="relative"
             >
-              <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
+              {/* Desktop: Horizontal scroll */}
+              <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
                 {trendingProducts.map((trendingItem, index) => (
                   <motion.div
                     key={trendingItem.itemId}
@@ -359,8 +391,30 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className=" relative group"
-                     onClick={() => handleClickProduct(trendingItem.itemId)}
+                    onClick={() => handleClickProduct(trendingItem.itemId)}
+                  >
+                    <ProductCard
+                      img={trendingItem.mainImage}
+                      name={trendingItem.name}
+                      category={trendingItem.category}
+                      price={trendingItem.price}
+                      productId={trendingItem.itemId}
+                      className="transition-all duration-300"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Mobile: 2 column grid */}
+              <div className="md:hidden grid grid-cols-2 gap-4">
+                {trendingProducts.map((trendingItem, index) => (
+                  <motion.div
+                    key={trendingItem.itemId}
+                    variants={itemVariants}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.4 }}
+                    onClick={() => handleClickProduct(trendingItem.itemId)}
                   >
                     <ProductCard
                       img={trendingItem.mainImage}
@@ -418,14 +472,12 @@ export default function Home() {
               viewport={{ once: true }}
               className="relative"
             >
-              <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
+              {/* Desktop: Horizontal scroll */}
+              <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
                 {/* Skeleton loading when recentlyViewed is undefined */}
                 {!recentlyViewed &&
                   Array.from({ length: 4 }).map((_, idx) => (
-                    <div
-                      key={`recent-skeleton-${idx}`}
-                      className=""
-                    >
+                    <div key={`recent-skeleton-${idx}`}>
                       <ProductCard loading />
                     </div>
                   ))}
@@ -438,8 +490,37 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className=" relative group"
-                     onClick={() => handleClickProduct(item.productId)}
+                    onClick={() => handleClickProduct(item.productId)}
+                  >
+                    <ProductCard
+                      img={item.productImage}
+                      name={item.productName}
+                      category={item.productCategory}
+                      price={item.productPrice}
+                      productId={item.productId}
+                      className="transition-all duration-300"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Mobile: 2 column grid */}
+              <div className="md:hidden grid grid-cols-2 gap-4">
+                {/* Skeleton loading */}
+                {!recentlyViewed &&
+                  Array.from({ length: 4 }).map((_, idx) => (
+                    <ProductCard key={`recent-skeleton-mobile-${idx}`} loading />
+                  ))}
+
+                {/* Real products */}
+                {recentlyViewed?.map((item, index) => (
+                  <motion.div
+                    key={`mobile-${item._id}`}
+                    variants={itemVariants}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.4 }}
+                    onClick={() => handleClickProduct(item.productId)}
                   >
                     <ProductCard
                       img={item.productImage}
@@ -500,14 +581,12 @@ export default function Home() {
               viewport={{ once: true }}
               className="relative"
             >
-              <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
+              {/* Desktop: Horizontal scroll */}
+              <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
                 {/* Skeleton loading when personalizedProducts is undefined */}
                 {!personalizedProducts &&
                   Array.from({ length: 4 }).map((_, idx) => (
-                    <div
-                      key={`personal-skeleton-${idx}`}
-                      className=""
-                    >
+                    <div key={`personal-skeleton-${idx}`}>
                       <ProductCard loading />
                     </div>
                   ))}
@@ -520,7 +599,36 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className=" relative group"
+                    onClick={() => handleClickProduct(personalizedProduct.itemId)}
+                  >
+                    <ProductCard
+                      img={personalizedProduct.mainImage}
+                      name={personalizedProduct.name}
+                      category={personalizedProduct.category}
+                      price={personalizedProduct.price}
+                      productId={personalizedProduct.itemId}
+                      className="transition-all duration-300"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Mobile: 2 column grid */}
+              <div className="md:hidden grid grid-cols-2 gap-4">
+                {/* Skeleton loading */}
+                {!personalizedProducts &&
+                  Array.from({ length: 4 }).map((_, idx) => (
+                    <ProductCard key={`personal-skeleton-mobile-${idx}`} loading />
+                  ))}
+
+                {/* Real products */}
+                {personalizedProducts?.map((personalizedProduct, index) => (
+                  <motion.div
+                    key={`mobile-${personalizedProduct._id}`}
+                    variants={itemVariants}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.4 }}
                     onClick={() => handleClickProduct(personalizedProduct.itemId)}
                   >
                     <ProductCard

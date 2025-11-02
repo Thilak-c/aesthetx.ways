@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useAction, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -15,7 +15,7 @@ const getSessionToken = () => {
 
 export default function Login() {
   const router = useRouter();
-  const signIn = useAction(api.auth.signIn);
+  const signIn = useMutation(api.auth.signIn);
   
   const token = getSessionToken();
   const me = useQuery(api.users.meByToken, token ? { token } : "skip");

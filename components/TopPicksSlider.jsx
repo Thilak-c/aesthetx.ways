@@ -15,7 +15,7 @@ export default function TopPicksSlider() {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-const router = useRouter();
+  const router = useRouter();
   // Fetch products using direct Convex client
   useEffect(() => {
     const fetchProducts = async () => {
@@ -79,15 +79,29 @@ const router = useRouter();
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    if (!el || !products || products.length === 0) return;
 
     const updatePages = () => {
       setPageCount(Math.ceil(el.scrollWidth / el.clientWidth));
     };
 
     const handleScroll = () => {
+      const scrollLeft = el.scrollLeft;
+      const scrollWidth = el.scrollWidth;
+      const clientWidth = el.clientWidth;
+      const halfWidth = scrollWidth / 2;
+
+      // When reaching the end, jump back to the start
+      if (scrollLeft >= halfWidth - clientWidth) {
+        el.scrollLeft = scrollLeft - halfWidth;
+      }
+      // When reaching the start (scrolling backwards), jump to the end
+      else if (scrollLeft <= 0) {
+        el.scrollLeft = halfWidth;
+      }
+
       const page = Math.round(el.scrollLeft / el.clientWidth);
-      setCurrentPage(page);
+      setCurrentPage(page % products.length);
     };
 
     updatePages();
@@ -101,7 +115,7 @@ const router = useRouter();
       el.removeEventListener("scroll", handleScroll);
     };
   }, []);
- const handleClickProduct = (productId) => {
+  const handleClickProduct = (productId) => {
     sessionStorage.setItem("homeScroll", window.scrollY);
     router.push(`/product/${productId}`);
   };
@@ -128,40 +142,108 @@ const router = useRouter();
             </>
           )}
         </p>
-        <span className="block w-28 sm:w-36 h-[2px] mx-auto mt-1 opacity-50 rounded-full bg-gradient-to-r from-white via-black to-white"></span>
       </div>
 
-      <div className="relative w-full md:max-w-[74%] mx-auto flex items-center">
-        {/* Product Cards */}
-        <div
-          ref={scrollRef}
-          className="w-full overflow-x-auto scrollbar-hide product-slider"
-        >
-          <div className="flex flex-nowrap gap-6 px-4 sm:px-6 lg:px-8">
-            {isLoading ? (
-              // Skeleton loader (show 4 placeholder cards)
-              Array.from({ length: 4 }).map((_, idx) => (
+      <div className="relative w-full md:max-w-[74%] mx-auto">
+        {/* Desktop: Horizontal scroll */}
+        <div className="hidden md:block">
+          <div
+            ref={scrollRef}
+            className="w-full overflow-x-auto scrollbar-hide product-slider"
+          >
+            <div className="flex flex-nowrap gap-6 px-4 sm:px-6 lg:px-8">
+              {isLoading ? (
+                // Skeleton loader (show 4 placeholder cards)
+                Array.from({ length: 4 }).map((_, idx) => (
+                  <ProductCard key={`skeleton-${idx}`} loading />
+                ))
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center w-full py-8 gap-3">
+                  <div className="text-red-500">Failed to load top picks.</div>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-gray-800 text-white r hover:bg-gray-700 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : hasProducts ? (
+                <>
+                  {products.map((p, idx) => (
+                    <motion.div
+                      key={`first-${p._id}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.5 }}
+                      transition={{ delay: idx * 0.1, duration: 0.4 }}
+                      onClick={() => handleClickProduct(p._id)}
+                    >
+                      <ProductCard
+                        productId={p.itemId || p._id}
+                        img={p.mainImage || "/products/placeholder.jpg"}
+                        name={p.name}
+                        category={p.category}
+                        price={p.price}
+                      />
+                    </motion.div>
+                  ))}
+                  {/* Duplicate for infinite loop */}
+                  {products.map((p, idx) => (
+                    <motion.div
+                      key={`second-${p._id}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.5 }}
+                      transition={{ delay: idx * 0.1, duration: 0.4 }}
+                      onClick={() => handleClickProduct(p._id)}
+                    >
+                      <ProductCard
+                        productId={p.itemId || p._id}
+                        img={p.mainImage || "/products/placeholder.jpg"}
+                        name={p.name}
+                        category={p.category}
+                        price={p.price}
+                      />
+                    </motion.div>
+                  ))}
+                </>
+              ) : (
+                <div className="flex items-center justify-center w-full py-8">
+                  <div className="text-gray-500">No top picks available.</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile: 2 column grid */}
+        <div className="">
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-4">
+              {Array.from({ length: 6 }).map((_, idx) => (
                 <ProductCard key={`skeleton-${idx}`} loading />
-              ))
-            ) : error ? (
-              <div className="flex flex-col items-center justify-center w-full py-8 gap-3">
-                <div className="text-red-500">Failed to load top picks.</div>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Try Again
-                </button>
-              </div>
-            ) : hasProducts ? (
-              products.map((p, idx) => (
+              ))}
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center w-full py-8 gap-3">
+              <div className="text-red-500">Failed to load top picks.</div>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : hasProducts ? (
+            <div className="grid grid-cols-2 gap-4">
+              {products.map((p, idx) => (
                 <motion.div
                   key={p._id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.5 }} // triggers when half of the card is visible
-                  transition={{ delay: idx * 0.1, duration: 0.4 }}
-                    onClick={() => handleClickProduct(p._id)}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: idx * 0.05, duration: 0.4 }}
+                  onClick={() => handleClickProduct(p._id)}
                 >
                   <ProductCard
                     productId={p.itemId || p._id}
@@ -171,13 +253,13 @@ const router = useRouter();
                     price={p.price}
                   />
                 </motion.div>
-              ))
-            ) : (
-              <div className="flex items-center justify-center w-full py-8">
-                <div className="text-gray-500">No top picks available.</div>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center w-full py-8">
+              <div className="text-gray-500">No top picks available.</div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -189,9 +271,8 @@ const router = useRouter();
             <button
               key={idx}
               onClick={() => scrollToPage(idx)}
-              className={`w-1 h-1 rounded-full transition-colors duration-200 ${
-                currentPage === idx ? "bg-gray-800" : "bg-gray-300"
-              }`}
+              className={`w-1 h-1 rounded-full transition-colors duration-200 ${currentPage === idx ? "bg-gray-800" : "bg-gray-300"
+                }`}
               aria-label={`Go to slide ${idx + 1}`}
               disabled={currentPage === idx}
             />

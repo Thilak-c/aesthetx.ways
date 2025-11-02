@@ -40,56 +40,47 @@ export default function ProductCard({
 console.log(img)
   if (loading) {
     return (
-      <div
-        className={`flex-shrink-0 w-[180px] md:w-[200px] lg:w-[250px] 
-        bg-white rounded-xl overflow-hidden flex flex-col ${className}`}
-      >
+      <div className={`flex-shrink-0 w-full ${className}`}>
         {/* Image skeleton */}
-        <SkeletonBox className="w-full aspect-[3/4] rounded-t-xl" />
-
-        <div className="p-2 sm:p-3 flex flex-col gap-2">
+        <SkeletonBox className="w-full aspect-[4/5] mb-3" />
+        
+        <div className="flex flex-col gap-1">
           {/* Name skeleton */}
           <SkeletonBox className="h-4 w-3/4" />
-          {/* Category skeleton */}
-          <SkeletonBox className="h-3 w-1/2" />
           {/* Price skeleton */}
-          <SkeletonBox className="h-4 w-1/4" />
+          <SkeletonBox className="h-4 w-1/3" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="block ">
-      <div
-        className={`flex-shrink-0 w-[180px] md:w-[200px] lg:w-[250px]
-         rounded-xl overflow-hidden group flex flex-col cursor-pointer transition duration-300 ${className}`}
-      >
-        <div className="relative  rounded-t-xl w-full aspect-[3/4] bg-gray-100 overflow-hidden">
-          <img
-            src={img}
-            alt={name}
-            fill={name}
-            className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-110"
-          />
+    <div className={`block w-full cursor-pointer group ${className}`}>
+      {/* Product Image */}
+      <div className="relative w-full aspect-[4/5] bg-gray-100 overflow-hidden mb-1">
+        <img
+          src={img}
+          alt={name}
+          className="w-full h-full object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+      </div>
+      
+      {/* Product Info */}
+      <div className="flex flex-col gap-1">
+        {/* Product Name */}
+        <h3 className={`${poppins.className} text-[13px] sm:text-[14px] font-extrabold text-gray-900 line-clamp-2 leading-tight`}>
+          {name}
+        </h3>
+        <h4 className={`${poppins.className} text-[10px] sm:text-[12px] font-extralight text-gray-900 line-clamp-2 leading-tight`}>
+          {category}
+        </h4>
+        <div className="h-[1px] bg-black/20 w-full">
+
         </div>
-        <div className="p-2 sm:p-3 flex flex-col gap-1 sm:gap-1">
-          <div
-            className={`${poppins.className} font-normal md:font-semibold border-b border-gray-200 pb-1 sm:pb-1 text-gray-800 text-[12px] sm:text-[14px] leading-snug line-clamp-2`}
-          >
-            {name}
-          </div>
-          <div
-            className={`${inter.className} text-[10px] sm:text-[11px] font-light text-gray-500`}
-          >
-            {category}
-          </div>
-          <div
-            className={`${poppins.className} text-[12px] sm:text-[14px] text-gray-900 font-semibold md:font-bold`}
-          >
-            ₹ {price}
-          </div>
-        </div>
+        {/* Product Price */}
+        <p className={`${poppins.className} text-[13px] sm:text-[14px] font-normal text-gray-700`}>
+          ₹ {price.toLocaleString()}
+        </p>
       </div>
     </div>
   );

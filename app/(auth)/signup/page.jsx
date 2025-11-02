@@ -1,5 +1,5 @@
 "use client";
-import { useAction } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,8 +10,8 @@ import toast from "react-hot-toast";
 
 export default function Signup() {
   const router = useRouter();
-  const signup = useAction(api.auth.signup);
-  const signIn = useAction(api.auth.signIn);
+  const signup = useMutation(api.auth.signup);
+  const signIn = useMutation(api.auth.signIn);
 
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
