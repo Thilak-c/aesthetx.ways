@@ -6,14 +6,14 @@ import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Package, 
+import {
+  Search,
+  Filter,
+  Download,
+  Eye,
+  Edit,
+  Trash2,
+  Package,
   Plus,
   TrendingUp,
   Clock,
@@ -38,12 +38,12 @@ import {
 // Animated Number Component
 function AnimatedNumber({ value, duration = 1000 }) {
   const [displayValue, setDisplayValue] = useState(0);
-  
+
   useEffect(() => {
     let start = 0;
     const end = value || 0;
     const increment = end / (duration / 16);
-    
+
     const timer = setInterval(() => {
       start += increment;
       if (start >= end) {
@@ -52,17 +52,17 @@ function AnimatedNumber({ value, duration = 1000 }) {
       }
       setDisplayValue(Math.floor(start));
     }, 16);
-    
+
     return () => clearInterval(timer);
   }, [value, duration]);
-  
+
   return displayValue.toLocaleString();
 }
 
 // Toast Component
 function Toast({ message, type = "success", onClose, duration = 3000 }) {
   const [visible, setVisible] = useState(true);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false);
@@ -70,9 +70,9 @@ function Toast({ message, type = "success", onClose, duration = 3000 }) {
     }, duration);
     return () => clearTimeout(timer);
   }, [duration, onClose]);
-  
+
   if (!visible) return null;
-  
+
   const bgColor = {
     success: "bg-green-600",
     error: "bg-red-600",
@@ -88,8 +88,8 @@ function Toast({ message, type = "success", onClose, duration = 3000 }) {
       className={`fixed top-5 right-5 px-6 py-4 ${bgColor} text-white rounded-xl shadow-2xl flex items-center gap-4 z-50`}
     >
       <span className="font-medium">{message}</span>
-      <button 
-        onClick={onClose} 
+      <button
+        onClick={onClose}
         className="font-bold text-xl leading-none hover:scale-110 transition-transform"
       >
         ×
@@ -123,9 +123,8 @@ function StatCard({ title, value, icon: Icon, color, trend, delay = 0 }) {
             {typeof value === 'number' ? <AnimatedNumber value={value} /> : value}
           </p>
           {trend && (
-            <div className={`flex items-center mt-2 text-xs ${
-              trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-600'
-            }`}>
+            <div className={`flex items-center mt-2 text-xs ${trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-600'
+              }`}>
               <TrendingUp className={`w-3 h-3 mr-1 ${trend < 0 ? 'rotate-180' : ''}`} />
               {Math.abs(trend)}%
             </div>
@@ -142,7 +141,7 @@ function StatCard({ title, value, icon: Icon, color, trend, delay = 0 }) {
 // Update the ProductCard component to include trash functionality
 function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock, onRestore, onPermanentDelete, index }) {
   const [showActions, setShowActions] = useState(false);
-  
+
   const getStockStatus = () => {
     if (product.inStock === false) return { status: 'Out of Stock', color: 'red' };
     if (product.currentStock !== undefined && product.currentStock <= 0) return { status: 'Out of Stock', color: 'red' };
@@ -158,16 +157,15 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className={`bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 group ${
-        product.isDeleted ? 'opacity-60 bg-gray-50' : ''
-      }`}
+      className={`bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 group ${product.isDeleted ? 'opacity-60 bg-gray-50' : ''
+        }`}
     >
       <div className="p-6">
         {/* Product Image */}
         <div className="relative mb-4">
           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
             <img
-              src={product.images?.[0] || '/placeholder-product.jpg'}
+              src={product.mainImage || '/placeholder-product.jpg'}
               alt={product.name}
               width={200}
               height={200}
@@ -175,12 +173,11 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
             />
           </div>
           <div className="absolute top-2 right-2">
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              product.isDeleted ? 'bg-red-100 text-red-800' :
-              stockInfo.color === 'green' ? 'bg-green-100 text-green-800' :
-              stockInfo.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
-            }`}>
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${product.isDeleted ? 'bg-red-100 text-red-800' :
+                stockInfo.color === 'green' ? 'bg-green-100 text-green-800' :
+                  stockInfo.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+              }`}>
               {product.isDeleted ? 'In Trash' : stockInfo.status}
             </span>
           </div>
@@ -221,11 +218,10 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
                 </button>
                 <button
                   onClick={() => onToggleHidden(product)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    product.isHidden 
-                      ? 'text-green-600 hover:bg-green-50' 
+                  className={`p-2 rounded-lg transition-colors ${product.isHidden
+                      ? 'text-green-600 hover:bg-green-50'
                       : 'text-red-600 hover:bg-red-50'
-                  }`}
+                    }`}
                   title={product.isHidden ? 'Show Product' : 'Hide Product'}
                 >
                   <Eye className="w-4 h-4" />
@@ -257,7 +253,7 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
               </>
             )}
           </div>
-          
+
           <div className="relative">
             <button
               onClick={() => setShowActions(!showActions)}
@@ -265,7 +261,7 @@ function ProductCard({ product, onToggleHidden, onDelete, onEdit, onUpdateStock,
             >
               <MoreVertical className="w-4 h-4" />
             </button>
-            
+
             <AnimatePresence>
               {showActions && (
                 <motion.div
@@ -399,7 +395,7 @@ export default function ProductDashboard() {
   }, [products]);
 
   // Update the filteredProducts logic to properly filter low stock
-  const filteredProducts = useMemo(() => 
+  const filteredProducts = useMemo(() =>
     products
       .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
       .filter(p => selectedCategory === "All" || (p.category || "Uncategorized") === selectedCategory)
@@ -453,7 +449,7 @@ export default function ProductDashboard() {
   const handleDelete = async (product) => {
     if (confirm(`Are you sure you want to move "${product.name}" to trash?`)) {
       try {
-        await moveToTrash({ 
+        await moveToTrash({
           productId: product._id,
           deletedBy: "admin", // Pass a string value
           reason: "Moved to trash by admin"
@@ -486,12 +482,12 @@ export default function ProductDashboard() {
   };
 
   const handleExport = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + 
+    const csvContent = "data:text/csv;charset=utf-8," +
       "Name,Category,Price,Stock Status,Current Stock,Total Sales,Created At\n" +
-      filteredProducts.map(p => 
+      filteredProducts.map(p =>
         `${p.name},${p.category || "Uncategorized"},${p.price},${p.inStock !== false ? "In Stock" : "Out of Stock"},${p.currentStock || "∞"},${(p.buys || 0) * (p.price || 0)},${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ""}`
       ).join("\n");
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -503,7 +499,7 @@ export default function ProductDashboard() {
 
   const handleUpdateStock = async () => {
     if (!selectedProduct) return;
-    
+
     try {
       await updateStock({
         productId: selectedProduct._id,
@@ -514,7 +510,7 @@ export default function ProductDashboard() {
         },
         updatedBy: "admin"
       });
-      
+
       setToast({ message: "Stock updated successfully!", type: "success" });
       setShowStockModal(false);
       setSelectedProduct(null);
@@ -559,16 +555,15 @@ export default function ProductDashboard() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowTrash(!showTrash)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              showTrash 
-                ? 'bg-red-600 text-white hover:bg-red-700' 
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${showTrash
+                ? 'bg-red-600 text-white hover:bg-red-700'
                 : 'bg-white border border-gray-300 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <Trash2 className="w-4 h-4" />
             {showTrash ? 'View Active' : 'View Trash'}
           </button>
-          
+
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -576,7 +571,7 @@ export default function ProductDashboard() {
             <Filter className="w-4 h-4" />
             Filters
           </button>
-          
+
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -584,7 +579,7 @@ export default function ProductDashboard() {
             <Download className="w-4 h-4" />
             Export
           </button>
-          
+
           {!showTrash && (
             <Link
               href="/admin/upload/"
@@ -815,7 +810,7 @@ export default function ProductDashboard() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <select
@@ -829,7 +824,7 @@ export default function ProductDashboard() {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
                 <select
@@ -843,7 +838,7 @@ export default function ProductDashboard() {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
                 <select
@@ -857,7 +852,7 @@ export default function ProductDashboard() {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Stock Status</label>
                 <select
@@ -892,7 +887,7 @@ export default function ProductDashboard() {
                 </select>
               </div>
             </div>
-            
+
             {/* Clear Filters Button */}
             <div className="flex justify-end mt-4">
               <button
@@ -980,22 +975,20 @@ export default function ProductDashboard() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setViewMode("grid")}
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-400 hover:text-gray-600"
-            }`}
+            className={`p-2 rounded-lg transition-colors ${viewMode === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-400 hover:text-gray-600"
+              }`}
           >
             <Grid className="w-5 h-5" />
           </button>
-            <button
+          <button
             onClick={() => setViewMode("list")}
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === "list" ? "bg-blue-100 text-blue-600" : "text-gray-400 hover:text-gray-600"
-            }`}
+            className={`p-2 rounded-lg transition-colors ${viewMode === "list" ? "bg-blue-100 text-blue-600" : "text-gray-400 hover:text-gray-600"
+              }`}
           >
             <List className="w-5 h-5" />
-            </button>
+          </button>
         </div>
-        
+
         <p className="text-sm text-gray-500">
           Showing {filteredProducts.length} of {products.length} products
         </p>
@@ -1010,46 +1003,46 @@ export default function ProductDashboard() {
               product={product}
               onToggleHidden={handleToggleHidden}
               onDelete={handleDelete}
-              onEdit={() => {}}
+              onEdit={() => { }}
               onUpdateStock={openStockModal}
               onRestore={handleRestore}
               onPermanentDelete={handlePermanentDelete}
               index={index}
             />
           ))}
-      </div>
+        </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
-            <tr>
-              {[
+                <tr>
+                  {[
                     { label: "Product", key: "name" },
-                { label: "Category", key: "category" },
-                { label: "Price", key: "price" },
+                    { label: "Category", key: "category" },
+                    { label: "Price", key: "price" },
                     { label: "Stock", key: "currentStock" },
                     { label: "Status", key: "inStock" },
                     { label: "Sales", key: "buys" },
                     { label: "Created", key: "createdAt" },
-                { label: "Actions", key: "actions" }
-              ].map(col => (
-                <th
-                  key={col.key}
+                    { label: "Actions", key: "actions" }
+                  ].map(col => (
+                    <th
+                      key={col.key}
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={() => col.key !== "actions" && handleSort(col.key)}
-                >
+                      onClick={() => col.key !== "actions" && handleSort(col.key)}
+                    >
                       <div className="flex items-center gap-1">
                         {col.label}
                         {sortBy === col.key && (
                           sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />
                         )}
                       </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
                 {filteredProducts.map((product, index) => (
                   <motion.tr
                     key={product.itemId}
@@ -1079,75 +1072,72 @@ export default function ProductDashboard() {
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">₹{product.price?.toLocaleString()}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {product.currentStock !== undefined ? `${product.currentStock} units` : '∞'}
-                </td>
+                    </td>
                     <td className="px-6 py-4">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-    product.inStock === false || (product.currentStock !== undefined && product.currentStock <= 0)
-      ? 'bg-red-100 text-red-800' 
-      : product.currentStock !== undefined && product.currentStock < 10 && product.currentStock > 0
-      ? 'bg-yellow-100 text-yellow-800'
-      : 'bg-green-100 text-green-800'
-                  }`}>
-                    <span className={`w-2 h-2 mr-1.5 rounded-full ${
-      product.inStock === false || (product.currentStock !== undefined && product.currentStock <= 0)
-        ? 'bg-red-400' 
-        : product.currentStock !== undefined && product.currentStock < 10 && product.currentStock > 0
-        ? 'bg-yellow-400'
-        : 'bg-green-400'
-                    }`}></span>
-    {product.inStock === false || (product.currentStock !== undefined && product.currentStock <= 0)
-      ? 'Out of Stock'
-      : product.currentStock !== undefined && product.currentStock < 10 && product.currentStock > 0
-      ? 'Low Stock'
-      : 'In Stock'}
-                  </span>
-                </td>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.inStock === false || (product.currentStock !== undefined && product.currentStock <= 0)
+                          ? 'bg-red-100 text-red-800'
+                          : product.currentStock !== undefined && product.currentStock < 10 && product.currentStock > 0
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                        <span className={`w-2 h-2 mr-1.5 rounded-full ${product.inStock === false || (product.currentStock !== undefined && product.currentStock <= 0)
+                            ? 'bg-red-400'
+                            : product.currentStock !== undefined && product.currentStock < 10 && product.currentStock > 0
+                              ? 'bg-yellow-400'
+                              : 'bg-green-400'
+                          }`}></span>
+                        {product.inStock === false || (product.currentStock !== undefined && product.currentStock <= 0)
+                          ? 'Out of Stock'
+                          : product.currentStock !== undefined && product.currentStock < 10 && product.currentStock > 0
+                            ? 'Low Stock'
+                            : 'In Stock'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{product.buys || 0}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : "-"}
-                </td>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
-                  <Link
+                        <Link
                           href={`/admin/edit/${product.itemId}`}
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                           title="Edit"
-                  >
+                        >
                           <Edit className="w-4 h-4" />
-                  </Link>
-                  <button
+                        </Link>
+                        <button
                           onClick={() => handleToggleHidden(product)}
-                          className={`p-1 rounded transition-colors ${
-                            product.isHidden 
-                              ? 'text-green-600 hover:bg-green-50' 
+                          className={`p-1 rounded transition-colors ${product.isHidden
+                              ? 'text-green-600 hover:bg-green-50'
                               : 'text-red-600 hover:bg-red-50'
-                          }`}
+                            }`}
                           title={product.isHidden ? 'Show' : 'Hide'}
                         >
                           <Eye className="w-4 h-4" />
-                  </button>
-                  <button
+                        </button>
+                        <button
                           onClick={() => handleDelete(product)}
                           className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
-                  </button>
-                  <button
+                        </button>
+                        <button
                           onClick={() => openStockModal(product)}
                           className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
                           title="Update Stock"
                         >
                           <Package className="w-4 h-4" />
-                  </button>
+                        </button>
                       </div>
-                </td>
+                    </td>
                   </motion.tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {filteredProducts.length === 0 && (
@@ -1205,9 +1195,9 @@ export default function ProductDashboard() {
                     <input
                       type="number"
                       value={stockData.currentStock}
-                      onChange={(e) => setStockData(prev => ({ 
-                        ...prev, 
-                        currentStock: e.target.value 
+                      onChange={(e) => setStockData(prev => ({
+                        ...prev,
+                        currentStock: e.target.value
                       }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter current stock"
@@ -1219,9 +1209,9 @@ export default function ProductDashboard() {
                       type="checkbox"
                       id="inStock"
                       checked={stockData.inStock}
-                      onChange={(e) => setStockData(prev => ({ 
-                        ...prev, 
-                        inStock: e.target.checked 
+                      onChange={(e) => setStockData(prev => ({
+                        ...prev,
+                        inStock: e.target.checked
                       }))}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />

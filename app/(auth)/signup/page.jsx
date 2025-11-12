@@ -17,7 +17,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // State for password visibility
-  
+
   // OTP states
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -38,12 +38,12 @@ export default function Signup() {
       toast.error("Please enter your name");
       return;
     }
-    
+
     if (!form.email || !form.email.includes('@')) {
       toast.error("Please enter a valid email address");
       return;
     }
-    
+
     if (!form.password || form.password.length < 8) {
       toast.error("Password must be at least 8 characters long");
       return;
@@ -60,12 +60,12 @@ export default function Signup() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         setOtpSent(true);
         setOtpTimer(300); // 5 minutes in seconds
         toast.success("OTP sent to your email!");
-        
+
         // Start countdown timer
         const interval = setInterval(() => {
           setOtpTimer((prev) => {
@@ -105,14 +105,14 @@ export default function Signup() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          email: form.email, 
-          otp: otp.trim() 
+        body: JSON.stringify({
+          email: form.email,
+          otp: otp.trim()
         }),
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success("Email verified successfully!");
         // Continue with account creation
@@ -139,7 +139,7 @@ export default function Signup() {
     } catch (err) {
       console.error('Signup error:', err);
       const msg = String(err?.message || "");
-      
+
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("duplicate")) {
         setError("That email is already in use. Try logging in instead.");
         // Reset OTP state so user can try with different email
@@ -176,7 +176,7 @@ export default function Signup() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 pt-12 sm:pt-6 bg-gray-50 overflow-hidden">
       {/* Background with Logo */}
-      <div 
+      <div
         className="absolute inset-0 z-0 flex items-center justify-center"
       >
         <img
@@ -200,8 +200,8 @@ export default function Signup() {
             {otpSent ? "Verify Your Email" : "Create your account"}
           </h1>
           <p className="text-sm sm:text-base text-gray-700 font-medium">
-            {otpSent 
-              ? "Enter the verification code sent to your email" 
+            {otpSent
+              ? "Enter the verification code sent to your email"
               : "Join the AesthetX community"
             }
           </p>
@@ -212,12 +212,12 @@ export default function Signup() {
           <label htmlFor="name" className="block text-sm font-semibold text-gray-800 mb-2">
             Your Name
           </label>
-          <input 
-            name="name" 
+          <input
+            name="name"
             id="name"
-            placeholder="Enter your name" 
+            placeholder="Enter your name"
             className="w-full px-5 py-3.5 sm:px-6 sm:py-4 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-all shadow-md bg-white/90 text-gray-900 placeholder-gray-600 appearance-none hover:border-gray-600"
-            onChange={onChange} 
+            onChange={onChange}
             required
           />
         </div>
@@ -227,14 +227,14 @@ export default function Signup() {
           <label htmlFor="email" className="block text-sm font-semibold text-gray-800 mb-2">
             Email Address
           </label>
-          <input 
-            name="email" 
-            type="email" 
+          <input
+            name="email"
+            type="email"
             id="email"
-            placeholder="your.email@example.com" 
+            placeholder="your.email@example.com"
             className="w-full px-5 py-3.5 sm:px-6 sm:py-4 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-all shadow-md bg-white/90 text-gray-900 placeholder-gray-600 appearance-none hover:border-gray-600"
-            onChange={onChange} 
-            required 
+            onChange={onChange}
+            required
           />
         </div>
 
@@ -244,14 +244,14 @@ export default function Signup() {
             Password
           </label>
           <div className="relative">
-            <input 
-              name="password" 
-              type={showPassword ? "text" : "password"} 
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
               id="password"
-              placeholder="Enter your password (min 8 chars)" 
+              placeholder="Enter your password (min 8 chars)"
               className="w-full px-5 py-3.5 sm:px-6 sm:py-4 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-all pr-12 sm:pr-14 shadow-md bg-white/90 text-gray-900 placeholder-gray-600 appearance-none hover:border-gray-600"
-              onChange={onChange} 
-              required 
+              onChange={onChange}
+              required
             />
             <button
               type="button"
@@ -276,8 +276,8 @@ export default function Signup() {
                 {error}
               </p>
             )}
-            
-            <button 
+
+            <button
               type="submit"
               disabled={busy || isSendingOtp || !form.name.trim() || !form.email || !form.password || form.password.length < 8}
               className="w-full bg-gradient-to-r from-gray-900 to-black text-white font-bold py-3.5 sm:py-4 rounded-xl hover:from-black hover:to-gray-950 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:scale-95"
@@ -294,13 +294,13 @@ export default function Signup() {
               </p>
             )}
 
-        
+
 
             <div>
               <label htmlFor="otp" className="block text-sm font-semibold text-gray-800 mb-2">
                 Verification Code
               </label>
-              <input 
+              <input
                 type="text"
                 id="otp"
                 placeholder="Enter 6-digit OTP"
@@ -315,7 +315,7 @@ export default function Signup() {
               />
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={!otp || otp.length !== 6 || isVerifyingOtp}
               className="w-full bg-gradient-to-r from-gray-900 to-black text-white font-bold py-3.5 sm:py-4 rounded-xl hover:from-black hover:to-gray-950 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:scale-95"
@@ -324,26 +324,26 @@ export default function Signup() {
             </button>
 
             <div className="text-center space-y-2">
-             
+
               <button
                 type="button"
                 onClick={resendOtp}
                 disabled={otpTimer > 0 || isSendingOtp}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:text-gray-400 transition-colors text-sm underline"
               >
-                {otpTimer > 0 
-                  ? `Resend in ${Math.floor(otpTimer / 60)}:${(otpTimer % 60).toString().padStart(2, '0')}` 
+                {otpTimer > 0
+                  ? `Resend in ${Math.floor(otpTimer / 60)}:${(otpTimer % 60).toString().padStart(2, '0')}`
                   : "Resend OTP"
                 }
               </button>
-              
-            
-                        </div>
+
+
+            </div>
           </>
         )}
 
         <p className="text-xs sm:text-sm text-center text-gray-700 mt-3 sm:mt-4">
-          Already have an account? 
+          Already have an account?
           <Link href="/login" className="text-gray-900 hover:text-black font-bold underline ml-1 transition-colors hover:scale-105 inline-block transform hover:-translate-y-0.5 active:scale-95">
             Log in
           </Link>

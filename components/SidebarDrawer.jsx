@@ -1,40 +1,12 @@
 import { useState } from "react";
-import Image from "next/image";
+import Link from "next/link";
+import { X, ChevronRight, User } from "lucide-react";
 
-const navTabs = ["MEN", "WOMEN", "SNEAKERS"];
-const categories = [
-  "Topwear",
-  "Bottomwear",
-  "Official Merch",
-  "Bestsellers",
-  "All Accessories",
-  "Juniors",
-  "Markdowns",
-];
+export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" }) {
+  const [expandedSection, setExpandedSection] = useState(null);
 
-const accessories = [
-  { name: "Backpacks", img: "/path/to/backpack.jpg" },
-  { name: "Perfumes", img: "/path/to/perfume.jpg" },
-  { name: "Socks", img: "/path/to/socks.jpg" },
-  { name: "Rugs", img: "/path/to/rugs.jpg" },
-];
-
-const menCards = [
-  { name: "New Arrivals", img: "/sidebar-img/Daredevil-No-Fear.jpg" },
-  { name: "Korean Edit", img: "/sidebar-img/Korean-Pants-Mocha.jpg" },
-  { name: "Cotton Linen", img: "/sidebar-img/Cotton-Linen-Soft-Pink.jpg" },
-  { name: "Hot Merch", img: "/sidebar-img/logo.png" },
-];
-
-export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-xs" }) {
-  const [activeTab, setActiveTab] = useState(0);
-  const [openSections, setOpenSections] = useState({});
-
-  const toggleSection = (cat) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [cat]: !prev[cat],
-    }));
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section);
   };
 
   return (
@@ -42,114 +14,130 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-xs" 
       {/* Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+          className="fixed inset-0 bg-black/50 z-[9998] transition-opacity"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full ${width} bg-white z-50 transition-transform duration-300 overflow-y-auto rounded-tr-xl rounded-br-xl shadow-xl border-r border-gray-200 ${
+        className={`fixed top-0 left-0 h-full ${width} text-[13px/] bg-white z-[9999] transition-transform duration-300 overflow-y-auto ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ zIndex: 60 }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-white rounded-tr-xl">
-          <div className="flex items-center justify-center gap-2">
-            <img src="/logo.png" alt="Logo" width={90} height={24} className="" />
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-lg font-bold transition-colors p-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 w-7 h-7 flex items-center justify-center">
-            ×
-          </button>
-        </div>
-        <div className="p-2 pb-1">
-          <button className="w-full border border-gray-800 rounded-lg py-1.5 text-xs font-semibold text-gray-800 bg-white hover:bg-gray-50 transition mb-1 shadow-sm flex items-center justify-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg>
-            Log In/Register
+        {/* Header with Logo and Close */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <Link href="/" onClick={onClose}>
+            <img src="/logo.png" alt="Logo" className="h-8" />
+          </Link>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X size={24} className="text-gray-700" />
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200 bg-white px-1">
-          {navTabs.map((tab, idx) => (
+      
+
+        {/* Navigation Menu */}
+        <nav className="py-4">
+          {/* Home */}
+          <Link href="/" onClick={onClose}>
+            <div className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer">
+              <span className="text-base font-normal text-gray-900">Home</span>
+            </div>
+          </Link>
+
+          {/* Shop by Category */}
+          <div>
             <button
-              key={tab}
-              className={`flex-1 py-1 font-bold text-xs relative transition-colors duration-200 ${
-                activeTab === idx ? "text-gray-500" : "text-gray-500 hover:text-teal-600"
-              }`}
-              onClick={() => setActiveTab(idx)}
+              onClick={() => toggleSection('category')}
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
-              {tab}
-              <div
-                className={`h-0.5 mt-0.5 rounded transition-all duration-300 absolute left-0 right-0 mx-auto ${
-                  activeTab === idx ? "bg-gray-500 w-3/4" : "bg-transparent w-0"
+              <span className="text-base font-normal text-gray-900">Shop by Category</span>
+              <ChevronRight
+                size={20}
+                className={`text-gray-500 transition-transform ${
+                  expandedSection === 'category' ? 'rotate-90' : ''
                 }`}
-                style={{ bottom: -1 }}
               />
             </button>
-          ))}
-        </div>
-
-        {/* Horizontal Cards (example for MEN) */}
-        {activeTab === 0 && (
-          <div className="flex overflow-x-auto gap-2 p-2 pb-1">
-            {menCards.map((card) => (
-              <div key={card.name} className="flex-shrink-0 w-16 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-                <img
-                  src={card.img}
-                  alt={card.name}
-                  width={64}
-                  height={64}
-                  className="rounded-t-lg object-cover"
-                />
-                <div className="text-[10px] text-center font-semibold mt-0.5 pb-1 text-gray-800">{card.name}</div>
+            {expandedSection === 'category' && (
+              <div className="bg-gray-50 py-2">
+                <Link href="/shop?ct=men" onClick={onClose}>
+                  <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                    <span className="text-sm text-gray-700">Men</span>
+                  </div>
+                </Link>
+                <Link href="/shop?ct=women" onClick={onClose}>
+                  <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                    <span className="text-sm text-gray-700">Women</span>
+                  </div>
+                </Link>
+                <Link href="/shop?ct=sneakers" onClick={onClose}>
+                  <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                    <span className="text-sm text-gray-700">Sneakers</span>
+                  </div>
+                </Link>
               </div>
-            ))}
+            )}
           </div>
-        )}
 
-        {/* Accordions */}
-        <div className="divide-y divide-gray-200 px-1">
-          {categories.map((cat) => (
-            <div key={cat} className="bg-white">
-              <button
-                className="w-full flex justify-between items-center py-2 font-bold text-xs text-gray-700 hover:text-teal-700 transition-colors"
-                onClick={() => toggleSection(cat)}
-              >
-                {cat}
-                <img
-                  src="/icons/arow.png"
-                  alt="Toggle"
-                  width={12}
-                  height={12}
-                  className={`ml-1 transition-transform duration-300 ${openSections[cat] ? "rotate-180" : "rotate-0"}`}
-                />
-              </button>
-              {/* Example: Show accessories cards for All Accessories */}
-              {cat === "All Accessories" && openSections[cat] && (
-                <div className="flex overflow-x-auto gap-2 pb-2">
-                  {accessories.map((item) => (
-                    <div key={item.name} className="flex-shrink-0 w-16 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200">
-                      <img
-                        src={item.img}
-                        alt={item.name}
-                        width={64}
-                        height={64}
-                        className="rounded-t-lg object-cover"
-                      />
-                      <div className="text-[10px] text-center font-semibold mt-0.5 pb-1 text-gray-800">{item.name}</div>
-                    </div>
-                  ))}
+          {/* Shop by Collection */}
+          <div>
+            <button
+              onClick={() => toggleSection('collection')}
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-base font-normal text-gray-900">Shop by Collection</span>
+              <ChevronRight
+                size={20}
+                className={`text-gray-500 transition-transform ${
+                  expandedSection === 'collection' ? 'rotate-90' : ''
+                }`}
+              />
+            </button>
+            {expandedSection === 'collection' && (
+              <div className="bg-gray-50 py-2">
+                <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                  <span className="text-sm text-gray-700">New Arrivals</span>
                 </div>
-              )}
-              {/* For other categories, you can add content here */}
+                <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                  <span className="text-sm text-gray-700">Bestsellers</span>
+                </div>
+                <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                  <span className="text-sm text-gray-700">Sale</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Contact us */}
+          <Link href="/contact" onClick={onClose}>
+            <div className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer">
+              <span className="text-base font-normal text-gray-900">Contact us</span>
             </div>
-          ))}
+          </Link>
+
+          {/* Return Policy */}
+          <Link href="/return-policy" onClick={onClose}>
+            <div className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer">
+              <span className="text-base font-normal text-gray-900">Return Policy</span>
+            </div>
+          </Link>
+        </nav>
+
+        {/* Login Button at Bottom */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200 bg-white">
+          <Link href="/login" onClick={onClose}>
+            <button className="w-full flex items-center justify-center gap-2 py-3 text-base font-normal text-gray-900 hover:bg-gray-50 transition-colors rounded-lg">
+              <User size={20} />
+              <span>Log in</span>
+            </button>
+          </Link>
         </div>
       </div>
     </>
   );
-} 
+}

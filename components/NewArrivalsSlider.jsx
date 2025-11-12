@@ -185,22 +185,7 @@ export default function NewArrivalsSlider() {
       </div>
 
       {/* Pagination Dots */}
-      {products && products.length > 0 && (
-        <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: Math.ceil(products.length / visible) }).map(
-            (_, idx) => (
-              <button
-                key={idx}
-                onClick={() => scrollToPage(idx)}
-                className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
-                  currentPage === idx ? "bg-gray-800" : "bg-gray-300"
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            )
-          )}
-        </div>
-      )}
+    
     </section>
   );
 }
