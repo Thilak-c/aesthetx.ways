@@ -128,10 +128,10 @@ export default function TopPicksSlider() {
   return (
     <section className="w-full flex flex-col items-center py-12 ">
       <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-gray-800">
+        <h2 className="text-base sm:text-lg md:text-xl font-light tracking-wide text-gray-800">
           TOP PICKS OF THE WEEK
         </h2>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-xs font-light text-gray-600 mt-2">
           {hasProducts ? `` : isLoading ? "..." : ""}
           {error && (
             <>

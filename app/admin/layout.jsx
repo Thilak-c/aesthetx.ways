@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { FiMenu, FiX, FiHome, FiPackage, FiUpload, FiUsers, FiFileText, FiBarChart2, FiLogOut, FiShield, FiTrash2, FiMessageCircle, FiBell } from "react-icons/fi";
+import { FiMenu, FiX, FiHome, FiPackage,FiMessageSquare,FiMail, FiUpload, FiUsers, FiFileText, FiBarChart2, FiLogOut, FiShield, FiTrash2, FiMessageCircle, FiBell } from "react-icons/fi";
 
 
 
@@ -92,6 +92,9 @@ export default function AdminLayout({ children }) {
     { label: "Chat Support", href: "/admin/chat", icon: <FiMessageCircle /> },
     { label: "Analytics & Reports", href: "/admin/analytics", icon: <FiBarChart2 /> },
     { label: "Email Notifications", href: "/admin/notifications", icon: <FiBell /> },
+    { label: "Contacts", href: "/admin/contacts", icon: <FiMail /> },
+
+     { label: "Suggestions", href: "/admin/suggestions", icon: <FiMessageSquare /> },
   ];
 
   // Add trash link for super admins only

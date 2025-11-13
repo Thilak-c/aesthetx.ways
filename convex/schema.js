@@ -515,4 +515,35 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_type", ["type"])
     .index("by_sent_at", ["sentAt"]),
+
+  // Collections table for dynamic collections
+  collections: defineTable({
+    name: v.string(), // Display name (e.g., "New Arrivals")
+    slug: v.string(), // URL-friendly name (e.g., "new-arrivals")
+    description: v.optional(v.string()),
+    type: v.string(), // 'automatic', 'manual'
+    // For automatic collections
+    rules: v.optional(v.object({
+      filterType: v.string(), // 'date', 'sales', 'views', 'tag', 'custom'
+      dateRange: v.optional(v.number()), // Days to look back
+      minSales: v.optional(v.number()),
+      minViews: v.optional(v.number()),
+      tags: v.optional(v.array(v.string())),
+      sortBy: v.optional(v.string()), // 'createdAt', 'salesCount', 'views', 'price'
+      sortOrder: v.optional(v.string()), // 'asc', 'desc'
+      limit: v.optional(v.number()),
+    })),
+    // For manual collections
+    productIds: v.optional(v.array(v.string())),
+    isActive: v.boolean(),
+    displayOrder: v.number(), // For ordering in sidebar
+    icon: v.optional(v.string()), // Icon name or emoji
+    createdAt: v.string(),
+    updatedAt: v.string(),
+    createdBy: v.optional(v.id("users")),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_active", ["isActive"])
+    .index("by_display_order", ["displayOrder"])
+    .index("by_type", ["type"]),
 });

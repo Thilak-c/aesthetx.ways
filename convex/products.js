@@ -296,27 +296,34 @@ export const debugProducts = query(async ({ db }) => {
 export const getProductById = query({
   args: { productId: v.string() },
   handler: async (ctx, { productId }) => {
-    // First try to find by itemId (which is the public identifier)
-    let product = await ctx.db
-      .query("products")
-      .filter(q => q.eq(q.field("itemId"), productId))
-      .filter(q => q.eq(q.field("isDeleted"), undefined))
-      .unique();
-    
-    // If not found by itemId, try to find by _id (fallback)
-    if (!product) {
-      try {
-        product = await ctx.db.get(productId);
-        // Check if it's a valid product and not deleted
-        if (product && product.isDeleted === true) {
+    try {
+      // First try to find by itemId (which is the public identifier)
+      const products = await ctx.db
+        .query("products")
+        .filter(q => q.eq(q.field("itemId"), productId))
+        .collect();
+      
+      // Get the first non-deleted product
+      let product = products.find(p => !p.isDeleted);
+      
+      // If not found by itemId, try to find by _id (fallback)
+      if (!product) {
+        try {
+          product = await ctx.db.get(productId);
+          // Check if it's a valid product and not deleted
+          if (product && product.isDeleted === true) {
+            product = null;
+          }
+        } catch (error) {
           product = null;
         }
-      } catch (error) {
-        product = null;
       }
+      
+      return product || null;
+    } catch (error) {
+      console.error("Error in getProductById:", error);
+      return null;
     }
-    
-    return product;
   },
 });
 export const getProductCategories = query({

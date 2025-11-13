@@ -6,6 +6,7 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGuestCart } from "@/hooks/useGuestCart";
 import {
   ArrowLeft,
   ShoppingCart,
@@ -45,6 +46,7 @@ export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const { productId } = params;
+  const { addToGuestCart, getGuestCartSummary } = useGuestCart();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -168,10 +170,7 @@ export default function ProductPage() {
     api.products.getProductById,
     productId ? { productId } : "skip"
   );
-  const trendingProducts = useQuery(api.views.getMostViewedProducts, {
-    limit: 6,
-    category: product?.category,
-  });
+  
   // Update loading state based on product query
   useEffect(() => {
     if (product !== undefined) {
@@ -181,15 +180,27 @@ export default function ProductPage() {
       }
     }
   }, [product]);
-  const personalizedProducts = useQuery(api.products.getPersonalizedProducts, {
-    limit: 6,
-    userId: me?._id,
-  });
+  
+  const trendingProducts = useQuery(
+    api.views.getMostViewedProducts,
+    product && product.category ? {
+      limit: 6,
+      category: product.category,
+    } : "skip"
+  );
+  
+  const personalizedProducts = useQuery(
+    api.products.getPersonalizedProducts,
+    me?._id ? {
+      limit: 6,
+      userId: me._id,
+    } : "skip"
+  );
 
   // Add this query after line 115 (after the product query)
   const relatedProducts = useQuery(
     api.products.getRelatedProducts,
-    product
+    product && productId
       ? {
         productId: productId,
         category: product.category,
@@ -267,15 +278,6 @@ export default function ProductPage() {
   // Add trending products query
 
   const handleAddToCart = async () => {
-    if (!isLoggedIn || !me) {
-      // Redirect to login page with return URL
-      const currentUrl = window.location.pathname + window.location.search;
-      router.push(
-        `/login?returnUrl=${encodeURIComponent(currentUrl)}&action=addToCart`
-      );
-      return;
-    }
-
     if (!selectedSize) {
       setToastMessage("Please select a size first");
       setShowToast(true);
@@ -301,15 +303,28 @@ export default function ProductPage() {
     }
 
     try {
-      await addToCartMutation({
-        userId: me._id,
-        productId: productId,
-        productName: product.name,
-        productImage: product.mainImage,
-        price: product.price,
-        size: selectedSize,
-        quantity: quantity,
-      });
+      if (isLoggedIn && me) {
+        // User is logged in - add to database
+        await addToCartMutation({
+          userId: me._id,
+          productId: productId,
+          productName: product.name,
+          productImage: product.mainImage,
+          price: product.price,
+          size: selectedSize,
+          quantity: quantity,
+        });
+      } else {
+        // Guest user - add to local storage
+        addToGuestCart({
+          productId: productId,
+          productName: product.name,
+          productImage: product.mainImage,
+          price: product.price,
+          size: selectedSize,
+          quantity: quantity,
+        });
+      }
 
       setToastMessage("Product added to cart successfully!");
       setShowToast(true);
@@ -1257,7 +1272,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-2xl lg:text-3xl xl:text-4xl font-extrabold text-gray-900 leading-tight"
+                className="text-xl lg:text-2xl xl:text-2xl font-light text-gray-900 leading-tight"
               >
                 {product?.name}
               </motion.h1>
@@ -1269,11 +1284,11 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                 className="flex items-center space-x-4 lg:space-x-6"
               >
                 <div className="flex items-baseline space-x-2 lg:space-x-3">
-                  <span className="text-xl lg:text-2xl xl:text-3xl font-extrabold text-gray-900">
+                  <span className="text-lg lg:text-xl xl:text-xl font-light text-gray-900">
                     <span className="text-green-800">₹</span>
                     {product?.price}
                   </span>
-                  <span className="text-lg lg:text-xl xl:text-2xl text-gray-400 line-through">
+                  <span className="text-base lg:text-lg xl:text-lg text-gray-400 line-through font-light">
                     ₹{Math.round(product?.price * 1.2)}
                   </span>
                 </div>
@@ -1288,7 +1303,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                 transition={{ delay: 0.4 }}
                 className="space-y-3 lg:space-y-4"
               >
-                <label className="text-base lg:text-lg font-semibold text-gray-900">
+                <label className="text-sm lg:text-base font-light text-gray-900">
                   Select Size
                 </label>
 
@@ -1342,7 +1357,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
               transition={{ delay: 0.4 }}
               className="space-y-3 lg:space-y-4"
             >
-              <label className="text-base lg:text-lg font-semibold text-gray-900">
+              <label className="text-sm lg:text-base font-light text-gray-900">
                 Quantity
               </label>
 
@@ -1357,7 +1372,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                   <Minus className="w-5 h-5 lg:w-6 lg:h-6" />
                 </motion.button>
 
-                <span className="w-10 lg:w-16 text-center text-xl lg:text-2xl font-extrabold text-gray-900">
+                <span className="w-10 lg:w-16 text-center text-lg lg:text-xl font-light text-gray-900">
                   {quantity}
                 </span>
 
@@ -1426,7 +1441,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                       product.availableSizes.length > 0 &&
                       !selectedSize))
                 }
-                className="w-full bg-gray-900 text-white py-3 lg:py-5 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
+                className="w-full bg-gray-900 text-white py-3 lg:py-5 px-6 rounded-2xl font-light text-sm lg:text-base transition-all duration-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
               >
                 Add to Cart
               </motion.button>
@@ -1444,7 +1459,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                       product.availableSizes.length > 0 &&
                       !selectedSize))
                 }
-                className="w-full bg-white text-gray-900 py-3 lg:py-5 px-6 lg:px-8 rounded-2xl lg:rounded-3xl font-extrabold text-base lg:text-lg border-3 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-900"
+                className="w-full bg-white text-gray-900 py-3 lg:py-5 px-6 lg:px-8 rounded-2xl lg:rounded-3xl font-light text-sm lg:text-base border-3 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-900"
               >
                 <span>
                   {/* {!isLoggedIn
@@ -1471,10 +1486,10 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
               <div className="flex items-center space-x-3 p-3 lg:p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl lg:rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200">
                 <Truck className="w-5 h-5 lg:w-6 lg:h-6 text-gray-600" />
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm lg:text-base">
+                  <p className="font-light text-gray-900 text-xs lg:text-sm">
                     Free Shipping
                   </p>
-                  <p className="text-xs lg:text-sm text-gray-600">
+                  <p className="text-xs font-light text-gray-600">
                     On orders over ₹999
                   </p>
                 </div>
@@ -1501,7 +1516,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex flex-col items-center space-y-1 py-4 px-2 border-b-2 font-semibold text-sm transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
+                    className={`flex flex-col items-center space-y-1 py-4 px-2 border-b-2 font-light text-xs transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
                         ? "border-gray-900 text-gray-900"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                       }`}
@@ -1527,10 +1542,10 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                   className="space-y-8"
                 >
                   <div className="text-center mb-12">
-                    <h3 className="text-4xl font-extrabold text-gray-900 mb-4">
+                    <h3 className="text-xl lg:text-2xl font-light text-gray-900 mb-4">
                       Product Details
                     </h3>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                    <p className="text-sm lg:text-base font-light text-gray-600 max-w-2xl mx-auto">
                       Discover the exceptional quality and craftsmanship that
                       makes this product truly special
                     </p>
@@ -1538,8 +1553,8 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     <div className="space-y-6">
-                      <h4 className="text-2xl font-extrabold text-gray-900 flex items-center space-x-3">
-                        <Check className="w-6 h-6 text-gray-500" />
+                      <h4 className="text-base lg:text-lg font-light text-gray-900 flex items-center space-x-3">
+                        <Check className="w-5 h-5 text-gray-500" />
                         <span>Key Features</span>
                       </h4>
                       <ul className="space-y-4">
@@ -1558,7 +1573,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                             className="flex items-start space-x-3"
                           >
                             <Check className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700 leading-relaxed">
+                            <span className="text-xs lg:text-sm font-light text-gray-700 leading-relaxed">
                               {feature}
                             </span>
                           </motion.li>
@@ -1567,8 +1582,8 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                     </div>
 
                     <div className="space-y-6">
-                      <h4 className="text-2xl font-extrabold text-gray-900 flex items-center space-x-3">
-                        <Shield className="w-6 h-6 text-gray-500" />
+                      <h4 className="text-base lg:text-lg font-light text-gray-900 flex items-center space-x-3">
+                        <Shield className="w-5 h-5 text-gray-500" />
                         <span>Care Instructions</span>
                       </h4>
                       <ul className="space-y-4">
@@ -1597,7 +1612,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                   </div>
 
                   <div className="bg-gradient-to-r from-gray-50 to-white rounded-3xl p-8 border border-gray-100">
-                    <h4 className="text-2xl font-extrabold text-gray-900 mb-4 text-center">
+                    <h4 className="text-base lg:text-lg font-light text-gray-900 mb-4 text-center">
                       Why Choose This Product?
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1628,10 +1643,10 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                           <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto">
                             <item.icon className="w-8 h-8 text-gray-700" />
                           </div>
-                          <h5 className="font-semibold text-gray-900">
+                          <h5 className="text-xs lg:text-sm font-light text-gray-900">
                             {item.title}
                           </h5>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-xs font-light text-gray-600">
                             {item.description}
                           </p>
                         </motion.div>
@@ -1651,17 +1666,17 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                   className="space-y-6 sm:space-y-8"
                 >
                   <div className="text-center mb-8 sm:mb-12">
-                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-3 sm:mb-4">
+                    <h3 className="text-lg sm:text-xl lg:text-xl font-light text-gray-900 mb-3 sm:mb-4">
                       Technical Specifications
                     </h3>
-                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
+                    <p className="text-xs sm:text-sm lg:text-sm font-light text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
                       Detailed technical information and material specifications
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
                     <div className="space-y-4 sm:space-y-6">
-                      <h4 className="text-xl sm:text-2xl font-extrabold text-gray-900">
+                      <h4 className="text-base sm:text-lg font-light text-gray-900">
                         Material & Construction
                       </h4>
                       <div className="space-y-3 sm:space-y-4">
@@ -1951,7 +1966,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                   {/* Add Review Form */}
                   {token && me && (!reviews.find(r => r.userId === me._id)) && (
                     <motion.div className="mt-4 bg-white/80 p-3 sm:p-4 md:p-6 rounded-xl border border-gray-200 shadow-sm">
-                      <h4 className="text-sm sm:text-base md:text-lg font-extrabold mb-2 text-center">Write a Review</h4>
+                      <h4 className="text-xs sm:text-sm md:text-base font-light mb-2 text-center">Write a Review</h4>
                       <div className="flex justify-center mb-2 space-x-1">
                         {[1, 2, 3, 4, 5].map(s => (
                           <motion.button key={s} onClick={() => updateForm("rating", s)} className="p-1 sm:p-1.5">
@@ -1998,18 +2013,18 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                   className="space-y-6 sm:space-y-8"
                 >
                   <div className="text-center mb-4 sm:mb-6">
-                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-3 sm:mb-4">
+                    <h3 className="text-lg sm:text-xl lg:text-xl font-light text-gray-900 mb-3 sm:mb-4">
                       Shipping & Returns
                     </h3>
-                    <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
+                    <p className="text-xs sm:text-sm lg:text-sm font-light text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
                       Everything you need to know about delivery and returns
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
                     <div className="space-y-4 sm:space-y-6">
-                      <h4 className="text-xl sm:text-2xl font-extrabold text-gray-900 flex items-center space-x-2 sm:space-x-3">
-                        <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+                      <h4 className="text-base sm:text-lg font-light text-gray-900 flex items-center space-x-2 sm:space-x-3">
+                        <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                         <span>Shipping Information</span>
                       </h4>
 
@@ -2017,11 +2032,11 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                         <div className="p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100">
                           <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
                             <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                            <span className="font-semibold text-gray-900 text-sm sm:text-base">
+                            <span className="font-light text-gray-900 text-xs sm:text-sm">
                               Free Shipping
                             </span>
                           </div>
-                          <p className="text-gray-700 text-xs sm:text-sm">
+                          <p className="text-gray-700 text-xs font-light">
                             On orders over ₹999
                           </p>
                         </div>
@@ -2053,8 +2068,8 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                     </div>
 
                     <div className="space-y-4 sm:space-y-6">
-                      <h4 className="text-xl sm:text-2xl font-extrabold text-gray-900 flex items-center space-x-2 sm:space-x-3">
-                        <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+                      <h4 className="text-base sm:text-lg font-light text-gray-900 flex items-center space-x-2 sm:space-x-3">
+                        <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                         <span>Return Policy</span>
                       </h4>
 
@@ -2153,10 +2168,10 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
           className="mt-12"
         >
           <div className="text-center mb-8">
-            <h3 className="text-xl md:text-2xl font-extrabold font-poppies text-gray-900 mb-2">
+            <h3 className="text-base md:text-lg font-light text-gray-900 mb-2">
               You Might Also Like
             </h3>
-            <p className="text-[11px] md:text-smtext-gray-600">
+            <p className="text-xs md:text-sm font-light text-gray-600">
               Discover more products that match your style
             </p>
           </div>
@@ -2188,7 +2203,7 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
       )}
 
       {/* Mobile-Optimized Trending Products */}
-      {trendingProducts && trendingProducts.length > 0 && (
+      {product?.category && (
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -2196,18 +2211,25 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
           className="mt-12"
         >
           <div className="text-center mb-8">
-            <h3 className="text-xl md:text-2xl font-extrabold text-gray-900 mb-2 flex items-center justify-center space-x-2">
+            <h3 className="text-base md:text-lg font-light text-gray-900 mb-2 flex items-center justify-center space-x-2">
               {/* <Zap className="w-6 h-6 text-orange-500" /> */}
               <span>Trending in {product?.category}</span>
             </h3>
-            <p className="text-[11px] md:text-sm text-gray-600">
+            <p className="text-xs md:text-sm font-light text-gray-600">
               Most viewed products in this category
             </p>
           </div>
 
-          <div className="flex justify-center">
-            <div className="flex overflow-x-auto gap-4 pb-4 max-w-full">
-              {trendingProducts.map((trendingItem, index) => (
+          <div className="md:max-w-[74%] mx-auto px-4 lg:px-8">
+            {/* Desktop */}
+            <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
+              {!trendingProducts ? (
+                // Skeleton loading
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <ProductCard key={`skeleton-${idx}`} loading />
+                ))
+              ) : (
+                trendingProducts.map((trendingItem, index) => (
                 <motion.div
                   key={trendingItem.itemId}
                   initial={{ opacity: 0, y: 20 }}
@@ -2229,7 +2251,37 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                     className=" transition-shadow duration-300"
                   />
                 </motion.div>
-              ))}
+              ))
+              )}
+            </div>
+
+            {/* Mobile: 2 column grid */}
+            <div className="md:hidden grid grid-cols-2 gap-4">
+              {!trendingProducts ? (
+                // Skeleton loading
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <ProductCard key={`skeleton-mobile-${idx}`} loading />
+                ))
+              ) : (
+                trendingProducts.map((trendingItem, index) => (
+                <motion.div
+                  key={`mobile-${trendingItem.itemId}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => handleClickProduct(trendingItem.itemId)}
+                >
+                  <ProductCard
+                    img={trendingItem.mainImage}
+                    name={trendingItem.name}
+                    category={trendingItem.category}
+                    price={trendingItem.price}
+                    productId={trendingItem.itemId}
+                    className="transition-shadow duration-300"
+                  />
+                </motion.div>
+              ))
+              )}
             </div>
           </div>
         </motion.div>
@@ -2244,17 +2296,17 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
           className="mt-12"
         >
           <div className="text-center mb-8">
-            <h3 className="text-xl md:text-2xl font-extrabold text-gray-900 mb-2 flex items-center justify-center space-x-2">
-              <History className="w-6 h-6 text-gray-600" />
+            <h3 className="text-base md:text-lg font-light text-gray-900 mb-2 flex items-center justify-center space-x-2">
+              <History className="w-5 h-5 text-gray-600" />
               <span>Recently Viewed</span>
             </h3>
-            <p className="text-[11px] md:text-sm text-gray-600">
+            <p className="text-xs md:text-sm font-light text-gray-600">
               Continue browsing products you've recently explored
             </p>
           </div>
 
-          <div className="flex justify-center">
-            <div className="flex overflow-x-auto gap-4 pb-4 max-w-full">
+          <div className="md:max-w-[74%] mx-auto px-4 lg:px-8">
+            <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
               {recentlyViewed.map((item, index) => (
                 <motion.div
                   key={item._id}
@@ -2275,6 +2327,28 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                 </motion.div>
               ))}
             </div>
+
+            {/* Mobile: 2 column grid */}
+            <div className="md:hidden grid grid-cols-2 gap-4">
+              {recentlyViewed.map((item, index) => (
+                <motion.div
+                  key={`mobile-${item._id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => handleClickProduct(item.productId)}
+                >
+                  <ProductCard
+                    img={item.productImage}
+                    name={item.productName}
+                    category={item.productCategory}
+                    price={item.productPrice}
+                    productId={item.productId}
+                    className="transition-shadow duration-300"
+                  />
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.div>
       )}
@@ -2290,17 +2364,18 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
           className="mt-12  justify-center"
         >
           <div className="text-center mb-8">
-            <h3 className="text-xl md:text-2xl font-extrabold text-gray-900 mb-2 flex items-center justify-center space-x-2">
-              <Heart className="w-6 h-6 text-gray-500" />
+            <h3 className="text-base md:text-lg font-light text-gray-900 mb-2 flex items-center justify-center space-x-2">
+              <Heart className="w-5 h-5 text-gray-500" />
               <span>For {me.name}</span>
             </h3>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 text-xs font-light">
               Curated based on your interests: {me.interests?.join(", ")}
             </p>
           </div>
 
-          <div className="flex overflow-x-auto items-center justify-center gap-4 pb-4 max-w-full">
-            {personalizedProducts.map((personalizedProduct) => (
+          <div className="md:max-w-[74%] mx-auto px-4 lg:px-8">
+            <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
+              {personalizedProducts.map((personalizedProduct) => (
               <motion.div
                 key={personalizedProduct._id}
                 initial={{ opacity: 0, y: 20 }}
@@ -2319,6 +2394,29 @@ console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
                 />
               </motion.div>
             ))}
+            </div>
+
+            {/* Mobile: 2 column grid */}
+            <div className="md:hidden grid grid-cols-2 gap-4">
+              {personalizedProducts.map((personalizedProduct, index) => (
+                <motion.div
+                  key={`mobile-${personalizedProduct._id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => handleClickProduct(personalizedProduct.itemId)}
+                >
+                  <ProductCard
+                    img={personalizedProduct.mainImage}
+                    name={personalizedProduct.name}
+                    category={personalizedProduct.category}
+                    price={personalizedProduct.price}
+                    productId={personalizedProduct.itemId}
+                    className="transition-shadow duration-300"
+                  />
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.div>
       )}

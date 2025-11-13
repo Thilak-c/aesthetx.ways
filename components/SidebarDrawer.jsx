@@ -1,9 +1,42 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { X, ChevronRight, User } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" }) {
   const [expandedSection, setExpandedSection] = useState(null);
+
+  // Fetch all products to extract categories and subcategories
+  const products = useQuery(api.category.getAllProducts) ?? [];
+  
+  // Fetch dynamic collections from database
+  const collections = useQuery(api.collections.getAllCollections) ?? [];
+
+  // Extract unique categories and their subcategories
+  const categoriesData = useMemo(() => {
+    const categoryMap = {};
+    
+    products.forEach((product) => {
+      const category = product.category;
+      const subcategory = product.subcategories;
+      
+      if (category) {
+        if (!categoryMap[category]) {
+          categoryMap[category] = new Set();
+        }
+        if (subcategory) {
+          categoryMap[category].add(subcategory);
+        }
+      }
+    });
+
+    // Convert to array format
+    return Object.keys(categoryMap).map((category) => ({
+      name: category,
+      subcategories: Array.from(categoryMap[category]).sort(),
+    }));
+  }, [products]);
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -49,69 +82,87 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
             </div>
           </Link>
 
-          {/* Shop by Category */}
-          <div>
-            <button
-              onClick={() => toggleSection('category')}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-base font-normal text-gray-900">Shop by Category</span>
-              <ChevronRight
-                size={20}
-                className={`text-gray-500 transition-transform ${
-                  expandedSection === 'category' ? 'rotate-90' : ''
-                }`}
-              />
-            </button>
-            {expandedSection === 'category' && (
-              <div className="bg-gray-50 py-2">
-                <Link href="/shop?ct=men" onClick={onClose}>
-                  <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
-                    <span className="text-sm text-gray-700">Men</span>
-                  </div>
-                </Link>
-                <Link href="/shop?ct=women" onClick={onClose}>
-                  <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
-                    <span className="text-sm text-gray-700">Women</span>
-                  </div>
-                </Link>
-                <Link href="/shop?ct=sneakers" onClick={onClose}>
-                  <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
-                    <span className="text-sm text-gray-700">Sneakers</span>
-                  </div>
-                </Link>
-              </div>
-            )}
-          </div>
+          {/* Shop by Category - Dynamic from Database */}
+          {categoriesData.map((category) => (
+            <div key={category.name}>
+              <button
+                onClick={() => toggleSection(category.name)}
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-base font-normal text-gray-900">{category.name}</span>
+                <ChevronRight
+                  size={20}
+                  className={`text-gray-500 transition-transform ${
+                    expandedSection === category.name ? 'rotate-90' : ''
+                  }`}
+                />
+              </button>
+              {expandedSection === category.name && (
+                <div className="bg-gray-50 py-2">
+                  {/* All items link */}
+                  <Link href={`/shop?ct=${category.name.toLowerCase()}`} onClick={onClose}>
+                    <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                      <span className="text-xs font-light text-gray-600">All {category.name}</span>
+                    </div>
+                  </Link>
+                  
+                  {/* Subcategories */}
+                  {category.subcategories.map((subcategory) => (
+                    <Link 
+                      key={subcategory}
+                      href={`/shop/subcategory?ct=${category.name.toLowerCase()}&sub=${encodeURIComponent(subcategory)}`} 
+                      onClick={onClose}
+                    >
+                      <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                        <span className="text-xs font-light text-gray-600">{subcategory}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
 
-          {/* Shop by Collection */}
-          <div>
-            <button
-              onClick={() => toggleSection('collection')}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-base font-normal text-gray-900">Shop by Collection</span>
-              <ChevronRight
-                size={20}
-                className={`text-gray-500 transition-transform ${
-                  expandedSection === 'collection' ? 'rotate-90' : ''
-                }`}
-              />
-            </button>
-            {expandedSection === 'collection' && (
-              <div className="bg-gray-50 py-2">
-                <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
-                  <span className="text-sm text-gray-700">New Arrivals</span>
-                </div>
-                <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
-                  <span className="text-sm text-gray-700">Bestsellers</span>
-                </div>
-                <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
-                  <span className="text-sm text-gray-700">Sale</span>
-                </div>
+          {/* Divider */}
+          <div className="my-2 mx-6 border-t border-gray-200"></div>
+
+          {/* Collections Section - Dynamic from Database */}
+          {collections.length > 0 && (
+            <>
+              <div>
+                <button
+                  onClick={() => toggleSection('collections')}
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-base font-normal text-gray-900">Collections</span>
+                  <ChevronRight
+                    size={20}
+                    className={`text-gray-500 transition-transform ${
+                      expandedSection === 'collections' ? 'rotate-90' : ''
+                    }`}
+                  />
+                </button>
+                {expandedSection === 'collections' && (
+                  <div className="bg-gray-50 py-2">
+                    {collections.map((collection) => (
+                      <Link 
+                        key={collection.slug}
+                        href={`/collections/${collection.slug}`} 
+                        onClick={onClose}
+                      >
+                        <div className="px-10 py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+                          <span className="text-xs font-light text-gray-600">{collection.name}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+
+              {/* Divider */}
+              <div className="my-2 mx-6 border-t border-gray-200"></div>
+            </>
+          )}
 
           {/* Contact us */}
           <Link href="/contact" onClick={onClose}>

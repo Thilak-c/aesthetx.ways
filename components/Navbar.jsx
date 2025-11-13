@@ -375,7 +375,7 @@ export function NavbarMobile() {
       <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} width={"w-[85%]"} />
 
       {/* bottom tab bar */}
-      <div
+      {/* <div
         ref={barRef}
         className="fixed bottom-3 left-1/2 z-50 -translate-x-1/2 w-[92%] flex md:hidden items-center justify-between border border-black/5 rounded-full bg-gradient-to-tr from-white/80 to-white/60 backdrop-blur-xl shadow-[0_8px_20px_rgba(0,0,0,0.15)] px-2"
         style={{ height: 60 }}
@@ -397,7 +397,7 @@ export function NavbarMobile() {
           >
             {link}
           </button>
-        ))}
+        ))} */}
 
         {/* {activeIdx !== null && (
           <span
@@ -409,7 +409,7 @@ export function NavbarMobile() {
             }}
           />
         )} */}
-      </div>
+      {/* </div> */}
     </>
   );
 }

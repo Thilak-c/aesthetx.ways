@@ -93,7 +93,7 @@ export default function HelpChatWidget() {
               damping: 30,
               height: { duration: 0.3 }
             }}
-            className="fixed bottom-20 right-4 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 overflow-hidden"
+            className="fixed bottom-4 right-4 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 overflow-hidden"
           >
             {/* Header */}
             <motion.div 
@@ -184,7 +184,7 @@ export default function HelpChatWidget() {
               stiffness: 400, 
               damping: 25 
             }}
-            className="fixed bottom-[80px] right-4 w-14 h-14 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg flex items-center justify-center z-50"
+            className="fixed bottom-4 right-4 w-14 h-14 bg-black hover:bg-gray-800 text-white rounded-full shadow-lg flex items-center justify-center z-50"
           >
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}

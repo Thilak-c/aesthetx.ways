@@ -200,13 +200,13 @@ export default function Home() {
             >
               <motion.h2
                 variants={itemVariants}
-                className="text-xl lg:text-2xl font-extrabold text-gray-900 mb-4"
+                className="text-base lg:text-lg font-light text-gray-900 mb-4"
               >
                 You Might Also Like
               </motion.h2>
               <motion.p
                 variants={itemVariants}
-                className="text-[11px] text-gray-600 max-w-2xl mx-auto"
+                className="text-xs font-light text-gray-600 max-w-2xl mx-auto"
               >
                 Discover more products that match your style and preferences
               </motion.p>
@@ -362,14 +362,14 @@ export default function Home() {
             >
               <motion.h2
                 variants={itemVariants}
-                className="text-xl lg:text-2xl font-extrabold text-gray-900 mb-4 flex items-center justify-center space-x-3"
+                className="text-base lg:text-lg font-light text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
                 {/* <Zap className="w-8 h-8 text-gray-500" /> */}
                 <span>Trending in Men</span>
               </motion.h2>
               <motion.p
                 variants={itemVariants}
-                className="text-[11px] text-gray-600 max-w-2xl mx-auto"
+                className="text-xs font-light text-gray-600 max-w-2xl mx-auto"
               >
                 Most viewed and loved products in this category
               </motion.p>
@@ -452,14 +452,14 @@ export default function Home() {
             >
               <motion.h2
                 variants={itemVariants}
-                className="text-xl lg:text-2xl font-extrabold text-gray-900 mb-4 flex items-center justify-center space-x-3"
+                className="text-base lg:text-lg font-light text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
                 {/* <History className="w-8 h-8 text-gray-500" /> */}
                 <span>Recently Viewed</span>
               </motion.h2>
               <motion.p
                 variants={itemVariants}
-                className="text-[11px] text-gray-600 max-w-2xl mx-auto"
+                className="text-xs font-light text-gray-600 max-w-2xl mx-auto"
               >
                 Continue browsing products you've recently explored
               </motion.p>
@@ -558,17 +558,17 @@ export default function Home() {
             >
               <motion.h2
                 variants={itemVariants}
-                className="text-xl lg:text-2xl font-extrabold text-gray-900 mb-4 flex items-center justify-center space-x-3"
+                className="text-base lg:text-lg font-light text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
                 {/* <Heart className="w-8 h-8 text-gray-500" />/ */}
                 <span>For {me.name}</span>
               </motion.h2>
               <motion.p
                 variants={itemVariants}
-                className="text-[11px] text-gray-600 max-w-2xl mx-auto"
+                className="text-xs font-light text-gray-600 max-w-2xl mx-auto"
               >
                 Curated based on your interests:{" "}
-                <span className="font-semibold text-gray-600">
+                <span className="font-light text-gray-600">
                   {me.interests?.join(", ")}
                 </span>
               </motion.p>

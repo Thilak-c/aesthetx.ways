@@ -17,6 +17,17 @@ function save(list) {
   fs.writeFileSync(FILE, JSON.stringify(list, null, 2));
 }
 
+/* ---------- GET handler ---------- */
+export async function GET(req) {
+  try {
+    const list = load();
+    // Return suggestions in reverse order (newest first)
+    return NextResponse.json({ suggestions: list.reverse() });
+  } catch {
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
 /* ---------- POST handler ---------- */
 export async function POST(req) {
   try {

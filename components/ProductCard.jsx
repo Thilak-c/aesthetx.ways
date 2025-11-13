@@ -68,17 +68,17 @@ console.log(img)
       {/* Product Info */}
       <div className="flex flex-col gap-1">
         {/* Product Name */}
-        <h3 className={`${poppins.className} text-[13px] sm:text-[14px] font-extrabold text-gray-900 line-clamp-2 leading-tight`}>
+        <h3 className={`${poppins.className} text-[11px] sm:text-[12px] font-light text-gray-900 line-clamp-2 leading-tight`}>
           {name}
         </h3>
-        <h4 className={`${poppins.className} text-[10px] sm:text-[12px] font-extralight text-gray-900 line-clamp-2 leading-tight`}>
+        <h4 className={`${poppins.className} text-[9px] sm:text-[10px] font-extralight text-gray-600 line-clamp-2 leading-tight`}>
           {category}
         </h4>
         <div className="h-[1px] bg-black/20 w-full">
 
         </div>
         {/* Product Price */}
-        <p className={`${poppins.className} text-[13px] sm:text-[14px] font-normal text-gray-700`}>
+        <p className={`${poppins.className} text-[11px] sm:text-[12px] font-light text-gray-700`}>
           ₹ {price.toLocaleString()}
         </p>
       </div>

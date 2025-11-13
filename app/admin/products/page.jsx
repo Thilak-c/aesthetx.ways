@@ -1055,7 +1055,7 @@ export default function ProductDashboard() {
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
                           <img
-                            src={product.images?.[0] || '/placeholder-product.jpg'}
+                            src={product.mainImage || '/placeholder-product.jpg'}
                             alt={product.name}
                             width={48}
                             height={48}
