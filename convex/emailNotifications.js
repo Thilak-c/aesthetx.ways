@@ -47,11 +47,8 @@ export const sendOrderNotificationEmail = action({
         error: result.success ? undefined : result.error,
       });
 
-      console.log(`Order notification email processed for order ${orderData.orderNumber}:`, result);
       return result;
     } catch (error) {
-      console.error("Failed to send order notification email:", error);
-
       // Log the failed notification
       await ctx.runMutation(api.emailNotifications.logOrderNotification, {
         orderNumber: orderData.orderNumber,
@@ -92,7 +89,6 @@ export const logOrderNotification = mutation({
       },
     });
 
-    console.log("Order notification logged:", { notificationId, ...args });
     return { success: true, notificationId };
   },
 });// G·et email notification history

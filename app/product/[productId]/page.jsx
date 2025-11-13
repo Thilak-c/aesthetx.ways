@@ -79,9 +79,9 @@ export default function ProductPage() {
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [imageDirection, setImageDirection] = useState(null);
   useEffect(() => {
-    // Scroll to top when page loads
+    // Scroll to top when page loads or productId changes
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [productId]);
   useEffect(() => {
     if (typeof document !== "undefined") {
       const match = document.cookie.match(/(?:^|; )sessionToken=([^;]+)/);
@@ -112,21 +112,7 @@ export default function ProductPage() {
       setIsWishlisted(wishlistStatus.isWishlisted);
     }
   }, [wishlistStatus]);
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem("homeScroll", window.scrollY);
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, []);
-  useEffect(() => {
-    const scrollY = sessionStorage.getItem("homeScroll");
-    if (scrollY) {
-      window.scrollTo({ top: parseInt(scrollY), behavior: "auto" });
-      sessionStorage.removeItem("homeScroll"); // optional: clear after restoring
-    }
-  }, []);
+  // Removed scroll restoration logic to ensure page always starts at top
   const handleClickProduct = (productId) => {
     sessionStorage.setItem("homeScroll", window.scrollY);
     router.push(`/product/${productId}`);
@@ -277,7 +263,16 @@ export default function ProductPage() {
 
   // Add trending products query
 
-  const handleAddToCart = async () => {
+const handleAddToCart = async () => {
+    if (!isLoggedIn || !me) {
+      // Redirect to login page with return URL
+      const currentUrl = window.location.pathname + window.location.search;
+      router.push(
+        `/login?returnUrl=${encodeURIComponent(currentUrl)}&action=addToCart`
+      );
+      return;
+    }
+
     if (!selectedSize) {
       setToastMessage("Please select a size first");
       setShowToast(true);
@@ -303,28 +298,15 @@ export default function ProductPage() {
     }
 
     try {
-      if (isLoggedIn && me) {
-        // User is logged in - add to database
-        await addToCartMutation({
-          userId: me._id,
-          productId: productId,
-          productName: product.name,
-          productImage: product.mainImage,
-          price: product.price,
-          size: selectedSize,
-          quantity: quantity,
-        });
-      } else {
-        // Guest user - add to local storage
-        addToGuestCart({
-          productId: productId,
-          productName: product.name,
-          productImage: product.mainImage,
-          price: product.price,
-          size: selectedSize,
-          quantity: quantity,
-        });
-      }
+      await addToCartMutation({
+        userId: me._id,
+        productId: productId,
+        productName: product.name,
+        productImage: product.mainImage,
+        price: product.price,
+        size: selectedSize,
+        quantity: quantity,
+      });
 
       setToastMessage("Product added to cart successfully!");
       setShowToast(true);

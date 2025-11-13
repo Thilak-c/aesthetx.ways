@@ -61,7 +61,6 @@ export const getProductsByCategoryOrType = query({
       });
       
     } catch (error) {
-      console.error("Error fetching products:", error);
       return [];
     }
   },
@@ -95,7 +94,6 @@ export const getProductsByCategory = query({
       );
       
     } catch (error) {
-      console.error("Error fetching products by category:", error);
       return [];
     }
   },
@@ -129,7 +127,6 @@ export const getProductsBySubcategory = query({
       );
       
     } catch (error) {
-      console.error("Error fetching products by subcategory:", error);
       return [];
     }
   },
@@ -321,7 +318,6 @@ export const getProductById = query({
       
       return product || null;
     } catch (error) {
-      console.error("Error in getProductById:", error);
       return null;
     }
   },
@@ -403,20 +399,14 @@ export const getProductsByIds = query({
 
 // Get top 10 products of the week (by sales)
 export const getTopPicks = query(async ({ db }) => {
-  console.log("getTopPicks function called");
-  
   const allProducts = await db.query("products").collect();
-  console.log("All products:", allProducts.length);
   
   const visibleProducts = allProducts.filter(p => !p.isHidden);
-  console.log("Visible products:", visibleProducts.length);
   
   // Sort by buys field (sales count)
   const sortedProducts = visibleProducts.sort((a, b) => (b.buys || 0) - (a.buys || 0));
-  console.log("Sorted products by buys:", sortedProducts.map(p => ({ name: p.name, buys: p.buys })));
   
   const topProducts = sortedProducts.slice(0, 10);
-  console.log("Top 10 products:", topProducts.length);
   
   // Return products with all necessary fields for display
   return topProducts.map(p => ({
@@ -2289,30 +2279,21 @@ export const getPersonalizedProducts = query({
   },
   handler: async (ctx, args) => {
     try {
-      console.log('getPersonalizedProducts called with:', args);
-      
       if (!args.userId) {
-        console.log('No userId provided');
         return [];
       }
 
       // Get user data
       const user = await ctx.db.get(args.userId);
-      console.log('User found:', user ? { name: user.name, interests: user.interests } : 'null');
       
       if (!user || !user.interests || user.interests.length === 0) {
-        console.log('User has no interests');
         return [];
       }
-
-      console.log('Getting personalized products for user:', user.name, 'with interests:', user.interests);
 
       // Get all products (remove isDeleted filter)
       const allProducts = await ctx.db
         .query("products")
         .collect();
-
-      console.log('Total products found:', allProducts.length);
 
       // Simple matching - check if any product type matches any user interest
       const personalizedProducts = allProducts.filter(product => {
@@ -2325,19 +2306,13 @@ export const getPersonalizedProducts = query({
         );
       });
 
-      console.log('Personalized products after filtering:', personalizedProducts.length);
-
       // Sort by creation date (newest first) and limit
       const sortedProducts = personalizedProducts
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, args.limit || 6);
-
-      console.log(`Found ${sortedProducts.length} personalized products for ${user.name}`);
-      console.log('Final products:', sortedProducts.map(p => ({ name: p.name, type: p.type })));
       
       return sortedProducts;
     } catch (error) {
-      console.error('Error in getPersonalizedProducts:', error);
       return [];
     }
   },

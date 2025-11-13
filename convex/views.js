@@ -36,7 +36,6 @@ export const addView = mutation({
 
       return { success: true, viewId };
     } catch (error) {
-      console.error("Error adding view:", error);
       throw new Error("Failed to record view");
     }
   },
@@ -59,7 +58,6 @@ export const getProductViews = query({
 
       return views;
     } catch (error) {
-      console.error("Error fetching product views:", error);
       return [];
     }
   },
@@ -112,7 +110,6 @@ export const getProductViewStats = query({
         categoryViews,
       };
     } catch (error) {
-      console.error("Error fetching view stats:", error);
       return {
         totalViews: 0,
         uniqueUsers: 0,
@@ -133,8 +130,6 @@ export const getMostViewedProducts = query({
   },
   handler: async (ctx, args) => {
     try {
-      console.log('getMostViewedProducts called with:', args);
-      
       // First try to get products based on views
       let viewsQuery = ctx.db
         .query("views")
@@ -145,7 +140,6 @@ export const getMostViewedProducts = query({
       }
 
       const views = await viewsQuery.collect();
-      console.log('Found views:', views.length);
 
       if (views.length > 0) {
         // Group by productId and count views
@@ -165,8 +159,6 @@ export const getMostViewedProducts = query({
           return acc;
         }, {});
 
-        // console.log('Product view counts:', Object.keys(productViewCounts));
-
         // Convert to array and sort by view count
         const sortedProducts = Object.values(productViewCounts)
           .map(item => ({
@@ -177,14 +169,10 @@ export const getMostViewedProducts = query({
           .sort((a, b) => b.viewCount - a.viewCount)
           .slice(0, args.limit || 6);
 
-        // console.log('Sorted products:', sortedProducts.length);
-
         // Fetch product details for each trending product
         const productsWithDetails = [];
         
         for (const item of sortedProducts) {
-          // console.log(`Looking for product with itemId: ${item.productId}`);
-          
           try {
             // Try to find by itemId first
             let product = await ctx.db
@@ -192,8 +180,6 @@ export const getMostViewedProducts = query({
               .filter((q) => q.eq(q.field("itemId"), item.productId))
               .filter((q) => q.neq(q.field("isDeleted"), true))
               .first();
-
-            // console.log(`Found product by itemId for ${item.productId}:`, product ? 'Yes' : 'No');
 
             if (!product) {
               // Try to find by _id as fallback
@@ -207,7 +193,6 @@ export const getMostViewedProducts = query({
             }
 
             if (product) {
-              console.log(`Adding product: ${product.name} (${product.itemId})`);
               productsWithDetails.push({
                 itemId: product.itemId,
                 name: product.name,
@@ -218,20 +203,15 @@ export const getMostViewedProducts = query({
                 uniqueUsers: item.uniqueUsers,
                 uniqueSessions: item.uniqueSessions,
               });
-            } else {
-              console.log(`No product found for ${item.productId}`);
             }
           } catch (error) {
-            console.error(`Error fetching product details for ${item.productId}:`, error);
+            // Error fetching product details
           }
         }
 
-        console.log('Returning trending products:', productsWithDetails.length);
         return productsWithDetails;
       } else {
         // Fallback: Get regular products from the same category
-        // console.log('No views found, falling back to regular products');
-        
         let productsQuery = ctx.db
           .query("products")
           .filter((q) => q.neq(q.field("isDeleted"), true));
@@ -243,8 +223,6 @@ export const getMostViewedProducts = query({
         const products = await productsQuery
           .order("desc")
           .take(args.limit || 6);
-
-        // console.log('Found fallback products:', products.length);
 
         // Add mock view counts for display
         const productsWithMockCounts = products.map((product, index) => ({
@@ -262,7 +240,6 @@ export const getMostViewedProducts = query({
         return productsWithMockCounts;
       }
     } catch (error) {
-      console.error("Error fetching most viewed products:", error);
       return [];
     }
   },
@@ -328,7 +305,6 @@ export const getGlobalTrendingProducts = query({
               category: product?.category || item.category,
             };
           } catch (error) {
-            console.error(`Error fetching product details for ${item.productId}:`, error);
             return {
               ...item,
               productName: 'Unknown Product',
@@ -342,7 +318,6 @@ export const getGlobalTrendingProducts = query({
 
       return productsWithDetails;
     } catch (error) {
-      console.error("Error fetching global trending products:", error);
       return [];
     }
   },
@@ -365,7 +340,6 @@ export const getUserViewHistory = query({
 
       return views;
     } catch (error) {
-      console.error("Error fetching user view history:", error);
       return [];
     }
   },
@@ -388,7 +362,6 @@ export const getViewsByCategory = query({
 
       return views;
     } catch (error) {
-      console.error("Error fetching views by category:", error);
       return [];
     }
   },
@@ -482,7 +455,6 @@ export const getViewAnalytics = query({
         categoryCounts,
       };
     } catch (error) {
-      console.error("Error fetching view analytics:", error);
       return {
         totalViews: 0,
         uniqueUsers: 0,
@@ -515,7 +487,6 @@ export const deleteView = mutation({
 
       return { success: true };
     } catch (error) {
-      console.error("Error deleting view:", error);
       throw new Error("Failed to delete view");
     }
   },
@@ -539,7 +510,6 @@ export const getProductViewCount = query({
         uniqueUsers: new Set(views.map(v => v.userId).filter(Boolean)).size,
       };
     } catch (error) {
-      console.error("Error fetching product view count:", error);
       return { totalViews: 0, uniqueUsers: 0 };
     }
   },

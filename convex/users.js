@@ -36,9 +36,9 @@ export const getUserByEmailInternal = internalQuery({
 		// Filter out deleted users
 		const activeUsers = users.filter(user => !user.isDeleted);
 		
-		// If multiple active users with same email, log error and return first one
+		// If multiple active users with same email, return first one
 		if (activeUsers.length > 1) {
-			console.error(`Multiple active users found with email: ${normalizedEmail}`, activeUsers.map(u => u._id));
+			// Multiple active users found
 		}
 		
 		// Return the first active user found
@@ -96,9 +96,9 @@ export const getActiveUserByEmail = internalQuery({
 		// Filter out deleted users and return first active one
 		const activeUsers = users.filter(user => !user.isDeleted);
 		
-		// If multiple active users with same email, log error and return first one
+		// If multiple active users with same email, return first one
 		if (activeUsers.length > 1) {
-			console.error(`Multiple active users found with email: ${normalizedEmail}`, activeUsers.map(u => u._id));
+			// Multiple active users found
 		}
 		
 		return activeUsers[0] || null;
@@ -205,8 +205,6 @@ export const cleanupDuplicateUsers = internalMutation({
 					});
 					cleanedCount++;
 				}
-				
-				console.log(`Cleaned up ${duplicateUsers.length} duplicate users for email: ${email}`);
 			}
 		}
 		
@@ -337,8 +335,6 @@ export const viewUserPassword = query({
 		}
 		
 		// Log the password access attempt for security audit
-		console.log(`🔐 Password accessed: Super admin ${requestor.email} viewed password for user ${targetUser.email} at ${nowIso()}`);
-		
 		// Note: In a real system, you'd need to store passwords in a way that allows recovery
 		// For demonstration, we'll show a message about this limitation
 		
@@ -379,8 +375,6 @@ export const viewTempPassword = query({
 		}
 		
 		// Log the password access attempt
-		console.log(`🔐 Temp password accessed: Super admin ${requestor.email} viewed temp password for user ${targetUser.email} at ${nowIso()}`);
-		
 		return {
 			userId: targetUser._id,
 			email: targetUser.email,

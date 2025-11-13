@@ -31,12 +31,6 @@ export const sendEmail = action({
       };
 
       // Log the email for now (replace with actual email service)
-      console.log("=== EMAIL NOTIFICATION ===");
-      console.log("To:", emailData.to);
-      console.log("Subject:", emailData.subject);
-      console.log("From:", emailData.from);
-      console.log("Timestamp:", emailData.timestamp);
-      console.log("========================");
 
       // Example with Resend API (uncomment and configure when ready)
       /*
@@ -60,7 +54,6 @@ export const sendEmail = action({
       }
 
       const result = await response.json();
-      console.log("Email sent successfully:", result);
       */
 
       // Example with webhook (replace with your webhook URL)
@@ -80,7 +73,6 @@ export const sendEmail = action({
 
       return { success: true, message: "Email notification logged" };
     } catch (error) {
-      console.error("Email service error:", error);
       return { success: false, error: error.message };
     }
   },

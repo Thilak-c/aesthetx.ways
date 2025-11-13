@@ -134,7 +134,6 @@ export const createOrder = mutation({
           },
         });
       } catch (emailError) {
-        console.error("Failed to send order notification email:", emailError);
         // Don't fail the order creation if email fails
       }
 
@@ -172,13 +171,8 @@ export const createOrder = mutation({
               buys: newBuys,
               inStock: stillInStock,
             });
-
-            console.log(`Updated stock for ${product.name}: Size ${item.size} reduced by ${item.quantity}`);
-          } else {
-            console.warn(`Product not found for stock update: ${item.productId}`);
           }
         } catch (error) {
-          console.error(`Error updating stock for product ${item.productId}:`, error);
           // Don't fail the order creation if stock update fails
         }
       }
@@ -190,7 +184,6 @@ export const createOrder = mutation({
         message: "Order created successfully",
       };
     } catch (error) {
-      console.error("Error creating order:", error);
       throw new Error(error);
     }
   },

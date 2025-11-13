@@ -91,7 +91,6 @@ export const signup = mutation({
 				userId,
 			};
 		} catch (error) {
-			console.error("Signup error:", error);
 			throw new Error(error.message || "Signup failed");
 		}
 	},
@@ -163,7 +162,6 @@ export const signIn = mutation({
 				userId: user._id,
 			};
 		} catch (error) {
-			console.error("Sign in error:", error);
 			throw new Error(error.message || "Sign in failed");
 		}
 	},
@@ -240,7 +238,6 @@ export const adminSignIn = mutation({
 				email: user.email,
 			};
 		} catch (error) {
-			console.error("Admin sign in error:", error);
 			throw new Error(error.message || "Admin sign in failed");
 		}
 	},
@@ -319,7 +316,6 @@ export const createSuperAdmin = mutation({
 				role: "super_admin",
 			};
 		} catch (error) {
-			console.error("Create super admin error:", error);
 			throw new Error(error.message || "Failed to create super admin");
 		}
 	},
