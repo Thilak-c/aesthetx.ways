@@ -37,7 +37,7 @@ export default function ProductCard({
   if (!loading) {
     useProductView(productId);
   }
-console.log(img)
+
   if (loading) {
     return (
       <div className={`flex-shrink-0 w-full ${className}`}>

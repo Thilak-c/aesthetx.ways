@@ -153,7 +153,6 @@ export default function EnhancedSearchBar() {
     setIsOpen(false);
     setSearchQuery("");
     // Track search result click
-    console.log('Product clicked:', product.name);
   };
 
   // Clear search

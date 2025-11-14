@@ -21,13 +21,10 @@ export default function TopPicksSlider() {
     const fetchProducts = async () => {
       try {
         setIsLoading(true);
-        console.log("Fetching products from Convex...");
 
         const debugData = await convex.query("products:debugProducts");
-        console.log("Debug data from database:", debugData);
 
         const result = await convex.query("products:getTopPicks");
-        console.log("Products fetched successfully:", result);
         setProducts(result || []);
         setError(null);
       } catch (err) {
@@ -61,9 +58,7 @@ export default function TopPicksSlider() {
 
   useEffect(() => {
     if (products.length > 0) {
-      console.log(
-        "Products data structure:",
-        products.map((p) => ({
+      products.map((p) => ({
           _id: p._id,
           name: p.name,
           category: p.category,

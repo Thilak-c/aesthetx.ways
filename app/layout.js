@@ -6,6 +6,7 @@ import LayoutWrapper from "../components/LayoutWrapper";
 import { Suspense } from "react"; // Import Suspense
 import AccessGate from "@/components/AccessGate";
 import Footer from "@/ components/footer";
+import { WebsiteStructuredData, OrganizationStructuredData } from "@/components/StructuredData";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,13 +31,69 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "AesthetX Ways",
-  description: "Your ultimate fashion and lifestyle companion.",
+  metadataBase: new URL('https://aesthetxways.com'), // Replace with your actual domain
+  title: {
+    default: "AesthetX Ways - Premium Fashion & Lifestyle Store",
+    template: "%s | AesthetX Ways"
+  },
+  description: "Discover premium fashion, sneakers, and lifestyle products. Shop the latest trends in men's and women's fashion with fast shipping and easy returns.",
+  keywords: ["fashion", "sneakers", "lifestyle", "men's fashion", "women's fashion", "online shopping", "premium clothing", "streetwear"],
+  authors: [{ name: "AesthetX Ways" }],
+  creator: "AesthetX Ways",
+  publisher: "AesthetX Ways",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://aesthetxways.com",
+    title: "AesthetX Ways - Premium Fashion & Lifestyle Store",
+    description: "Discover premium fashion, sneakers, and lifestyle products. Shop the latest trends with fast shipping.",
+    siteName: "AesthetX Ways",
+    images: [
+      {
+        url: "/og-image.jpg", // You'll need to add this image
+        width: 1200,
+        height: 630,
+        alt: "AesthetX Ways Fashion Store",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AesthetX Ways - Premium Fashion & Lifestyle Store",
+    description: "Discover premium fashion, sneakers, and lifestyle products.",
+    images: ["/og-image.jpg"],
+    creator: "@aesthetxways", // Replace with your Twitter handle
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: "your-google-verification-code", // Add your Google Search Console verification
+    // yandex: "your-yandex-verification-code",
+    // bing: "your-bing-verification-code",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <WebsiteStructuredData />
+        <OrganizationStructuredData />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} antialiased`}
       >

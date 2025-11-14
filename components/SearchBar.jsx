@@ -40,7 +40,6 @@ export default function SearchBar() {
     e.preventDefault();
     if (searchQuery.trim()) {
       // Navigate to search results page or handle search
-      console.log("Searching for:", searchQuery);
       setShowResults(false);
     }
   };

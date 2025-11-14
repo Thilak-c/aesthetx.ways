@@ -14,9 +14,6 @@ const razorpay = new Razorpay({
 export async function POST(request) {
   try {
     // Debug logging
-    console.log('Environment variables:', {
-      key_id: process.env.RAZORPAY_KEY_ID ? 'Set' : 'Not set',
-      key_secret: process.env.RAZORPAY_KEY_SECRET ? 'Set' : 'Not set'
     });
     
     const body = await request.json();

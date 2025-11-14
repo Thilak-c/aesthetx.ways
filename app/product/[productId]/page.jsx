@@ -34,6 +34,7 @@ import {
   Users,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import { ProductStructuredData, BreadcrumbStructuredData } from "@/components/StructuredData";
 
 // Font classes
 const fontClasses = {
@@ -403,10 +404,6 @@ const handleAddToCart = async () => {
         setToastMessage(result.message);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
-
-        console.log("Wishlist updated:", {
-          product: product.name,
-          action: result.action,
           isWishlisted: result.isWishlisted,
         });
       }
@@ -420,9 +417,6 @@ const handleAddToCart = async () => {
     }
   };
   useEffect(() => {
-    console.log("Personalized products debug:", {
-      personalizedProducts,
-      userId: me?._id,
       userName: me?.name,
       userInterests: me?.interests,
       hasUser: !!me,
@@ -430,14 +424,8 @@ const handleAddToCart = async () => {
   }, [personalizedProducts, me]);
 
   const handleAddReview = async () => {
-    console.log("handleAddReview called");
-    console.log("isLoggedIn:", isLoggedIn);
-    console.log("me:", me);
-    console.log("token:", token);
-    console.log("reviewForm:", reviewForm);
 
     if (!isLoggedIn || !me) {
-      console.log("Early return - not logged in or no user data");
       return;
     }
 
@@ -472,8 +460,6 @@ const handleAddToCart = async () => {
       setToastMessage("Review submitted successfully!");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-
-      console.log("Review submitted successfully");
     } catch (error) {
       console.error("Error submitting review:", error);
       // Show error toast
@@ -715,10 +701,20 @@ const handleAddToCart = async () => {
 
   // Add personalized products query for the user
 
-  // Add debug logging
-console.log(trendingProducts,"ggggggggggggggggggggggggggggggggggggggggg")
+  // Breadcrumb data for structured data
+  const breadcrumbItems = [
+    { name: "Home", url: "https://aesthetxways.com" },
+    { name: "Shop", url: "https://aesthetxways.com/shop" },
+    { name: product?.category || "Products", url: `https://aesthetxways.com/shop?category=${product?.category}` },
+    { name: product?.name || "Product", url: `https://aesthetxways.com/product/${productId}` },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Add Structured Data */}
+      <ProductStructuredData product={product} reviews={reviews} reviewStats={reviewStats} />
+      <BreadcrumbStructuredData items={breadcrumbItems} />
+      
       {/* Responsive Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}

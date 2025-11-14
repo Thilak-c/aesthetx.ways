@@ -60,7 +60,6 @@ export function useProductView(productId, options = {}) {
     addViewMutation(viewData)
       .then(() => {
         hasTracked.current = true;
-        console.log(`View tracked for product ${productId}`);
       })
       .catch((error) => {
         console.error('Failed to track product view:', error);

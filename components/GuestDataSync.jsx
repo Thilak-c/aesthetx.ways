@@ -37,7 +37,6 @@ export default function GuestDataSync({ userId, isLoggedIn }) {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('Guest data synced:', data.results);
         
         // Clear local storage after successful sync
         clearGuestCart();
@@ -48,9 +47,7 @@ export default function GuestDataSync({ userId, isLoggedIn }) {
         // Show success message
         if (data.results.cartSynced > 0 || data.results.ordersSynced > 0) {
           // You can show a toast notification here
-          console.log(
-            `Synced ${data.results.cartSynced} cart items and ${data.results.ordersSynced} orders`
-          );
+        }
         }
       }
     } catch (error) {

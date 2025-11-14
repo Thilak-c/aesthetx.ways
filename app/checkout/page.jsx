@@ -84,7 +84,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (me) {
       setIsLoggedIn(true);
-      console.log("User object:", me); // Debug log
 
       // Pre-fill shipping details with user data if available
       if (me.name)
@@ -412,7 +411,6 @@ export default function CheckoutPage() {
 
       // Create order
       const order = await createRazorpayOrder();
-      console.log("Razorpay order created:", order);
 
       // Configure Razorpay options
       const options = {
@@ -483,8 +481,6 @@ export default function CheckoutPage() {
                   }));
                 }
 
-                console.log("Creating order with items:", mappedItems);
-
                 const orderResult = await createOrderMutation({
                   userId: me?._id || null, // null for guest users
                
@@ -538,7 +534,6 @@ export default function CheckoutPage() {
 
                     const emailData = await emailResponse.json();
                     if (emailData.success) {
-                      console.log("Order confirmation email sent successfully");
                     } else {
                       console.error("Failed to send order confirmation email:", emailData.message);
                     }
@@ -546,13 +541,11 @@ export default function CheckoutPage() {
                     console.error("Error sending order confirmation email:", emailError);
                     // Don't block the success flow if email sending fails
                   }
-                  console.log("Order created:", orderResult);
 
                   // Clear cart after successful order (only for cart-based purchases)
                   if (!isDirectPurchase) {
                     try {
                       await clearCartMutation({ userId: me._id });
-                      console.log("Cart cleared successfully");
                     } catch (error) {
                       console.error("Error clearing cart:", error);
                       // Don't block the success flow if cart clearing fails
@@ -589,25 +582,21 @@ export default function CheckoutPage() {
         },
         modal: {
           ondismiss: function () {
-            console.log("Razorpay modal dismissed");
             setIsProcessing(false);
           },
         },
       };
 
       // Open Razorpay checkout
-      console.log("Razorpay options:", options);
       const razorpayInstance = new Razorpay(options);
 
       // Add event listeners for better state management
       razorpayInstance.on("payment.failed", function (response) {
-        console.log("Payment failed:", response.error);
         showToastMessage("Payment failed. Please try again.");
         setIsProcessing(false);
       });
 
       razorpayInstance.on("payment.cancelled", function (response) {
-        console.log("Payment cancelled:", response);
         showToastMessage("Payment was cancelled.");
         setIsProcessing(false);
       });
@@ -617,7 +606,6 @@ export default function CheckoutPage() {
       // Reset processing state after a timeout as fallback
       setTimeout(() => {
         if (isProcessing) {
-          console.log("Resetting processing state after timeout");
           setIsProcessing(false);
         }
       }, 10000); // 10 seconds timeout
