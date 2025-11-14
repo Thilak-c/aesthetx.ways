@@ -75,7 +75,7 @@ export default function MenWomenSneakersPage() {
   };
 
   return (
-    <div className="min-h-screen relative bg-gray-50 p-6 md:p-12">
+    <div className="min-h-screen relative bg-gray-50 p-3 md:p-6">
       <div className="md:hidden top-0 h-[60px] "></div>
       <div className="absolute top-0 left-0 md:hidden">
         <NavbarMobile />
@@ -85,7 +85,7 @@ export default function MenWomenSneakersPage() {
       </div>
 
       {/* Category Tabs */}
-      <nav className="flex gap-6 mb-6 relative max-w-7xl mx-auto border-b border-gray-200">
+      <nav className="flex gap-4 mb-4 relative max-w-7xl mx-auto border-b border-gray-200">
         {Object.keys(categoryMap).map((key) => (
           <button
             key={key}
@@ -96,7 +96,7 @@ export default function MenWomenSneakersPage() {
                 `${window.location.pathname}?${params.toString()}`
               );
             }}
-            className={`relative text-lg font-semibold pb-2 ${
+            className={`relative text-sm font-normal pb-2 ${
               ctParam === key
                 ? "text-black"
                 : "text-gray-400 hover:text-gray-700"
@@ -106,7 +106,7 @@ export default function MenWomenSneakersPage() {
             {ctParam === key && (
               <motion.span
                 layoutId="underline"
-                className="absolute bottom-0 left-0 w-full h-1 bg-black rounded-full"
+                className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-full"
               />
             )}
           </button>
@@ -114,9 +114,9 @@ export default function MenWomenSneakersPage() {
       </nav>
 
       {/* Subcategory Cards Section */}
-      <section className="max-w-7xl mx-auto mb-8">
-        <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <section className="max-w-7xl mx-auto mb-6">
+        <h2 className="text-base font-normal mb-4">Shop by Category</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {subcategoryCards.map((card, idx) => (
             <motion.div
               key={card.name}
@@ -124,8 +124,8 @@ export default function MenWomenSneakersPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
               onClick={() => setActiveSubcategory(card.name)}
-              className={`relative h-48 rounded-lg overflow-hidden cursor-pointer group ${
-                activeSubcategory === card.name ? "ring-4 ring-black" : ""
+              className={`relative h-36 rounded-lg overflow-hidden cursor-pointer group ${
+                activeSubcategory === card.name ? "ring-2 ring-black" : ""
               }`}
             >
               {/* Background Image */}
@@ -142,18 +142,18 @@ export default function MenWomenSneakersPage() {
               }`} />
               
               {/* Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-4">
-                <h3 className="text-xl font-bold mb-1 text-center">{card.name}</h3>
-                <p className="text-sm opacity-90">{card.count} items</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-3">
+                <h3 className="text-sm font-normal mb-0.5 text-center">{card.name}</h3>
+                <p className="text-xs opacity-90">{card.count} items</p>
               </div>
 
               {/* Active Indicator */}
               {activeSubcategory === card.name && (
                 <motion.div
                   layoutId="activeSubcategory"
-                  className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center"
+                  className="absolute top-1.5 right-1.5 w-5 h-5 bg-white rounded-full flex items-center justify-center"
                 >
-                  <div className="w-3 h-3 bg-black rounded-full" />
+                  <div className="w-2.5 h-2.5 bg-black rounded-full" />
                 </motion.div>
               )}
             </motion.div>
@@ -162,7 +162,7 @@ export default function MenWomenSneakersPage() {
       </section>
 
       {/* Filters */}
-      <div className="flex gap-4 my-4 max-w-7xl mx-auto">
+      <div className="flex gap-3 my-3 max-w-7xl mx-auto">
         <CustomDropdown
           label="Subcategory"
           options={subcategories}
@@ -177,11 +177,11 @@ export default function MenWomenSneakersPage() {
           onSelect={setActiveType}
         />
       </div>
-      <div className="w-full h-[1px] bg-black max-w-7xl flex justify-center self-center-safe mx-auto blur-[2px] mb-4"></div>
+      <div className="w-full h-[1px] bg-black max-w-7xl flex justify-center self-center-safe mx-auto blur-[2px] mb-3"></div>
 
       {/* Products Grid */}
       <section className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {filteredProducts.length === 0
             ? Array.from({ length: 8 }).map((_, idx) => (
                 <ProductCard key={`skeleton-${idx}`} loading />

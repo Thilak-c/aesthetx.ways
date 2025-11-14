@@ -286,13 +286,13 @@ export default function UserSettingsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Premium Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/60 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 lg:w-12 lg:h-12 b-gradient-to-br from-slate-900 to-slate-700 rounded-2xl flex items-center justify-center shadowlg">
                 <img src="/fav.png" alt="" />
               </div>
-              <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              <span className="text-xl lg:text-base font-normal bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                 AesthetX
               </span>
             </div>
@@ -316,7 +316,7 @@ export default function UserSettingsPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 lg:py-12">
         {/* Hero Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -330,8 +330,8 @@ export default function UserSettingsPage() {
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
           </div>
 
-          <div className="relative p-8 lg:p-12">
-            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8">
+          <div className="relative p-4 lg:p-12">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-3 lg:gap-4">
               {/* Profile Photo with Glow */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -352,16 +352,16 @@ export default function UserSettingsPage() {
 
               {/* User Info */}
               <div className="flex-1 text-center lg:text-left text-white">
-                <h1 className="text-3xl lg:text-4xl font-bold mb-2">{me.name || 'User'}</h1>
+                <h1 className="text-xl lg:text-2xl font-normal mb-2">{me.name || 'User'}</h1>
                 <p className="text-slate-300 flex items-center justify-center lg:justify-start gap-2 mb-4">
                   <Mail className="w-4 h-4" />
                   {me.email}
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-                  <span className="px-4 py-2 bg-emerald-500/20 backdrop-blur-sm text-emerald-300 rounded-full text-sm font-medium border border-emerald-500/30">
+                  <span className="px-3 py-2 bg-emerald-500/20 backdrop-blur-sm text-emerald-300 rounded-full text-sm font-medium border border-emerald-500/30">
                     ✓ Active
                   </span>
-                  <span className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-medium border border-white/20">
+                  <span className="px-3 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-medium border border-white/20">
                     Member since {new Date(me._creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                   </span>
                 </div>
@@ -371,7 +371,7 @@ export default function UserSettingsPage() {
         </motion.div>
 
         {/* Settings Sections Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
           {settingsSections.map((section, index) => (
             <motion.div
               key={section.id}
@@ -381,20 +381,20 @@ export default function UserSettingsPage() {
               className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden hover:shadow-2xl transition-all duration-300"
             >
               {/* Section Header */}
-              <div className="p-6 lg:p-8 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+              <div className="p-3 lg:p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
                 <div className="flex items-center space-x-4">
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 shadow-sm">
                     <section.icon className="w-7 h-7 text-slate-700" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">{section.title}</h3>
+                    <h3 className="text-sm font-normal text-slate-900">{section.title}</h3>
                     <p className="text-slate-600 text-sm mt-1">{section.description}</p>
                   </div>
                 </div>
               </div>
 
               {/* Section Content */}
-              <div className="p-6 lg:p-8">
+              <div className="p-3 lg:p-4">
                 {section.content}
               </div>
             </motion.div>
@@ -507,12 +507,12 @@ function PasswordChangeModal({ onClose, userId }) {
         className="bg-white rounded-3xl shadow-2xl w-full max-w-md"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 lg:p-8 border-b border-slate-100">
+        <div className="flex items-center justify-between p-3 lg:p-4 border-b border-slate-100">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center">
               <Key className="w-6 h-6 text-slate-700" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900">Change Password</h3>
+            <h3 className="text-base font-normal text-slate-900">Change Password</h3>
           </div>
           <button 
             onClick={onClose} 
@@ -523,10 +523,10 @@ function PasswordChangeModal({ onClose, userId }) {
         </div>
         
         {/* Content */}
-        <div className="p-6 lg:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="p-3 lg:p-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-normal text-slate-700 mb-2">
                 Current Password
               </label>
               <div className="relative">
@@ -534,7 +534,7 @@ function PasswordChangeModal({ onClose, userId }) {
                   type={showCurrentPassword ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
+                  className="w-full px-3 py-2 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
                   placeholder="Enter current password"
                   required
                 />
@@ -549,7 +549,7 @@ function PasswordChangeModal({ onClose, userId }) {
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-normal text-slate-700 mb-2">
                 New Password
               </label>
               <div className="relative">
@@ -557,7 +557,7 @@ function PasswordChangeModal({ onClose, userId }) {
                   type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
+                  className="w-full px-3 py-2 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
                   placeholder="Enter new password"
                   required
                 />
@@ -572,7 +572,7 @@ function PasswordChangeModal({ onClose, userId }) {
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-normal text-slate-700 mb-2">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -580,7 +580,7 @@ function PasswordChangeModal({ onClose, userId }) {
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
+                  className="w-full px-3 py-2 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
                   placeholder="Confirm new password"
                   required
                 />
@@ -620,14 +620,14 @@ function PasswordChangeModal({ onClose, userId }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-3 border-2 border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+                className="flex-1 px-3 py-2 border-2 border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="flex-1 px-4 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3 py-2 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {busy ? "Changing..." : "Change Password"}
               </button>
@@ -657,12 +657,12 @@ function TwoFactorModal({ onClose, userId }) {
         className="bg-white rounded-3xl shadow-2xl w-full max-w-md"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-3 border-b border-slate-100">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center">
               <Shield className="w-6 h-6 text-slate-700" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900">Two-Factor Authentication</h3>
+            <h3 className="text-sm font-normal text-slate-900">Two-Factor Authentication</h3>
           </div>
           <button 
             onClick={onClose} 
@@ -673,18 +673,18 @@ function TwoFactorModal({ onClose, userId }) {
         </div>
         
         {/* Content */}
-        <div className="p-8 text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="p-4 text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center mx-auto mb-3">
             <Shield className="w-10 h-10 text-slate-700" />
           </div>
           
-          <h4 className="text-2xl font-bold text-slate-900 mb-3">Coming Soon!</h4>
+          <h4 className="text-base font-normal text-slate-900 mb-3">Coming Soon!</h4>
           
-          <p className="text-slate-600 mb-6 leading-relaxed">
+          <p className="text-slate-600 mb-3 leading-relaxed">
             Two-factor authentication is currently under development. This feature will add an extra layer of security to your account.
           </p>
           
-          <div className="bg-slate-50 rounded-2xl p-6 mb-6">
+          <div className="bg-slate-50 rounded-2xl p-3 mb-3">
             <div className="space-y-3 text-sm text-slate-700">
               {['QR codes for authenticator apps', 'SMS verification codes', 'Backup recovery codes', 'Enhanced account security'].map((feature, idx) => (
                 <div key={idx} className="flex items-center space-x-3">
@@ -697,7 +697,7 @@ function TwoFactorModal({ onClose, userId }) {
           
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors"
+            className="w-full px-3 py-2 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors"
           >
             Got it!
           </button>
@@ -725,12 +725,12 @@ function PrivacyPolicyModal({ onClose }) {
         className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-3 border-b border-slate-100">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center">
               <Lock className="w-6 h-6 text-slate-700" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900">Privacy Policy</h3>
+            <h3 className="text-base font-normal text-slate-900">Privacy Policy</h3>
           </div>
           <button 
             onClick={onClose} 
@@ -741,8 +741,8 @@ function PrivacyPolicyModal({ onClose }) {
         </div>
         
         {/* Content */}
-        <div className="p-8 overflow-y-auto max-h-[60vh]">
-          <div className="space-y-6">
+        <div className="p-4 overflow-y-auto max-h-[60vh]">
+          <div className="space-y-3">
             {[
               {
                 title: 'Information We Collect',
@@ -770,7 +770,7 @@ function PrivacyPolicyModal({ onClose }) {
               }
             ].map((section, idx) => (
               <div key={idx}>
-                <h4 className="text-lg font-bold text-slate-900 mb-3">{section.title}</h4>
+                <h4 className="text-sm font-normal text-slate-900 mb-3">{section.title}</h4>
                 <p className="text-slate-600 leading-relaxed">{section.content}</p>
               </div>
             ))}
@@ -778,10 +778,10 @@ function PrivacyPolicyModal({ onClose }) {
         </div>
         
         {/* Footer */}
-        <div className="p-6 border-t border-slate-100">
+        <div className="p-3 border-t border-slate-100">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors"
+            className="w-full px-3 py-2 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors"
           >
             Close
           </button>
@@ -853,12 +853,12 @@ function DeactivateAccountModal({ onClose, userId, deactivateUser }) {
         className="bg-white rounded-3xl shadow-2xl w-full max-w-md"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-3 border-b border-slate-100">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-amber-200 rounded-xl flex items-center justify-center">
               <UserX className="w-6 h-6 text-amber-700" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900">Deactivate Account</h3>
+            <h3 className="text-base font-normal text-slate-900">Deactivate Account</h3>
           </div>
           <button 
             onClick={onClose} 
@@ -869,7 +869,7 @@ function DeactivateAccountModal({ onClose, userId, deactivateUser }) {
         </div>
         
         {/* Warning */}
-        <div className="p-6 border-b border-slate-100">
+        <div className="p-3 border-b border-slate-100">
           <div className="flex items-start space-x-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
             <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
             <div>
@@ -882,16 +882,16 @@ function DeactivateAccountModal({ onClose, userId, deactivateUser }) {
         </div>
         
         {/* Form */}
-        <div className="p-6">
-          <form onSubmit={handleDeactivate} className="space-y-5">
+        <div className="p-3">
+          <form onSubmit={handleDeactivate} className="space-y-3">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-normal text-slate-700 mb-2">
                 Reason for deactivation
               </label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
+                className="w-full px-3 py-2 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
                 required
               >
                 <option value="">Select a reason</option>
@@ -903,7 +903,7 @@ function DeactivateAccountModal({ onClose, userId, deactivateUser }) {
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-normal text-slate-700 mb-2">
                 Confirm your password
               </label>
               <div className="relative">
@@ -911,7 +911,7 @@ function DeactivateAccountModal({ onClose, userId, deactivateUser }) {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
+                  className="w-full px-3 py-2 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
                   placeholder="Enter your password"
                   required
                 />
@@ -951,14 +951,14 @@ function DeactivateAccountModal({ onClose, userId, deactivateUser }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-3 border-2 border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+                className="flex-1 px-3 py-2 border-2 border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="flex-1 px-4 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3 py-2 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {busy ? "Deactivating..." : "Deactivate Account"}
               </button>
@@ -1038,12 +1038,12 @@ function DeleteAccountModal({ onClose, userId, moveToTrash }) {
         className="bg-white rounded-3xl shadow-2xl w-full max-w-md"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-3 border-b border-slate-100">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
               <Trash2 className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900">Move to Trash</h3>
+            <h3 className="text-base font-normal text-slate-900">Move to Trash</h3>
           </div>
           <button 
             onClick={onClose} 
@@ -1054,7 +1054,7 @@ function DeleteAccountModal({ onClose, userId, moveToTrash }) {
         </div>
         
         {/* Warning */}
-        <div className="p-6 border-b border-slate-100">
+        <div className="p-3 border-b border-slate-100">
           <div className="flex items-start space-x-3 p-4 bg-slate-900 border border-slate-700 rounded-xl text-white">
             <AlertTriangle className="w-5 h-5 text-white mt-0.5 flex-shrink-0" />
             <div>
@@ -1068,16 +1068,16 @@ function DeleteAccountModal({ onClose, userId, moveToTrash }) {
         </div>
         
         {/* Form */}
-        <div className="p-6">
-          <form onSubmit={handleDelete} className="space-y-5">
+        <div className="p-3">
+          <form onSubmit={handleDelete} className="space-y-3">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-normal text-slate-700 mb-2">
                 Reason for deletion
               </label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
+                className="w-full px-3 py-2 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
                 required
               >
                 <option value="">Select a reason</option>
@@ -1089,7 +1089,7 @@ function DeleteAccountModal({ onClose, userId, moveToTrash }) {
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-normal text-slate-700 mb-2">
                 Confirm your password
               </label>
               <div className="relative">
@@ -1097,7 +1097,7 @@ function DeleteAccountModal({ onClose, userId, moveToTrash }) {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
+                  className="w-full px-3 py-2 pr-12 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
                   placeholder="Enter your password"
                   required
                 />
@@ -1112,14 +1112,14 @@ function DeleteAccountModal({ onClose, userId, moveToTrash }) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-normal text-slate-700 mb-2">
                 Type "DELETE" to confirm
               </label>
               <input
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
+                className="w-full px-3 py-2 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-900 transition-all"
                 placeholder="Type DELETE"
                 required
               />
@@ -1151,14 +1151,14 @@ function DeleteAccountModal({ onClose, userId, moveToTrash }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-3 border-2 border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+                className="flex-1 px-3 py-2 border-2 border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="flex-1 px-4 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3 py-2 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {busy ? "Moving to Trash..." : "Move to Trash"}
               </button>
@@ -1181,17 +1181,17 @@ function RequireLogin({ message = "Please log in to access your settings and pre
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-3">
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-8 rounded-3xl shadow-2xl border border-slate-200 text-center max-w-md w-full"
+        className="bg-white p-4 rounded-3xl shadow-2xl border border-slate-200 text-center max-w-md w-full"
       >
-        <div className="w-16 h-16 bg-gradient-to-br from-slate-900 to-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-16 h-16 bg-gradient-to-br from-slate-900 to-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
           <User className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-3">Authentication Required</h2>
-        <p className="text-slate-600 mb-6">{message}</p>
+        <h2 className="text-base font-normal text-slate-900 mb-3">Authentication Required</h2>
+        <p className="text-slate-600 mb-3">{message}</p>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto"></div>
       </motion.div>
     </div>

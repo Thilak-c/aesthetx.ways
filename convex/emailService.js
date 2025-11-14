@@ -225,6 +225,13 @@ export const sendCustomerOrderConfirmation = action({
             
             <p>Shipping to:<br>${args.orderData.shippingAddress}</p>
             
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://aesthetxways.com'}/track-order?orderId=${args.orderData.orderNumber}" 
+                 style="display: inline-block; background: #000; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Track Your Order
+              </a>
+            </div>
+            
             <p>Thank you for choosing AesthetX Ways!</p>
           </div>
         </div>

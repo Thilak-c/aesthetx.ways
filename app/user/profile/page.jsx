@@ -356,7 +356,7 @@ export default function ProfilePageRedesign() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Premium Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/60 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradiet-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center shad-lg">
@@ -389,7 +389,7 @@ export default function ProfilePageRedesign() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 lg:py-12">
         {/* Hero Profile Card */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -403,8 +403,8 @@ export default function ProfilePageRedesign() {
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
           </div>
 
-          <div className="relative p-8 lg:p-12">
-            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8">
+          <div className="relative p-4 lg:p-12">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-3 lg:gap-4">
               {/* Profile Photo with Glow */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -438,7 +438,7 @@ export default function ProfilePageRedesign() {
               <div className="flex-1 text-center lg:text-left text-white">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
                   <div>
-                    <h1 className="text-3xl lg:text-4xl font-bold mb-2">{formData.name}</h1>
+                    <h1 className="text-xl lg:text-2xl font-normal mb-2">{formData.name}</h1>
                     <p className="text-slate-300 flex items-center justify-center lg:justify-start gap-2">
                       <Mail className="w-4 h-4" />
                       {formData.email}
@@ -451,7 +451,7 @@ export default function ProfilePageRedesign() {
                     disabled={busy}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 ${
+                    className={`px-6 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 ${
                       isEditing
                         ? "bg-white text-slate-900"
                         : "bg-white/10 backdrop-blur-sm text-white hover:bg-white/20"
@@ -472,10 +472,10 @@ export default function ProfilePageRedesign() {
                 </div>
 
                 <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-                  <span className="px-4 py-2 bg-emerald-500/20 backdrop-blur-sm text-emerald-300 rounded-full text-sm font-medium border border-emerald-500/30">
+                  <span className="px-3 py-2 bg-emerald-500/20 backdrop-blur-sm text-emerald-300 rounded-full text-sm font-medium border border-emerald-500/30">
                     ✓ Active
                   </span>
-                  <span className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-medium border border-white/20">
+                  <span className="px-3 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-medium border border-white/20">
                     Member since {new Date(me._creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                   </span>
                 </div>
@@ -491,7 +491,7 @@ export default function ProfilePageRedesign() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl font-semibold transition-all duration-300 ${
                   activeTab === tab.id
                     ? "bg-slate-900 text-white shadow-lg"
                     : "text-slate-600 hover:bg-slate-50"
@@ -512,21 +512,21 @@ export default function ProfilePageRedesign() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 lg:p-10"
+            className="bg-white rounded-3xl shadow-xl border border-slate-200 p-3 lg:p-10"
           >
             {activeTab === "personal" && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Personal Information</h2>
+              <div className="space-y-3">
+                <h2 className="text-base font-normal text-slate-900 mb-4">Personal Information</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
+                    <label className="block text-xs font-normal text-slate-700 mb-2">Full Name</label>
                     <input
                       type="text"
                       value={formData.name}
                       disabled={!isEditing}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`w-full px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
                         isEditing
                           ? "border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
                           : "border-slate-200 bg-slate-50 text-slate-600"
@@ -535,13 +535,13 @@ export default function ProfilePageRedesign() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+                    <label className="block text-xs font-normal text-slate-700 mb-2">Email Address</label>
                     <div className="relative">
                       <input
                         type="email"
                         value={formData.email}
                         disabled
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-600"
+                        className="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-600"
                       />
                       <span className="absolute right-3 top-3 text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">
                         Verified
@@ -550,13 +550,13 @@ export default function ProfilePageRedesign() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Primary Phone</label>
+                    <label className="block text-xs font-normal text-slate-700 mb-2">Primary Phone</label>
                     <input
                       type="tel"
                       value={formData.phoneNumber}
                       disabled={!isEditing}
                       onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                      className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`w-full px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
                         isEditing
                           ? "border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
                           : "border-slate-200 bg-slate-50 text-slate-600"
@@ -565,13 +565,13 @@ export default function ProfilePageRedesign() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Secondary Phone</label>
+                    <label className="block text-xs font-normal text-slate-700 mb-2">Secondary Phone</label>
                     <input
                       type="tel"
                       value={formData.secondaryPhoneNumber}
                       disabled={!isEditing}
                       onChange={(e) => setFormData(prev => ({ ...prev, secondaryPhoneNumber: e.target.value }))}
-                      className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`w-full px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
                         isEditing
                           ? "border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
                           : "border-slate-200 bg-slate-50 text-slate-600"
@@ -583,12 +583,12 @@ export default function ProfilePageRedesign() {
             )}
 
             {activeTab === "address" && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Address Information</h2>
+              <div className="space-y-3">
+                <h2 className="text-base font-normal text-slate-900 mb-4">Address Information</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">State</label>
+                    <label className="block text-xs font-normal text-slate-700 mb-2">State</label>
                     <select
                       value={formData.address.state}
                       disabled={!isEditing}
@@ -596,7 +596,7 @@ export default function ProfilePageRedesign() {
                         ...prev,
                         address: { ...prev.address, state: e.target.value, city: '' }
                       }))}
-                      className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`w-full px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
                         isEditing
                           ? "border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
                           : "border-slate-200 bg-slate-50 text-slate-600"
@@ -610,7 +610,7 @@ export default function ProfilePageRedesign() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">City</label>
+                    <label className="block text-xs font-normal text-slate-700 mb-2">City</label>
                     <select
                       value={formData.address.city}
                       disabled={!isEditing || !formData.address.state}
@@ -618,7 +618,7 @@ export default function ProfilePageRedesign() {
                         ...prev,
                         address: { ...prev.address, city: e.target.value }
                       }))}
-                      className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`w-full px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
                         isEditing
                           ? "border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
                           : "border-slate-200 bg-slate-50 text-slate-600"
@@ -632,7 +632,7 @@ export default function ProfilePageRedesign() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">PIN Code</label>
+                    <label className="block text-xs font-normal text-slate-700 mb-2">PIN Code</label>
                     <input
                       type="text"
                       value={formData.address.pinCode}
@@ -641,7 +641,7 @@ export default function ProfilePageRedesign() {
                         ...prev,
                         address: { ...prev.address, pinCode: e.target.value }
                       }))}
-                      className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`w-full px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
                         isEditing
                           ? "border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
                           : "border-slate-200 bg-slate-50 text-slate-600"
@@ -651,7 +651,7 @@ export default function ProfilePageRedesign() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Full Address</label>
+                  <label className="block text-xs font-normal text-slate-700 mb-2">Full Address</label>
                   <textarea
                     value={formData.address.fullAddress}
                     disabled={!isEditing}
@@ -660,7 +660,7 @@ export default function ProfilePageRedesign() {
                       address: { ...prev.address, fullAddress: e.target.value }
                     }))}
                     rows={4}
-                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 resize-none ${
+                    className={`w-full px-3 py-2 rounded-xl border-2 transition-all duration-200 resize-none ${
                       isEditing
                         ? "border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
                         : "border-slate-200 bg-slate-50 text-slate-600"
@@ -671,16 +671,16 @@ export default function ProfilePageRedesign() {
             )}
 
             {activeTab === "interests" && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6">Your Interests</h2>
+              <div className="space-y-3">
+                <h2 className="text-base font-normal text-slate-900 mb-4">Your Interests</h2>
                 
-                <div className="flex flex-wrap gap-3 mb-6">
+                <div className="flex flex-wrap gap-3 mb-3">
                   {formData.interests.map((interest, idx) => (
                     <motion.span
                       key={idx}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-full font-medium shadow-lg"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-full font-medium shadow-lg"
                     >
                       {interest}
                       {isEditing && (
@@ -703,7 +703,7 @@ export default function ProfilePageRedesign() {
                         value={newInterest}
                         onChange={(e) => setNewInterest(e.target.value)}
                         placeholder="Add custom interest..."
-                        className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
+                        className="flex-1 px-3 py-2 rounded-xl border-2 border-slate-300 focus:border-slate-900 focus:ring-4 focus:ring-slate-100"
                         onKeyPress={(e) => {
                           if (e.key === 'Enter' && newInterest.trim()) {
                             addInterest(newInterest.trim());
@@ -718,7 +718,7 @@ export default function ProfilePageRedesign() {
                             setNewInterest('');
                           }
                         }}
-                        className="px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors"
+                        className="px-6 py-2 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors"
                       >
                         <Plus className="w-5 h-5" />
                       </button>
