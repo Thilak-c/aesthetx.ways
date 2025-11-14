@@ -45,11 +45,7 @@ export async function POST(request) {
     
     // Store OTP with expiration (5 minutes)
     global.otpStore.set(email, otpData);
-    global.otpStorePersistent.set(email, otpData); 
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      storeSize: global.otpStore.size,
-      persistentStoreSize: global.otpStorePersistent.size
-    });
+    global.otpStorePersistent.set(email, otpData);
 
     // Email content
     const mailOptions = {

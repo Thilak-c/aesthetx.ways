@@ -58,15 +58,7 @@ export default function TopPicksSlider() {
 
   useEffect(() => {
     if (products.length > 0) {
-      products.map((p) => ({
-          _id: p._id,
-          name: p.name,
-          category: p.category,
-          price: p.price,
-          mainImage: p.mainImage,
-          hasImage: !!p.mainImage,
-        }))
-      );
+      // Products loaded successfully
     }
   }, [products]);
 

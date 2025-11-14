@@ -8,8 +8,12 @@ import { useState, useEffect } from "react";
 export default function NotFound() {
   const router = useRouter();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
 
   useEffect(() => {
+    // Set actual window size on client
+    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    
     const handleMouseMove = (e) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
@@ -50,12 +54,12 @@ export default function NotFound() {
           key={i}
           className="absolute"
           initial={{
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
+            x: Math.random() * windowSize.width,
+            y: Math.random() * windowSize.height,
           }}
           animate={{
-            y: [null, Math.random() * window.innerHeight],
-            x: [null, Math.random() * window.innerWidth],
+            y: [null, Math.random() * windowSize.height],
+            x: [null, Math.random() * windowSize.width],
             rotate: [0, 360],
             opacity: [0.1, 0.2, 0.1],
           }}

@@ -13,9 +13,6 @@ const razorpay = new Razorpay({
 
 export async function POST(request) {
   try {
-    // Debug logging
-    });
-    
     const body = await request.json();
     const { amount, currency = 'INR', receipt, notes } = body;
 

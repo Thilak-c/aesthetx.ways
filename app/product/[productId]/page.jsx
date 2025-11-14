@@ -404,8 +404,6 @@ const handleAddToCart = async () => {
         setToastMessage(result.message);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
-          isWishlisted: result.isWishlisted,
-        });
       }
     } catch (error) {
       console.error("Error updating wishlist:", error);
@@ -417,10 +415,7 @@ const handleAddToCart = async () => {
     }
   };
   useEffect(() => {
-      userName: me?.name,
-      userInterests: me?.interests,
-      hasUser: !!me,
-    });
+    // Personalized products loaded
   }, [personalizedProducts, me]);
 
   const handleAddReview = async () => {
