@@ -5,7 +5,7 @@ import { ConvexProvider, convex } from "../convexClient"; // Revert to named imp
 import LayoutWrapper from "../components/LayoutWrapper";
 import { Suspense } from "react"; // Import Suspense
 import AccessGate from "@/components/AccessGate";
-import Footer from "@/ components/footer";
+// import Footer from "@/ components/footer";
 import { WebsiteStructuredData, OrganizationStructuredData } from "@/components/StructuredData";
 
 const geistSans = Geist({
@@ -104,7 +104,7 @@ export default function RootLayout({ children }) {
             {/* Add Suspense boundary */}
             <LayoutWrapper>
               {children}
-              <Footer/>
+              {/* <Footer/> */}
             </LayoutWrapper>
           </Suspense>
               {/* </AccessGate> */}

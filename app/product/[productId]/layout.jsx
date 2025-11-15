@@ -29,7 +29,8 @@ export async function generateMetadata({ params }) {
       openGraph: {
         title: `${productName} | AesthetX Ways`,
         description: `${productName} - ${category}. Price: ₹${price}. ${description.substring(0, 100)}`,
-        type: "product",
+        type: "website",
+        siteName: "AesthetX Ways",
         images: [
           {
             url: product.mainImage || "/default-product.jpg",

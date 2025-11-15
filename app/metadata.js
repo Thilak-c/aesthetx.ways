@@ -36,7 +36,8 @@ export const generateProductMetadata = (product) => {
     openGraph: {
       title: `${product.name} | AesthetX Ways`,
       description: `Buy ${product.name} - ${product.category}. Price: ₹${product.price}`,
-      type: "product",
+      type: "website",
+      siteName: "AesthetX Ways",
       images: [
         {
           url: product.mainImage,
