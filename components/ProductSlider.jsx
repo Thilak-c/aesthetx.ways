@@ -2,18 +2,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 
 const slides = [
-    {
-    desktopImg: "/poster-img-hero-home/IMG_1725.PNG",
-    mobileImg: "/poster-img-hero-home/IMG_3401.JPG",
-    title: "ALIEN FORCE DROP",
-    subtitle: "COLLECTOR'S ITEM",
-    cta: "SHOP NOW",
-    description: "EXCLUSIVE MERCH RELEASE",
-    limited: "ONLY THIS WEEK",
-    pieces: 400,
-  },
+  
   {
-    desktopImg: "/poster-img-hero-home/IMG_6724.PNG",
+    desktopImg: "/poster-img-hero-home/IMG_1725.PNG",
     mobileImg: "/poster-img-hero-home/IMG_6724.PNG",
     title: "ALIEN FORCE DROP",
     subtitle: "COLLECTOR'S ITEM",
