@@ -14,7 +14,7 @@ const slides = [
   },
   {
     desktopImg: "/poster-img-hero-home/IMG_6724.PNG",
-    mobileImg: "/poster-img-hero-home/IMG_3401.JPG",
+    mobileImg: "/poster-img-hero-home/IMG_6724.PNG",
     title: "ALIEN FORCE DROP",
     subtitle: "COLLECTOR'S ITEM",
     cta: "SHOP NOW",
@@ -24,7 +24,7 @@ const slides = [
   },
   {
     desktopImg: "/poster-img-hero-home/IMG_6725.PNG",
-    mobileImg: "/poster-img-hero-home/IMG_3402 (1).JPG",
+    mobileImg: "/poster-img-hero-home/IMG_6725.PNG",
     title: "BEN 10 ALIEN FORCE",
     subtitle: "FIRST TIME EVER IN INDIA",
     cta: "TAP TO UNLOCK",
@@ -34,7 +34,7 @@ const slides = [
   },
   {
     desktopImg: "/poster-img-hero-home/IMG_6726.PNG",
-    mobileImg: "/poster-img-hero-home/IMG_3403.JPG",
+    mobileImg: "/poster-img-hero-home/IMG_6726.PNG",
     title: "LIMITED TEE",
     subtitle: "DON'T MISS OUT",
     cta: "BUY NOW",
@@ -44,7 +44,7 @@ const slides = [
   },
   {
     desktopImg: "/poster-img-hero-home/IMG_6727.PNG",
-    mobileImg: "/poster-img-hero-home/IMG_3414.JPG",
+    mobileImg: "/poster-img-hero-home/IMG_6727.PNG",
     title: "EXCLUSIVE DROP",
     subtitle: "NEW ARRIVAL",
     cta: "EXPLORE",

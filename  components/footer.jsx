@@ -7,7 +7,12 @@ import {
   FaInstagram, FaYoutube, FaFacebook, FaTwitter,
   FaRocket, FaSun, FaMoon, FaLightbulb, FaPaperPlane,
 } from 'react-icons/fa';
+{/*
 import Galaxy from './Galaxy/Galaxy';
+
+ utils */ }
+
+
 import addSubscriber from '../utils/addSubscriber';
 import useKonami from '../hooks/useKonami';
 
@@ -232,9 +237,11 @@ export default function Footer() {
         )}
       </AnimatePresence> */}
       {/* iiii */}
-      <div className="w-full h-[700px]">
+    {/*
+    <div className="w-full h-[700px]">
         <Galaxy />
       </div>
+      */ } 
 
       <style jsx global>{`
         @media (prefers-reduced-motion: reduce) {
