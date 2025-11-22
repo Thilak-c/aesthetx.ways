@@ -133,9 +133,8 @@ export default function Footer() {
 
               <div className='gflex'>
                 <div className='flex items-center self-center mb-4'>
-
-                  <div className='font-extrabold text-[20px] mr-4 text-center'>AESTHETX WAYS</div>
-                  <img src="/fav.png" className="w-[30px] h-[30px] self-center animate-spin-slow mxb-3 " alt="" />
+                  <img src="/logo.png" className="h-8 mr-2" alt="AesthetX Ways" />
+                  <img src="/fav.png" className="w-[30px] h-[30px] self-center mb-[9px] animate-spin-slow mxb-3 " alt="" />
                 </div>
                 <p className="text-sm text-black/70 dark:text-white/70 leading-relaxed max-w-xs">
                   Helping you grow your social presence with style, reach, and authenticity.
