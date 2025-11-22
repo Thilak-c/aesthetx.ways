@@ -1,13 +1,10 @@
 import Image from "next/image";
 
 const categories = [
-  { name: "CROP TEES", img: "/categories/crop-tees.jpg" },
-  { name: "OVERSIZED TEES", img: "/categories/oversized-tees.jpg" },
-  { name: "BAGGY JEANS", img: "/categories/baggy-jeans.jpg" },
-  { name: "BAGGY LOWERS", img: "/categories/BAGGY LOWERS.webp" },
-  { name: "HOODIE", img: "/categories/hoodie.webp" },
-  { name: "FULL SLEEVES", img: "/categories/FULL SLEEVES.webp" },
-  { name: "TRACK PANTS", img: "/categories/TRACK PANTS.webp" },
+  { name: "Hoodies", img: "/banner/hoodies-1.PNG" },
+  { name: "TEES", img: "/banner/tees-1.PNG" },
+  { name: "Jerseys", img: "/banner/Jerseys-1.PNG" },
+  // { name: "Lowers", img: "/banner/Jerseys-1.PNG" },
 ];
 
 export default function CategoriesGrid() {
@@ -15,10 +12,10 @@ export default function CategoriesGrid() {
     <section className="w-full flex flex-col items-center py-10 bg-white">
       
       <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-gray-800">
+        <h2 className="text-base sm:text-lg md:text-xl font-light tracking-wide text-gray-800">
           CATEGORIES
         </h2>
-        <span className="block w-28 sm:w-36 h-[2px] mx-auto mt-1 opacity-50 rounded-full bg-gradient-to-r from-white via-black to-white"></span>
+        {/* <span className="block w-28 sm:w-36 h-[2px] mx-auto mt-1 opacity-50 rounded-full bg-gradient-to-r from-white via-black to-white"></span> */}
       </div>
       
       {/* Mobile: Full width stacked */}

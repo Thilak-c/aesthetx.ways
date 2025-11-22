@@ -7,10 +7,8 @@ import {
   FaInstagram, FaYoutube, FaFacebook, FaTwitter,
   FaRocket, FaSun, FaMoon, FaLightbulb, FaPaperPlane,
 } from 'react-icons/fa';
-{/*
-import Galaxy from './Galaxy/Galaxy';
 
- utils */ }
+import Galaxy from './Galaxy/Galaxy';
 
 
 import addSubscriber from '../utils/addSubscriber';
@@ -67,7 +65,7 @@ export default function Footer() {
     <>
       <div
         className="relative w-full py-6 px-4 flex justify-center bg-black/80 bg-cover bg-center"
-        style={{ backgroundImage: "url('/logo.png')" }}
+        // style={{ backgroundImage: "url('/logo.png')" }}
       >
         {/* Optional dark overlay for better contrast */}
         <div className="absolute inset-0 bg-black/70"></div>
@@ -97,7 +95,7 @@ export default function Footer() {
                   ? (
                     <img
                       src="/favicon.png"
-                      className="w-[15px] h-[15px] animate-spin-slow mx-auto"
+                      className="w-[13px] h-[13px] animate-spin-slow mx-auto"
                       alt="Loading"
                     />
                   )
@@ -137,7 +135,7 @@ export default function Footer() {
                 <div className='flex items-center self-center mb-4'>
 
                   <div className='font-extrabold text-[20px] mr-4 text-center'>AESTHETX WAYS</div>
-                  <img src="/fav.png" className="w-[45px] h-[45px] self-center animate-spin-slow mxb-3 " alt="" />
+                  <img src="/fav.png" className="w-[30px] h-[30px] self-center animate-spin-slow mxb-3 " alt="" />
                 </div>
                 <p className="text-sm text-black/70 dark:text-white/70 leading-relaxed max-w-xs">
                   Helping you grow your social presence with style, reach, and authenticity.
@@ -237,11 +235,11 @@ export default function Footer() {
         )}
       </AnimatePresence> */}
       {/* iiii */}
-    {/*
+    
     <div className="w-full h-[700px]">
         <Galaxy />
       </div>
-      */ } 
+    
 
       <style jsx global>{`
         @media (prefers-reduced-motion: reduce) {

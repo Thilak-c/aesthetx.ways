@@ -133,10 +133,10 @@ export default function Home() {
       className={`min-h-screen bg-gradient-to-br bg-[#fff] ${fontClasses.poppins}`}
     >
       <div className="xl:block hidden h-[80px] xl:h-[100px]"></div>
-      <div className="xl:hidden">
+      <div className="xl:hidden mb-14">
         <NavbarMobile />
       </div>
-      <div className="hidden  xl:block">
+      <div className=" hidden  xl:block">
         <Navbar />
       </div>
       <motion.section

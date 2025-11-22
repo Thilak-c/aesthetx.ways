@@ -98,7 +98,7 @@ export default function ProductSlider() {
   const currentImage = isMobile ? slides[current].mobileImg : slides[current].desktopImg;
 
   return (
-    <div className="relative w-full md:rounded-3xl rounded-2xl max-w-[1600px] mx-auto h-[70vh] overflow-hidden shadow-xl bg-black">
+    <div className="relative w-full md:rounded-3xl  max-w-[1600px] mx-auto h-[70vh] overflow-hidden shadow-xl bg-black">
       {/* Slide */}
       <div className="w-full h-full relative">
         <div className={`absolute inset-0 transition-opacity duration-300 ${fade ? 'opacity-100' : 'opacity-0'}`}>
