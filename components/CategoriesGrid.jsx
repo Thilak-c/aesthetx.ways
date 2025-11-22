@@ -1,9 +1,9 @@
 import Image from "next/image";
 
 const categories = [
-  { name: "Hoodies", img: "/banner/hoodies-1.PNG" },
+  { name: "FULL SLEAVES", img: "/banner/hoodies-1.PNG" },
   { name: "TEES", img: "/banner/tees-1.PNG" },
-  { name: "Jerseys", img: "/banner/Jerseys-1.PNG" },
+  { name: "JERSEYS", img: "/banner/Jerseys-1.PNG" },
   // { name: "Lowers", img: "/banner/Jerseys-1.PNG" },
 ];
 
@@ -19,7 +19,7 @@ export default function CategoriesGrid() {
       </div>
       
       {/* Mobile: Full width stacked */}
-      <div className="flex md:hidden flex-col gap-6 w-full px-">
+      <div className="flex md:hidden flex-col gap- w-full px-">
         {categories.map((cat) => (
           <div key={cat.name} className="relative justify-center flex overflow-hidden shadow bg-white group transition hover:shadow-lg cursor-pointer w-full">
             <Image

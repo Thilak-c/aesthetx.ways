@@ -22,7 +22,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
 
   // Fetch all products to extract categories and subcategories
   const products = useQuery(api.category.getAllProducts) ?? [];
-  
+
   // Fetch dynamic collections from database
   const collections = useQuery(api.collections.getAllCollections) ?? [];
 
@@ -35,11 +35,11 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
   // Extract unique categories and their subcategories
   const categoriesData = useMemo(() => {
     const categoryMap = {};
-    
+
     products.forEach((product) => {
       const category = product.category;
       const subcategory = product.subcategories;
-      
+
       if (category) {
         if (!categoryMap[category]) {
           categoryMap[category] = new Set();
@@ -60,11 +60,11 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
   // Extract all unique subcategories across all categories
   const allSubcategories = useMemo(() => {
     const subcategoryMap = {};
-    
+
     products.forEach((product) => {
       const category = product.category;
       const subcategory = product.subcategories;
-      
+
       if (subcategory && category) {
         if (!subcategoryMap[subcategory]) {
           subcategoryMap[subcategory] = category;
@@ -99,9 +99,8 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full ${width} text-[13px/] bg-white z-[9999] transition-transform duration-300 overflow-y-auto ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 h-full ${width} text-[13px/] bg-white z-[9999] transition-transform duration-300 overflow-y-auto ${open ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {/* Header with Logo and Close */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -116,7 +115,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
           </button>
         </div>
 
-      
+
 
         {/* Navigation Menu */}
         <nav className="py-2">
@@ -152,9 +151,8 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                   <span className="text-sm font-normal text-gray-900">Categories</span>
                   <ChevronRight
                     size={16}
-                    className={`text-gray-500 transition-transform ${
-                      expandedSection === 'categories' ? 'rotate-90' : ''
-                    }`}
+                    className={`text-gray-500 transition-transform ${expandedSection === 'categories' ? 'rotate-90' : ''
+                      }`}
                   />
                 </button>
                 {expandedSection === 'categories' && (
@@ -168,9 +166,8 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                           <span className="text-xs font-light text-gray-600">{category.name}</span>
                           <ChevronRight
                             size={14}
-                            className={`text-gray-500 transition-transform ${
-                              expandedCategory === category.name ? 'rotate-90' : ''
-                            }`}
+                            className={`text-gray-500 transition-transform ${expandedCategory === category.name ? 'rotate-90' : ''
+                              }`}
                           />
                         </button>
                         {expandedCategory === category.name && (
@@ -181,12 +178,12 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                                 <span className="text-[10px] font-light text-gray-600">All {category.name}</span>
                               </div>
                             </Link>
-                            
+
                             {/* Subcategories */}
                             {category.subcategories.map((subcategory) => (
-                              <Link 
+                              <Link
                                 key={subcategory}
-                                href={`/shop/subcategory?ct=${category.name.toLowerCase()}&sub=${encodeURIComponent(subcategory)}`} 
+                                href={`/shop/subcategory?ct=${category.name.toLowerCase()}&sub=${encodeURIComponent(subcategory)}`}
                                 onClick={onClose}
                               >
                                 <div className="px-12 py-1.5 hover:bg-gray-200 transition-colors cursor-pointer">
@@ -218,17 +215,16 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                   <span className="text-sm font-normal text-gray-900">Subcategories</span>
                   <ChevronRight
                     size={16}
-                    className={`text-gray-500 transition-transform ${
-                      expandedSection === 'subcategories' ? 'rotate-90' : ''
-                    }`}
+                    className={`text-gray-500 transition-transform ${expandedSection === 'subcategories' ? 'rotate-90' : ''
+                      }`}
                   />
                 </button>
                 {expandedSection === 'subcategories' && (
                   <div className="bg-gray-50 py-1">
                     {allSubcategories.map((subcategory) => (
-                      <Link 
+                      <Link
                         key={subcategory.name}
-                        href={`/shop/subcategory?ct=${subcategory.category.toLowerCase()}&sub=${encodeURIComponent(subcategory.name)}`} 
+                        href={`/shop/subcategory?ct=${subcategory.category.toLowerCase()}&sub=${encodeURIComponent(subcategory.name)}`}
                         onClick={onClose}
                       >
                         <div className="px-8 py-2 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -256,17 +252,16 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                   <span className="text-sm font-normal text-gray-900">Collections</span>
                   <ChevronRight
                     size={16}
-                    className={`text-gray-500 transition-transform ${
-                      expandedSection === 'collections' ? 'rotate-90' : ''
-                    }`}
+                    className={`text-gray-500 transition-transform ${expandedSection === 'collections' ? 'rotate-90' : ''
+                      }`}
                   />
                 </button>
                 {expandedSection === 'collections' && (
                   <div className="bg-gray-50 py-1">
                     {collections.map((collection) => (
-                      <Link 
+                      <Link
                         key={collection.slug}
-                        href={`/collections/${collection.slug}`} 
+                        href={`/collections/${collection.slug}`}
                         onClick={onClose}
                       >
                         <div className="px-8 py-2 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -293,9 +288,9 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
               Contact us
             </Link>
             <span>·</span>
-            <Link href="/return-policy" onClick={onClose} className="hover:text-gray-900">
+            {/* <Link href="/return-policy" onClick={onClose} className="hover:text-gray-900">
               Return Policy
-            </Link>
+            </Link> */}
             <span>·</span>
             <Link href="/track-order" onClick={onClose} className="hover:text-gray-900">
               Track Order

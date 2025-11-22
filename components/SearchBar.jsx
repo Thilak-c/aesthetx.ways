@@ -25,14 +25,14 @@ export default function SearchBar() {
   // Search products using Convex
   const searchResults = useQuery(
     api.products.searchProducts,
-    debouncedQuery.length >= 2 ? { query: debouncedQuery, limit: 8 } : "skip"
+    debouncedQuery.length >= 1 ? { query: debouncedQuery, limit: 8 } : "skip"
   );
 
   // Handle input change
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    setShowResults(value.length >= 2);
+    setShowResults(value.length >= 1);
   };
 
   // Handle search submit
@@ -78,7 +78,7 @@ export default function SearchBar() {
           onChange={handleInputChange}
           onFocus={() => {
             setIsOpen(true);
-            if (searchQuery.length >= 2) {
+            if (searchQuery.length >= 1) {
               setShowResults(true);
             }
           }}

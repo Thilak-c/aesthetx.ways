@@ -799,14 +799,19 @@ export const searchProducts = query({
       .filter(q => q.neq(q.field("isDeleted"), true))
       .collect();
 
-    const searchTerm = query.toLowerCase();
+    const searchTerm = query.toLowerCase().trim();
     
-    const filtered = products.filter(product => 
-      product.name.toLowerCase().includes(searchTerm) ||
-      product.itemId.toLowerCase().includes(searchTerm) ||
-      (product.category && product.category.toLowerCase().includes(searchTerm)) ||
-      (product.description && product.description.toLowerCase().includes(searchTerm))
-    );
+    const filtered = products.filter(product => {
+      const name = (product.name || "").toLowerCase();
+      const itemId = (product.itemId || "").toLowerCase();
+      const category = (product.category || "").toLowerCase();
+      const description = (product.description || "").toLowerCase();
+      
+      return name.includes(searchTerm) ||
+             itemId.includes(searchTerm) ||
+             category.includes(searchTerm) ||
+             description.includes(searchTerm);
+    });
 
     return filtered.slice(0, limit);
   },
@@ -2326,7 +2331,7 @@ export const searchProductsForNavbar = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { searchTerm, limit = 8 }) => {
-    if (!searchTerm || searchTerm.trim().length < 2) {
+    if (!searchTerm || searchTerm.trim().length < 1) {
       return [];
     }
 
