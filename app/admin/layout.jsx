@@ -39,7 +39,7 @@ export default function AdminLayout({ children }) {
     const timeout = setTimeout(() => {
       if (adminUser === undefined) {
         // If still loading after 10 seconds, redirect to login
-        router.push("/admin-login");
+        router.push("/login");
       }
     }, 10000);
 

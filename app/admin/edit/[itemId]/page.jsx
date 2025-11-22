@@ -155,18 +155,21 @@ export default function EditProductPage({ params }) {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+    console.log("Save button clicked", { form, dirty, loading });
     const errs = validate();
     if (Object.keys(errs).length) {
+      console.log("Validation errors:", errs);
       Object.values(errs).forEach((m) => toast.error(m));
       return;
     }
     setLoading(true);
     try {
+      console.log("Updating product...", form.itemId);
       await updateProduct({
         itemId: form.itemId,
         updates: {
           name: form.name?.trim(),
-          type: form.type?.trim(),
+          type: typeof form.type === 'string' ? form.type?.trim() : form.type,
           category: form.category?.trim(),
           price: Number(form.price),
           buys: Number(form.buys ?? 0),
@@ -176,11 +179,13 @@ export default function EditProductPage({ params }) {
           otherImages: form.otherImages,
         },
       });
+      console.log("Product updated successfully");
       setInitial(form);
       setLastSavedAt(new Date());
       toast.success("Saved ✔");
       router.push(`/admin/product/${form.itemId}`);
-    } catch {
+    } catch (error) {
+      console.error("Save failed:", error);
       toast.error("Save failed.");
     } finally {
       setLoading(false);

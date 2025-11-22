@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 const categories = [
-  { name: "FULL SLEAVES", img: "/banner/full-sleves_1.PNG" },
+  { name: "FULL SLEEVES", img: "/banner/full-sleves_1.PNG" },
   { name: "TEES", img: "/banner/tees_2.PNG" },
   { name: "JERSEYS", img: "/banner/Jerseys_1.PNG" },
   { name: "HOODIES", img: "/banner/hoodies_1.PNG" },
@@ -10,14 +10,14 @@ const categories = [
 export default function CategoriesGrid() {
   return (
     <section className="w-full flex flex-col items-center py-10 bg-white">
-      
+
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-base sm:text-lg md:text-xl font-light tracking-wide text-gray-800">
           CATEGORIES
         </h2>
         {/* <span className="block w-28 sm:w-36 h-[2px] mx-auto mt-1 opacity-50 rounded-full bg-gradient-to-r from-white via-black to-white"></span> */}
       </div>
-      
+
       {/* Mobile: Full width stacked */}
       <div className="flex md:hidden flex-col gap- w-full px-">
         {categories.map((cat) => (
