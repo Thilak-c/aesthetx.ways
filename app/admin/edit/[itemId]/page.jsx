@@ -489,8 +489,8 @@ export default function EditProductPage({ params }) {
                 Reset
               </button>
               <button
-                type="submit"
-                // onClick={submit}/
+                type="button"
+                onClick={handleSubmit}
                 disabled={loading || !dirty}
                 className="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-900 disabled:opacity-50"
               >

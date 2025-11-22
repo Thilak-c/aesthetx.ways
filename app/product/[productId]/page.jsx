@@ -157,7 +157,7 @@ export default function ProductPage() {
     api.products.getProductById,
     productId ? { productId } : "skip"
   );
-  
+
   // Update loading state based on product query
   useEffect(() => {
     if (product !== undefined) {
@@ -167,7 +167,7 @@ export default function ProductPage() {
       }
     }
   }, [product]);
-  
+
   const trendingProducts = useQuery(
     api.views.getMostViewedProducts,
     product && product.category ? {
@@ -175,7 +175,7 @@ export default function ProductPage() {
       category: product.category,
     } : "skip"
   );
-  
+
   const personalizedProducts = useQuery(
     api.products.getPersonalizedProducts,
     me?._id ? {
@@ -264,7 +264,7 @@ export default function ProductPage() {
 
   // Add trending products query
 
-const handleAddToCart = async () => {
+  const handleAddToCart = async () => {
     if (!isLoggedIn || !me) {
       // Redirect to login page with return URL
       const currentUrl = window.location.pathname + window.location.search;
@@ -709,7 +709,7 @@ const handleAddToCart = async () => {
       {/* Add Structured Data */}
       <ProductStructuredData product={product} reviews={reviews} reviewStats={reviewStats} />
       <BreadcrumbStructuredData items={breadcrumbItems} />
-      
+
       {/* Responsive Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
@@ -787,8 +787,8 @@ const handleAddToCart = async () => {
                 onClick={handleWishlistToggle}
                 disabled={isWishlisting || !isLoggedIn}
                 className={`p-2 lg:p-3 rounded-lg lg:rounded-xl transition-all duration-200 ${isWishlisted
-                    ? "text-red-500 hover:text-red-600 hover:bg-red-50"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "text-red-500 hover:text-red-600 hover:bg-red-50"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                   } ${isWishlisting ? "opacity-50 cursor-not-allowed" : ""}`}
                 title={
                   isLoggedIn
@@ -875,8 +875,8 @@ const handleAddToCart = async () => {
                       key={index}
                       onClick={() => setModalImageIndex(index)}
                       className={`w-12 h-12 lg:w-16 lg:h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${modalImageIndex === index
-                          ? "border-white"
-                          : "border-white/50"
+                        ? "border-white"
+                        : "border-white/50"
                         }`}
                     >
                       <img
@@ -1007,9 +1007,9 @@ const handleAddToCart = async () => {
                       e.stopPropagation();
                       changeImage("prev");
                     }}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-xl hover:bg-white hover:shadow-2xl transition-all duration-300 border border-gray-200 hidden lg:block"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-300 hidden lg:block"
                   >
-                    <ArrowLeft className="w-5 h-5 text-gray-700" />
+                    <ArrowLeft className="w-4 h-4 text-white drop-shadow-lg" />
                   </motion.button>
                 )}
 
@@ -1040,9 +1040,9 @@ const handleAddToCart = async () => {
                         e.stopPropagation();
                         changeImage("next");
                       }}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-xl hover:bg-white hover:shadow-2xl transition-all duration-300 border border-gray-200 hidden lg:block"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-300 hidden lg:block"
                     >
-                      <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
+                      <ArrowLeft className="w-4 h-4 text-white  drop-shadow-lg rotate-180" />
                     </motion.button>
                   )}
 
@@ -1066,9 +1066,9 @@ const handleAddToCart = async () => {
                       e.stopPropagation();
                       changeImage("prev");
                     }}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-2xl hover:bg-white hover:shadow-3xl transition-all duration-300 border border-gray-200 lg:hidden"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-300 lg:hidden"
                   >
-                    <ArrowLeft className="w-5 h-5 text-gray-700" />
+                    <ArrowLeft className="w-4 h-4 text-white drop-shadow-lg" />
                   </motion.button>
                 )}
 
@@ -1092,9 +1092,9 @@ const handleAddToCart = async () => {
                         e.stopPropagation();
                         changeImage("next");
                       }}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-2xl hover:bg-white hover:shadow-3xl transition-all duration-300 border border-gray-200 lg:hidden"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-300 lg:hidden"
                     >
-                      <ArrowLeft className="w-5 h-5 text-gray-700 rotate-180" />
+                      <ArrowLeft className="w-4 h-4 text-white drop-shadow-lg rotate-180" />
                     </motion.button>
                   )}
 
@@ -1165,8 +1165,8 @@ const handleAddToCart = async () => {
                           }, 500);
                         }}
                         className={`relative w-20 h-20 lg:w-24 lg:h-24 rounded-xl lg:rounded-2xl overflow-hidden border-2 transition-all duration-300 shadow-lg flex-shrink-0 ${selectedImage === index
-                            ? "border-gray-900 ring-4 ring-gray-900/20 shadow-2xl"
-                            : "border-gray-200 hover:border-gray-300 "
+                          ? "border-gray-900 ring-4 ring-gray-900/20 shadow-2xl"
+                          : "border-gray-200 hover:border-gray-300 "
                           }`}
                       >
                         <img
@@ -1218,8 +1218,8 @@ const handleAddToCart = async () => {
                         <Star
                           key={star}
                           className={`w-4 h-4 lg:w-5 lg:h-5 ${star <= (reviewStats?.averageRating || 0)
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-300"
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
                             }`}
                         />
                       ))}
@@ -1294,10 +1294,10 @@ const handleAddToCart = async () => {
                         onClick={() => !isOutOfStock && setSelectedSize(size)}
                         disabled={isOutOfStock}
                         className={`relative px-3 py-2 lg:px-4 lg:py-3 rounded-sm lg:rounded-2xl border-2 font-medium transition-all duration-200 text-xs lg:text-sm ${isSelected
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : isOutOfStock
-                              ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                          ? "border-gray-900 bg-gray-900 text-white"
+                          : isOutOfStock
+                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
                           }`}
                       >
                         <span>{size}</span>
@@ -1490,8 +1490,8 @@ const handleAddToCart = async () => {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex flex-col items-center space-y-1 py-4 px-2 border-b-2 font-light text-xs transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
-                        ? "border-gray-900 text-gray-900"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      ? "border-gray-900 text-gray-900"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                       }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -1514,116 +1514,17 @@ const handleAddToCart = async () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-8"
                 >
-                  <div className="text-center mb-12">
+                  <div className="text-center mb-8">
                     <h3 className="text-xl lg:text-2xl font-light text-gray-900 mb-4">
-                      Product Details
+                      Product Description
                     </h3>
-                    <p className="text-sm lg:text-base font-light text-gray-600 max-w-2xl mx-auto">
-                      Discover the exceptional quality and craftsmanship that
-                      makes this product truly special
-                    </p>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <div className="space-y-6">
-                      <h4 className="text-base lg:text-lg font-light text-gray-900 flex items-center space-x-3">
-                        <Check className="w-5 h-5 text-gray-500" />
-                        <span>Key Features</span>
-                      </h4>
-                      <ul className="space-y-4">
-                        {[
-                          "Premium quality materials sourced from the finest suppliers",
-                          "Expert craftsmanship with attention to every detail",
-                          "Comfortable fit designed for all-day wear",
-                          "Versatile design perfect for any occasion",
-                          "Sustainable and eco-friendly production methods",
-                        ].map((feature, index) => (
-                          <motion.li
-                            key={index}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="flex items-start space-x-3"
-                          >
-                            <Check className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-xs lg:text-sm font-light text-gray-700 leading-relaxed">
-                              {feature}
-                            </span>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="space-y-6">
-                      <h4 className="text-base lg:text-lg font-light text-gray-900 flex items-center space-x-3">
-                        <Shield className="w-5 h-5 text-gray-500" />
-                        <span>Care Instructions</span>
-                      </h4>
-                      <ul className="space-y-4">
-                        {[
-                          "Machine wash cold with similar colors",
-                          "Tumble dry low or air dry for best results",
-                          "Iron on low heat if needed",
-                          "Do not bleach or use harsh detergents",
-                          "Store in a cool, dry place",
-                        ].map((care, index) => (
-                          <motion.li
-                            key={index}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="flex items-start space-x-3"
-                          >
-                            <Check className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700 leading-relaxed">
-                              {care}
-                            </span>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-gray-50 to-white rounded-3xl p-8 border border-gray-100">
-                    <h4 className="text-base lg:text-lg font-light text-gray-900 mb-4 text-center">
-                      Why Choose This Product?
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {[
-                        {
-                          icon: Award,
-                          title: "Premium Quality",
-                          description: "Made with the finest materials",
-                        },
-                        {
-                          icon: Zap,
-                          title: "Fast Delivery",
-                          description: "Get it delivered in 2-3 days",
-                        },
-                        {
-                          icon: Shield,
-                          title: "Warranty",
-                          description: "1 year manufacturer warranty",
-                        },
-                      ].map((item, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="text-center space-y-3"
-                        >
-                          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto">
-                            <item.icon className="w-8 h-8 text-gray-700" />
-                          </div>
-                          <h5 className="text-xs lg:text-sm font-light text-gray-900">
-                            {item.title}
-                          </h5>
-                          <p className="text-xs font-light text-gray-600">
-                            {item.description}
-                          </p>
-                        </motion.div>
-                      ))}
+                  <div className="max-w-4xl mx-auto">
+                    <div className="bg-white rounded-2xl p-6 lg:p-8 border border-gray-100">
+                      <p className="text-sm lg:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                        {product?.description || "No description available for this product."}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
@@ -1734,10 +1635,10 @@ const handleAddToCart = async () => {
                                   <div className="flex items-center justify-center space-x-2 mb-2">
                                     <div
                                       className={`w-4 h-4 rounded-full ${sizeStock > 10
+                                        ? "bg-gray-500"
+                                        : sizeStock > 0
                                           ? "bg-gray-500"
-                                          : sizeStock > 0
-                                            ? "bg-gray-500"
-                                            : "bg-red-500"
+                                          : "bg-red-500"
                                         }`}
                                     ></div>
                                     <h5 className="font-extrabold text-lg text-gray-900">
@@ -1746,10 +1647,10 @@ const handleAddToCart = async () => {
                                   </div>
                                   <p
                                     className={`text-sm font-medium ${sizeStock > 10
+                                      ? "text-gray-600"
+                                      : sizeStock > 0
                                         ? "text-gray-600"
-                                        : sizeStock > 0
-                                          ? "text-gray-600"
-                                          : "text-red-600"
+                                        : "text-red-600"
                                       }`}
                                   >
                                     {sizeStock === 0
@@ -2226,28 +2127,28 @@ const handleAddToCart = async () => {
                 ))
               ) : (
                 trendingProducts.map((trendingItem, index) => (
-                <motion.div
-                  key={trendingItem.itemId}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex-shrink-0 relative"
-                  onClick={() => handleClickProduct(trendingItem.itemId)}
-                >
-                  {/* Trending Badge */}
+                  <motion.div
+                    key={trendingItem.itemId}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex-shrink-0 relative"
+                    onClick={() => handleClickProduct(trendingItem.itemId)}
+                  >
+                    {/* Trending Badge */}
 
-                  {/* View Count Badge */}
+                    {/* View Count Badge */}
 
-                  <ProductCard
-                    img={trendingItem.mainImage}
-                    name={trendingItem.name}
-                    category={trendingItem.category}
-                    price={trendingItem.price}
-                    productId={trendingItem.itemId}
-                    className=" transition-shadow duration-300"
-                  />
-                </motion.div>
-              ))
+                    <ProductCard
+                      img={trendingItem.mainImage}
+                      name={trendingItem.name}
+                      category={trendingItem.category}
+                      price={trendingItem.price}
+                      productId={trendingItem.itemId}
+                      className=" transition-shadow duration-300"
+                    />
+                  </motion.div>
+                ))
               )}
             </div>
 
@@ -2260,23 +2161,23 @@ const handleAddToCart = async () => {
                 ))
               ) : (
                 trendingProducts.map((trendingItem, index) => (
-                <motion.div
-                  key={`mobile-${trendingItem.itemId}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => handleClickProduct(trendingItem.itemId)}
-                >
-                  <ProductCard
-                    img={trendingItem.mainImage}
-                    name={trendingItem.name}
-                    category={trendingItem.category}
-                    price={trendingItem.price}
-                    productId={trendingItem.itemId}
-                    className="transition-shadow duration-300"
-                  />
-                </motion.div>
-              ))
+                  <motion.div
+                    key={`mobile-${trendingItem.itemId}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => handleClickProduct(trendingItem.itemId)}
+                  >
+                    <ProductCard
+                      img={trendingItem.mainImage}
+                      name={trendingItem.name}
+                      category={trendingItem.category}
+                      price={trendingItem.price}
+                      productId={trendingItem.itemId}
+                      className="transition-shadow duration-300"
+                    />
+                  </motion.div>
+                ))
               )}
             </div>
           </div>
@@ -2372,24 +2273,24 @@ const handleAddToCart = async () => {
           <div className="md:max-w-[74%] mx-auto px-4 lg:px-8">
             <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
               {personalizedProducts.map((personalizedProduct) => (
-              <motion.div
-                key={personalizedProduct._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="flex-shrink-0 relative"
-                onClick={() => handleClickProduct(personalizedProduct.itemId)}
-              >
-                <ProductCard
-                  img={personalizedProduct.mainImage}
-                  name={personalizedProduct.name}
-                  category={personalizedProduct.category}
-                  price={personalizedProduct.price}
-                  productId={personalizedProduct.itemId}
-                  className=" transition-shadow duration-300"
-                />
-              </motion.div>
-            ))}
+                <motion.div
+                  key={personalizedProduct._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex-shrink-0 relative"
+                  onClick={() => handleClickProduct(personalizedProduct.itemId)}
+                >
+                  <ProductCard
+                    img={personalizedProduct.mainImage}
+                    name={personalizedProduct.name}
+                    category={personalizedProduct.category}
+                    price={personalizedProduct.price}
+                    productId={personalizedProduct.itemId}
+                    className=" transition-shadow duration-300"
+                  />
+                </motion.div>
+              ))}
             </div>
 
             {/* Mobile: 2 column grid */}

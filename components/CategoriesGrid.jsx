@@ -1,10 +1,10 @@
 import Image from "next/image";
 
 const categories = [
-  { name: "FULL SLEAVES", img: "/banner/hoodies-1.PNG" },
-  { name: "TEES", img: "/banner/tees-1.PNG" },
-  { name: "JERSEYS", img: "/banner/Jerseys-1.PNG" },
-  // { name: "Lowers", img: "/banner/Jerseys-1.PNG" },
+  { name: "FULL SLEAVES", img: "/banner/hoodies_1.PNG" },
+  { name: "TEES", img: "/banner/tees_2.PNG" },
+  { name: "JERSEYS", img: "/banner/Jerseys_1.PNG" },
+  { name: "HOODIES", img: "/banner/hoodies_1.PNG" },
 ];
 
 export default function CategoriesGrid() {
