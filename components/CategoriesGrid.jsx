@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 const categories = [
-  { name: "FULL SLEAVES", img: "/banner/hoodies_1.PNG" },
+  { name: "FULL SLEAVES", img: "/banner/full-sleves_1.PNG" },
   { name: "TEES", img: "/banner/tees_2.PNG" },
   { name: "JERSEYS", img: "/banner/Jerseys_1.PNG" },
   { name: "HOODIES", img: "/banner/hoodies_1.PNG" },
