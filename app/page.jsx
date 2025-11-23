@@ -377,7 +377,7 @@ export default function Home() {
             >
               <motion.h2
                 variants={itemVariants}
-                className="text-base lg:text-lg font-light text-gray-900 mb-4 flex items-center justify-center space-x-3"
+                className="text-base lg:text-lg font-medium text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
                 {/* <Zap className="w-8 h-8 text-gray-500" /> */}
                 <span>Trending in Men</span>
@@ -467,7 +467,7 @@ export default function Home() {
             >
               <motion.h2
                 variants={itemVariants}
-                className="text-base lg:text-lg font-light text-gray-900 mb-4 flex items-center justify-center space-x-3"
+                className="text-base lg:text-lg font-medium text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
                 {/* <History className="w-8 h-8 text-gray-500" /> */}
                 <span>Recently Viewed</span>
@@ -498,7 +498,7 @@ export default function Home() {
                   ))}
 
                 {/* Real products */}
-                {recentlyViewed?.map((item, index) => (
+                {recentlyViewed?.filter(item => item.productImage)?.map((item, index) => (
                   <motion.div
                     key={item._id}
                     variants={itemVariants}
@@ -573,7 +573,7 @@ export default function Home() {
             >
               <motion.h2
                 variants={itemVariants}
-                className="text-base lg:text-lg font-light text-gray-900 mb-4 flex items-center justify-center space-x-3"
+                className="text-base lg:text-lg font-medium text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
                 {/* <Heart className="w-8 h-8 text-gray-500" />/ */}
                 <span>For {me.name}</span>

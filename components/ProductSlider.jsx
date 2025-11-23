@@ -15,7 +15,7 @@ const slides = [
   },
   {
     desktopImg: "/poster-img-hero-home/IMG_6725.PNG",
-    mobileImg: "/poster-img-hero-home/IMG_6725.PNG",
+    mobileImg: "/poster-img-hero-home/IMG_7326.JPG",
     title: "BEN 10 ALIEN FORCE",
     subtitle: "FIRST TIME EVER IN INDIA",
     cta: "TAP TO UNLOCK",

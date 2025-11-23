@@ -67,7 +67,7 @@ export default function NewArrivalsSlider() {
     <section className="w-full flex flex-col items-center pt-1">
       {/* Heading */}
       <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-base sm:text-lg md:text-xl font-light tracking-wide text-gray-800">
+        <h2 className="text-base sm:text-lg md:text-xl font-medium tracking-wide text-gray-800">
           NEW ARRIVALS
         </h2>
       </div>

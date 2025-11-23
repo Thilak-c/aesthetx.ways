@@ -163,7 +163,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                           onClick={() => toggleCategory(category.name)}
                           className="w-full px-8 py-2 flex items-center justify-between hover:bg-gray-100 transition-colors"
                         >
-                          <span className="text-xs font-light text-gray-600">{category.name}</span>
+                          <span className="text-sm font-normal text-gray-600">{category.name}</span>
                           <ChevronRight
                             size={14}
                             className={`text-gray-500 transition-transform ${expandedCategory === category.name ? 'rotate-90' : ''
@@ -175,7 +175,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                             {/* All items link */}
                             <Link href={`/shop?ct=${category.name.toLowerCase()}`} onClick={onClose}>
                               <div className="px-12 py-1.5 hover:bg-gray-200 transition-colors cursor-pointer">
-                                <span className="text-[10px] font-light text-gray-600">All {category.name}</span>
+                                <span className="text-[11.5px] font-normal text-gray-600">All {category.name}</span>
                               </div>
                             </Link>
 
@@ -187,7 +187,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                                 onClick={onClose}
                               >
                                 <div className="px-12 py-1.5 hover:bg-gray-200 transition-colors cursor-pointer">
-                                  <span className="text-[10px] font-light text-gray-600">{subcategory}</span>
+                                  <span className="text-[11.5px]  font-normal text-gray-600">{subcategory}</span>
                                 </div>
                               </Link>
                             ))}
@@ -228,7 +228,7 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
                         onClick={onClose}
                       >
                         <div className="px-8 py-2 hover:bg-gray-100 transition-colors cursor-pointer">
-                          <span className="text-xs font-light text-gray-600">{subcategory.name}</span>
+                          <span className="text-sm font-normal text-gray-600">{subcategory.name}</span>
                         </div>
                       </Link>
                     ))}
@@ -283,11 +283,11 @@ export default function SidebarDrawer({ open, onClose, width = "w-4/5 max-w-sm" 
         {/* Bottom Section - Fixed at bottom */}
         <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200">
           {/* Small Links Row */}
-          <div className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-[8px] text-gray-500 border-b border-gray-100">
+          <div className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-[10px] text-gray-500 border-b border-gray-100">
             <Link href="/contact" onClick={onClose} className="hover:text-gray-900">
               Contact us
             </Link>
-            <span>·</span>
+            {/* <span>·</span> */}
             {/* <Link href="/return-policy" onClick={onClose} className="hover:text-gray-900">
               Return Policy
             </Link> */}
