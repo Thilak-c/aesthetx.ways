@@ -2,14 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 const categories = [
-  { name: "FULL SLEEVES", img: "/banner/full-sleves_1.PNG", link: "/shop/subcategory?sub=full-sleeves" },
+  { name: "FULL SLEVES", img: "/banner/full-sleves_1.PNG", link: "/shop/subcategory?sub=full-sleves" },
   { name: "TEES", img: "/banner/tees_2.PNG", link: "/shop/subcategory?sub=tshirt" },
   { name: "JERSEYS", img: "/banner/Jerseys_1.PNG", link: "/shop/subcategory?sub=jersey" },
   { name: "HOODIES", img: "/banner/hoodies_1.PNG", link: "/shop/subcategory?sub=hoodie" },
-  { name: "SWEATSHIRTS", img: "/banner/sweatshirt.PNG", link: "/shop/subcategory?sub=sweatshirt" },
-  { name: "PANTS", img: "/banner/pants.PNG", link: "/shop/subcategory?sub=pants" },
-  { name: "SNEAKERS", img: "/banner/sneakers.PNG", link: "/shop/subcategory?sub=sneakers" },
-  { name: "ACCESSORIES", img: "/banner/accessories.PNG", link: "/shop?ct=accessories" },
 ];
 
 export default function CategoriesGrid() {
