@@ -79,7 +79,7 @@ export const getProductViewStats = query({
       const totalViews = views.length;
       const uniqueUsers = new Set(views.map(v => v.userId).filter(Boolean)).size;
       const uniqueSessions = new Set(views.map(v => v.sessionId).filter(Boolean)).size;
-      
+
       // Get views by view type
       const viewTypes = views.reduce((acc, view) => {
         const type = view.viewType || "unknown";
@@ -97,7 +97,7 @@ export const getProductViewStats = query({
       // Get recent views (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const recentViews = views.filter(view => 
+      const recentViews = views.filter(view =>
         new Date(view.viewedAt) > sevenDaysAgo
       ).length;
 
@@ -122,7 +122,7 @@ export const getProductViewStats = query({
   },
 });
 
-// Get most viewed products with better debugging
+// Get most viewed products - SIMPLIFIED VERSION
 export const getMostViewedProducts = query({
   args: {
     limit: v.optional(v.number()),
@@ -130,116 +130,33 @@ export const getMostViewedProducts = query({
   },
   handler: async (ctx, args) => {
     try {
-      // First try to get products based on views
-      let viewsQuery = ctx.db
-        .query("views")
-        .filter((q) => q.eq(q.field("isDeleted"), false));
+      // Just get products from the category - skip views for now
+      let productsQuery = ctx.db
+        .query("products")
+        .filter((q) => q.neq(q.field("isDeleted"), true))
+        .filter((q) => q.neq(q.field("isHidden"), true));
 
       if (args.category) {
-        viewsQuery = viewsQuery.filter((q) => q.eq(q.field("category"), args.category));
+        productsQuery = productsQuery.filter((q) => q.eq(q.field("category"), args.category));
       }
 
-      const views = await viewsQuery.collect();
+      const products = await productsQuery
+        .order("desc")
+        .take(args.limit || 8);
 
-      if (views.length > 0) {
-        // Group by productId and count views
-        const productViewCounts = views.reduce((acc, view) => {
-          const productId = view.productId;
-          if (!acc[productId]) {
-            acc[productId] = {
-              productId,
-              viewCount: 0,
-              uniqueUsers: new Set(),
-              uniqueSessions: new Set(),
-            };
-          }
-          acc[productId].viewCount++;
-          if (view.userId) acc[productId].uniqueUsers.add(view.userId);
-          if (view.sessionId) acc[productId].uniqueSessions.add(view.sessionId);
-          return acc;
-        }, {});
-
-        // Convert to array and sort by view count
-        const sortedProducts = Object.values(productViewCounts)
-          .map(item => ({
-            ...item,
-            uniqueUsers: item.uniqueUsers.size,
-            uniqueSessions: item.uniqueSessions.size,
-          }))
-          .sort((a, b) => b.viewCount - a.viewCount)
-          .slice(0, args.limit || 6);
-
-        // Fetch product details for each trending product
-        const productsWithDetails = [];
-        
-        for (const item of sortedProducts) {
-          try {
-            // Try to find by itemId first
-            let product = await ctx.db
-              .query("products")
-              .filter((q) => q.eq(q.field("itemId"), item.productId))
-              .filter((q) => q.neq(q.field("isDeleted"), true))
-              .first();
-
-            if (!product) {
-              // Try to find by _id as fallback
-              product = await ctx.db
-                .query("products")
-                .filter((q) => q.eq(q.field("_id"), item.productId))
-                .filter((q) => q.neq(q.field("isDeleted"), true))
-                .first();
-
-              // console.log(`Found product by _id for ${item.productId}:`, product ? 'Yes' : 'No');
-            }
-
-            if (product) {
-              productsWithDetails.push({
-                itemId: product.itemId,
-                name: product.name,
-                mainImage: product.mainImage,
-                price: product.price,
-                category: product.category,
-                viewCount: item.viewCount,
-                uniqueUsers: item.uniqueUsers,
-                uniqueSessions: item.uniqueSessions,
-              });
-            }
-          } catch (error) {
-            // Error fetching product details
-          }
-        }
-
-        return productsWithDetails;
-      } else {
-        // Fallback: Get regular products from the same category
-        let productsQuery = ctx.db
-          .query("products")
-          .filter((q) => q.neq(q.field("isDeleted"), true));
-
-        if (args.category) {
-          productsQuery = productsQuery.filter((q) => q.eq(q.field("category"), args.category));
-        }
-
-        const products = await productsQuery
-          .order("desc")
-          .take(args.limit || 6);
-
-        // Add mock view counts for display
-        const productsWithMockCounts = products.map((product, index) => ({
-          itemId: product.itemId,
-          name: product.name,
-          mainImage: product.mainImage,
-          price: product.price,
-          category: product.category,
-          viewCount: Math.floor(Math.random() * 50) + 5, // Mock view count
-          uniqueUsers: Math.floor(Math.random() * 15) + 3,
-          uniqueSessions: Math.floor(Math.random() * 25) + 5,
-        }));
-
-        // console.log('Returning fallback products:', productsWithMockCounts.length);
-        return productsWithMockCounts;
-      }
+      // Return products with simple structure
+      return products.map((product) => ({
+        itemId: product.itemId,
+        name: product.name,
+        mainImage: product.mainImage,
+        price: product.price,
+        category: product.category,
+        viewCount: product.buys || 0, // Use buys as proxy for popularity
+        uniqueUsers: 0,
+        uniqueSessions: 0,
+      }));
     } catch (error) {
+      console.error("getMostViewedProducts error:", error);
       return [];
     }
   },
@@ -273,7 +190,7 @@ export const getGlobalTrendingProducts = query({
         acc[productId].viewCount++;
         if (view.userId) acc[productId].uniqueUsers.add(view.userId);
         if (view.sessionId) acc[productId].uniqueSessions.add(view.sessionId);
-        
+
         return acc;
       }, {});
 
@@ -384,12 +301,12 @@ export const getViewAnalytics = query({
       // Filter by date range if provided
       let filteredViews = views;
       if (args.startDate) {
-        filteredViews = filteredViews.filter(view => 
+        filteredViews = filteredViews.filter(view =>
           new Date(view.viewedAt) >= new Date(args.startDate)
         );
       }
       if (args.endDate) {
-        filteredViews = filteredViews.filter(view => 
+        filteredViews = filteredViews.filter(view =>
           new Date(view.viewedAt) <= new Date(args.endDate)
         );
       }
@@ -404,7 +321,7 @@ export const getViewAnalytics = query({
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const dailyViews = {};
-      
+
       for (let i = 0; i < 30; i++) {
         const date = new Date(thirtyDaysAgo);
         date.setDate(date.getDate() + i);
@@ -513,5 +430,4 @@ export const getProductViewCount = query({
       return { totalViews: 0, uniqueUsers: 0 };
     }
   },
-}); 
- 
+});

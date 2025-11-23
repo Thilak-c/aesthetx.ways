@@ -45,6 +45,8 @@ export default function Home() {
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [queryTimeout, setQueryTimeout] = useState(false);
+
   // In your page component, e.g., HomePage.jsx
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -54,6 +56,7 @@ export default function Home() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
+
   useEffect(() => {
     const scrollY = sessionStorage.getItem("homeScroll");
     if (scrollY) {
@@ -61,10 +64,12 @@ export default function Home() {
       sessionStorage.removeItem("homeScroll"); // optional: clear after restoring
     }
   }, []);
+
   const handleClickProduct = (productId) => {
     sessionStorage.setItem("homeScroll", window.scrollY);
     router.push(`/product/${productId}`);
   };
+
   // Get token from cookies
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -102,6 +107,33 @@ export default function Home() {
 
   // Get products for "You Might Also Like" section
   const allProducts = useQuery(api.products.getAllProducts, { limit: 10 });
+
+  // Debug logging
+  useEffect(() => {
+    if (allProducts !== undefined) {
+      console.log("allProducts loaded:", allProducts?.length, "items");
+    }
+  }, [allProducts]);
+
+  useEffect(() => {
+    if (trendingProducts !== undefined) {
+      console.log("trendingProducts loaded:", trendingProducts?.length, "items");
+    }
+  }, [trendingProducts]);
+
+  // Add timeout for queries that take too long
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (allProducts === undefined || trendingProducts === undefined) {
+        setQueryTimeout(true);
+        console.warn("Query timeout: Some products are taking too long to load");
+        console.warn("allProducts:", allProducts === undefined ? "undefined" : "loaded");
+        console.warn("trendingProducts:", trendingProducts === undefined ? "undefined" : "loaded");
+      }
+    }, 10000); // 10 second timeout
+
+    return () => clearTimeout(timer);
+  }, [allProducts, trendingProducts]);
 
   // Animation variants for consistency
   const containerVariants = {
@@ -150,26 +182,26 @@ export default function Home() {
       </motion.section>
       <div className="p-2">
 
-      <motion.section
-        variants={sectionVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
-        className=""
-      >
-        <TopPicksSlider />
-      </motion.section>
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className=""
+        >
+          <TopPicksSlider />
+        </motion.section>
 
-      <motion.section
-        variants={sectionVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
-        className=""
-      >
-        <NewArrivalsSlider />
-      </motion.section>
-            </div>
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className=""
+        >
+          <NewArrivalsSlider />
+        </motion.section>
+      </div>
 
       <motion.section
         variants={sectionVariants}
@@ -181,138 +213,121 @@ export default function Home() {
         <CategoriesGrid />
       </motion.section>
 
-      {allProducts && allProducts.length > 0 ? (
-        <motion.section
-          variants={sectionVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className=""
-        >
-          <div className="md:max-w-[74%] mx-auto px-2 lg:px-8">
-            {/* Heading */}
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="text-center mb-12"
+      <motion.section
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        className=""
+      >
+        <div className="md:max-w-[74%] mx-auto px-2 lg:px-8">
+          {/* Heading */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <motion.h2
+              variants={itemVariants}
+              className="text-base lg:text-lg font-light text-gray-900 mb-4"
             >
-              <motion.h2
-                variants={itemVariants}
-                className="text-base lg:text-lg font-light text-gray-900 mb-4"
-              >
-                You Might Also Like
-              </motion.h2>
-              <motion.p
-                variants={itemVariants}
-                className="text-xs font-light text-gray-600 max-w-2xl mx-auto"
-              >
-                Discover more products that match your style and preferences
-              </motion.p>
-            </motion.div>
-
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="relative"
+              You Might Also Like
+            </motion.h2>
+            <motion.p
+              variants={itemVariants}
+              className="text-xs font-light text-gray-600 max-w-2xl mx-auto"
             >
-              {/* Desktop: Horizontal scroll */}
-              <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
-                {/* Skeleton loading if allProducts is undefined */}
-                {!allProducts &&
-                  Array.from({ length: 8 }).map((_, idx) => (
-                    <div key={`also-like-skeleton-${idx}`}>
-                      <ProductCard loading />
-                    </div>
-                  ))}
+              Discover more products that match your style and preferences
+            </motion.p>
+          </motion.div>
 
-                {/* Real products */}
-                {allProducts?.slice(0, 8).map((product, index) => (
-                  <motion.div
-                    key={product._id}
-                    variants={itemVariants}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.4 }}
-                    onClick={() => handleClickProduct(product.itemId)}
-                  >
-                    <ProductCard
-                      img={product.mainImage}
-                      name={product.name}
-                      category={product.category}
-                      price={product.price}
-                      productId={product.itemId}
-                      className="transition-all duration-300"
-                    />
-                  </motion.div>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="relative"
+          >
+            {/* Desktop: Horizontal scroll */}
+            <div className="hidden md:flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
+              {/* Skeleton loading if allProducts is undefined */}
+              {!allProducts &&
+                Array.from({ length: 8 }).map((_, idx) => (
+                  <div key={`also-like-skeleton-${idx}`}>
+                    <ProductCard loading />
+                  </div>
                 ))}
-              </div>
 
-              {/* Mobile: 2 column grid */}
-              <div className="md:hidden grid grid-cols-2 gap-4">
-                {/* Skeleton loading */}
-                {!allProducts &&
-                  Array.from({ length: 6 }).map((_, idx) => (
-                    <ProductCard key={`also-like-skeleton-mobile-${idx}`} loading />
-                  ))}
-
-                {/* Real products */}
-                {allProducts?.slice(0, 8).map((product, index) => (
-                  <motion.div
-                    key={product._id}
-                    variants={itemVariants}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.4 }}
-                    onClick={() => handleClickProduct(product.itemId)}
-                  >
-                    <ProductCard
-                      img={product.mainImage}
-                      name={product.name}
-                      category={product.category}
-                      price={product.price}
-                      productId={product.itemId}
-                      className="transition-all duration-300"
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </motion.section>
-      ) : (
-        // Optional: fallback skeleton if allProducts is undefined
-        <motion.section
-          variants={sectionVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className=""
-        >
-          <div className="md:max-w-[74%] mx-auto px-4 lg:px-8">
-            {/* Heading Skeleton */}
-            <div className="text-center mb-12">
-              <div className="h-6 w-48 bg-gray-200 mx-auto rounded mb-2 animate-pulse"></div>
-              <div className="h-4 w-72 bg-gray-200 mx-auto rounded animate-pulse"></div>
-            </div>
-
-            {/* Horizontal Skeleton Cards */}
-            <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide">
-              {Array.from({ length: 8 }).map((_, idx) => (
-                <div
-                  key={`also-like-skeleton-${idx}`}
-                  className=""
-                >
-                  <ProductCard loading />
+              {/* Empty state */}
+              {allProducts && allProducts.length === 0 && (
+                <div className="flex w-full justify-center items-center py-12">
+                  <p className="text-gray-500">No products available at the moment.</p>
                 </div>
+              )}
+
+              {/* Real products */}
+              {allProducts && allProducts.length > 0 && allProducts.slice(0, 8).map((product, index) => (
+                <motion.div
+                  key={product._id}
+                  variants={itemVariants}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.4 }}
+                  onClick={() => handleClickProduct(product.itemId)}
+                >
+                  <ProductCard
+                    img={product.mainImage}
+                    name={product.name}
+                    category={product.category}
+                    price={product.price}
+                    productId={product.itemId}
+                    className="transition-all duration-300"
+                  />
+                </motion.div>
               ))}
             </div>
-          </div>
-        </motion.section>
-      )}
+
+            {/* Mobile: 2 column grid */}
+            <div className="md:hidden grid grid-cols-2 gap-4">
+              {/* Skeleton loading */}
+              {!allProducts &&
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <ProductCard key={`also-like-skeleton-mobile-${idx}`} loading />
+                ))}
+
+              {/* Empty state */}
+              {allProducts && allProducts.length === 0 && (
+                <div className="col-span-2 flex w-full justify-center items-center py-12">
+                  <p className="text-gray-500">No products available at the moment.</p>
+                </div>
+              )}
+
+              {/* Real products */}
+              {allProducts && allProducts.length > 0 && allProducts.slice(0, 8).map((product, index) => (
+                <motion.div
+                  key={product._id}
+                  variants={itemVariants}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.4 }}
+                  onClick={() => handleClickProduct(product.itemId)}
+                >
+                  <ProductCard
+                    img={product.mainImage}
+                    name={product.name}
+                    category={product.category}
+                    price={product.price}
+                    productId={product.itemId}
+                    className="transition-all duration-300"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* Trending in Men Section */}
       {!trendingProducts || trendingProducts.length === 0 ? (
