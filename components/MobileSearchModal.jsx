@@ -101,44 +101,10 @@ export default function MobileSearchModal({ isOpen, onClose }) {
         <div className="flex-1 overflow-y-auto">
           {!isSearching ? (
             // Initial state - show suggestions or recent searches
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Search Products</h3>
-              <div className="space-y-2">
-                <div className="text-gray-500 text-sm">
-                  Start typing to search for products...
-                </div>
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  <button 
-                    onClick={() => setSearchTerm("shirt")}
-                    className="p-3 bg-gray-100 rounded-lg text-left hover:bg-gray-200 transition-colors"
-                  >
-                    <div className="font-medium text-gray-800">Shirts</div>
-                    <div className="text-sm text-gray-500">Men's & Women's</div>
-                  </button>
-                  <button 
-                    onClick={() => setSearchTerm("pants")}
-                    className="p-3 bg-gray-100 rounded-lg text-left hover:bg-gray-200 transition-colors"
-                  >
-                    <div className="font-medium text-gray-800">Pants</div>
-                    <div className="text-sm text-gray-500">Casual & Formal</div>
-                  </button>
-                  <button 
-                    onClick={() => setSearchTerm("shoes")}
-                    className="p-3 bg-gray-100 rounded-lg text-left hover:bg-gray-200 transition-colors"
-                  >
-                    <div className="font-medium text-gray-800">Shoes</div>
-                    <div className="text-sm text-gray-500">Sneakers & Boots</div>
-                  </button>
-                  <button 
-                    onClick={() => setSearchTerm("jacket")}
-                    className="p-3 bg-gray-100 rounded-lg text-left hover:bg-gray-200 transition-colors"
-                  >
-                    <div className="font-medium text-gray-800">Jackets</div>
-                    <div className="text-sm text-gray-500">Outerwear</div>
-                  </button>
-                </div>
-              </div>
-            </div>
+            // <div className="p-4">
+              {/* <h3 className="text-lg font-semibold text-gray-800 mb-4">Search Products</h3> */}
+      
+            // </div> 
           ) : searchResults === undefined ? (
             // Loading state
             <div className="p-4 text-center">

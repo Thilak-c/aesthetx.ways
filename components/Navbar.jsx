@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import SidebarDrawer from "./SidebarDrawer";
 import UserNavigation from "@/components/UserNavigation";
 import SearchDropdown from "./SearchDropdown";
+import MobileSearchModal from "./MobileSearchModal";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useQuery } from "convex/react";
@@ -188,14 +189,6 @@ export function NavbarMobile() {
   const param = searchParams.get("ct")?.toLowerCase();
   const activeIdx = navKeys.indexOf(param) >= null ? navKeys.indexOf(param) : null;
 
-  // const [activeIdx, setActiveIdx] = useState(defaultIdx);
-  // Update URL when active tab changes
-  // useEffect(() => {
-  //   const params = new URLSearchParams(searchParams.toString());
-  //   params.set("ct", navKeys[activeIdx]);
-  //   router.replace(`${window.location.pathname}?${params.toString()}`);
-  // }, [activeIdx, router, searchParams]);
-
   // Bottom tab sizing
   useEffect(() => {
     const calc = () => {
@@ -210,9 +203,6 @@ export function NavbarMobile() {
   // Your other states
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
-  const inputRef = useRef(null);
 
   // token & user
   const [token, setToken] = useState(null);
@@ -226,42 +216,6 @@ export function NavbarMobile() {
 
   const me = useQuery(api.users.meByToken, token ? { token } : "skip");
   useEffect(() => setIsLoggedIn(!!me), [me]);
-
-  // Search handlers
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setSearchDropdownOpen(value.trim().length >= 2);
-  };
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    const q = searchTerm.trim();
-    if (q) window.location.href = `/search?q=${encodeURIComponent(q)}`;
-  };
-
-  // Lock scroll on search overlay
-  useEffect(() => {
-    if (showSearch) {
-      document.body.style.overflow = "hidden";
-      const t = setTimeout(() => {
-        inputRef.current?.focus();
-        if (searchTerm.trim().length >= 2) setSearchDropdownOpen(true);
-      }, 60);
-      return () => {
-        clearTimeout(t);
-        document.body.style.overflow = "";
-      };
-    }
-    return () => {
-      document.body.style.overflow = "";
-      setSearchDropdownOpen(false);
-    };
-  }, [showSearch]);
-
-  // Adjust search dropdown as typing
-  useEffect(() => {
-    setSearchDropdownOpen(searchTerm.trim().length >= 2);
-  }, [searchTerm]);
 
   const cartSummary = useQuery(
     api.cart.getCartSummary,
@@ -312,65 +266,11 @@ export function NavbarMobile() {
         </div>
       </nav>
 
-      {/* Full-screen search overlay */}
-      <AnimatePresence>
-        {showSearch && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-white md:hidden"
-          >
-            <div className="flex flex-col h-full">
-              {/* Search Header */}
-              <div className="flex items-center gap-3 px-4 py-4 border-b border-black/10">
-                <button
-                  onClick={() => {
-                    setShowSearch(false);
-                    setSearchTerm("");
-                    setSearchDropdownOpen(false);
-                  }}
-                  className="p-2 hover:bg-black/5 rounded-full transition-colors"
-                >
-                  <ArrowLeftIcon size={20} strokeWidth={1.5} />
-                </button>
-
-                <form onSubmit={handleSearchSubmit} className="flex-1">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    placeholder="What are you looking for?"
-                    className="w-full outline-none bg-transparent text-base placeholder-black/50 text-black"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                  />
-                </form>
-
-                {searchTerm && (
-                  <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSearchDropdownOpen(false);
-                    }}
-                    className="text-black/50 hover:text-black text-sm font-medium"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-
-              {/* Search Results/Dropdown */}
-              <div className="flex-1 overflow-y-auto">
-                <SearchDropdown
-                  searchTerm={searchTerm}
-                  isOpen={searchDropdownOpen}
-                  onClose={() => setSearchDropdownOpen(false)}
-                />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Mobile Search Modal */}
+      <MobileSearchModal 
+        isOpen={showSearch} 
+        onClose={() => setShowSearch(false)} 
+      />
 
       <SidebarDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} width={"w-[85%]"} />
 

@@ -792,8 +792,9 @@ export const searchProducts = query({
   args: {
     query: v.string(),
     limit: v.optional(v.number()),
+    sortBy: v.optional(v.string()),
   },
-  handler: async (ctx, { query, limit = 20 }) => {
+  handler: async (ctx, { query, limit = 20, sortBy = "relevance" }) => {
     const products = await ctx.db
       .query("products")
       .filter(q => q.neq(q.field("isDeleted"), true))
