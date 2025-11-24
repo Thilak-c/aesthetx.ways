@@ -88,11 +88,7 @@ export default function Navbar() {
                 onMouseEnter={() => setHovered(link)}
                 onMouseLeave={() => setHovered(null)}
                 onClick={() => {
-                  const params = ("ct", link.link)
-                  // params.set("ct", navKeys[idx]);
-                  router.replace(
-                    `/shop?ct=${params.toString()}`
-                  );
+                  router.push(`/shop?ct=${link.link}`);
                 }}
               >
                 <span className="tracking-wide text-black group-hover:text-black/70">

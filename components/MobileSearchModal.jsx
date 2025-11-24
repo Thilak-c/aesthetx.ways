@@ -101,10 +101,13 @@ export default function MobileSearchModal({ isOpen, onClose }) {
         <div className="flex-1 overflow-y-auto">
           {!isSearching ? (
             // Initial state - show suggestions or recent searches
-            // <div className="p-4">
-              {/* <h3 className="text-lg font-semibold text-gray-800 mb-4">Search Products</h3> */}
-      
-            // </div> 
+            <div className="p-4">
+              <div className="space-y-2">
+                <div className="text-gray-500 text-sm text-center">
+                  Start typing to search for products...
+                </div>
+              </div>
+            </div>
           ) : searchResults === undefined ? (
             // Loading state
             <div className="p-4 text-center">
