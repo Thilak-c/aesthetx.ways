@@ -20,6 +20,7 @@ import type * as category from "../category.js";
 import type * as chatMessages from "../chatMessages.js";
 import type * as chatSessions from "../chatSessions.js";
 import type * as collections from "../collections.js";
+import type * as crons from "../crons.js";
 import type * as dailyAccess from "../dailyAccess.js";
 import type * as emailNotifications from "../emailNotifications.js";
 import type * as emailService from "../emailService.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   chatMessages: typeof chatMessages;
   chatSessions: typeof chatSessions;
   collections: typeof collections;
+  crons: typeof crons;
   dailyAccess: typeof dailyAccess;
   emailNotifications: typeof emailNotifications;
   emailService: typeof emailService;

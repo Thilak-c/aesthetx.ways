@@ -1,5 +1,5 @@
 "use client";
-import { FiEdit, FiUpload, FiBox, FiShoppingCart, FiUsers, FiBarChart2 } from "react-icons/fi";
+import { FiEdit, FiUpload, FiBox, FiShoppingCart, FiUsers, FiBarChart2, FiActivity } from "react-icons/fi";
 import React, { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -135,6 +135,7 @@ export default function AdminHomePage() {
       { label: "All Products", href: "/admin/all-products", icon: <FiBox size={24} /> },
       { label: "Orders", href: "/admin/orders", icon: <FiShoppingCart size={24} /> },
       { label: "Users", href: "/admin/users", icon: <FiUsers size={24} /> },
+      { label: "Analytics", href: "/admin/analytics", icon: <FiActivity size={24} /> },
       { label: "Reports", href: "/admin/reports", icon: <FiBarChart2 size={24} /> }
     ].map((btn, idx) => (
       <Link

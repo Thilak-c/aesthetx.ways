@@ -152,21 +152,32 @@ export default function ProductPage() {
     me ? { userId: me._id } : "skip"
   );
 
-  // Product data using new Convex React hooks
-  const product = useQuery(
-    api.products.getProductById,
-    productId ? { productId } : "skip"
-  );
+  // Product data using new Convex React hooks with error handling
+  let product;
+  let productError = null;
+
+  try {
+    product = useQuery(
+      api.products.getProductById,
+      productId ? { productId } : "skip"
+    );
+  } catch (err) {
+    productError = err;
+    console.error("Error fetching product:", err);
+  }
 
   // Update loading state based on product query
   useEffect(() => {
-    if (product !== undefined) {
+    if (productError) {
+      setIsLoading(false);
+      setError("Product not found");
+    } else if (product !== undefined) {
       setIsLoading(false);
       if (!product) {
         setError("Product not found");
       }
     }
-  }, [product]);
+  }, [product, productError]);
 
   const trendingProducts = useQuery(
     api.views.getMostViewedProducts,
@@ -555,96 +566,40 @@ export default function ProductPage() {
     );
   }
 
-  if (error) {
+  // Show error page for both error state and missing product
+  if (error || !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4 max-w-md mx-auto px-4"
+          className="text-center space-y-6 max-w-md"
         >
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-            <X className="w-8 h-8 text-red-600" />
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+            <Search className="w-12 h-12 text-gray-400" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900">
-            Product Loading Error
-          </h2>
-          <p className="text-red-600 text-lg">{error}</p>
-
-          <div className="text-left text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
-            <p className="font-semibold mb-2">Debug Information:</p>
-            <p>Product ID: {productId}</p>
-            <p>Convex Test: {testResult || "Failed"}</p>
-            <p>Products Count: {allProducts?.length || "Unknown"}</p>
-            <p>Loading State: {isLoading ? "Yes" : "No"}</p>
-            {debugProductIds && debugProductIds.length > 0 && (
-              <div className="mt-2">
-                <p className="font-semibold">Available Product IDs:</p>
-                <div className="text-xs space-y-1 max-h-32 overflow-y-auto">
-                  {debugProductIds.slice(0, 5).map((p, i) => (
-                    <div key={i} className="bg-white p-1 rounded">
-                      <span className="font-mono">{p.itemId || p._id}</span> -{" "}
-                      {p.name}
-                    </div>
-                  ))}
-                  {debugProductIds.length > 5 && (
-                    <p className="text-gray-500">
-                      ... and {debugProductIds.length - 5} more
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
           <div className="space-y-2">
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+            <h2 className="text-3xl font-extrabold text-gray-900">
+              Product Not Found
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Sorry, the product you&apos;re looking for doesn&apos;t exist or has been removed.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <Link
+              href="/shop"
+              className="block w-full px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
             >
-              Retry
-            </button>
+              Browse All Products
+            </Link>
             <button
               onClick={() => router.back()}
-              className="w-full px-6 py-3 bg-white text-gray-900 rounded-xl font-medium border-2 border-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+              className="block w-full px-6 py-3 bg-white text-gray-900 rounded-xl font-medium border-2 border-gray-200 hover:border-gray-900 transition-colors"
             >
               Go Back
             </button>
-            <a
-              href="/debug/products"
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors text-center block"
-            >
-              View Database Debug
-            </a>
           </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
-        >
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-            <Search className="w-8 h-8 text-gray-600" />
-          </div>
-          <h2 className="text-2xl font-extrabold text-gray-900">
-            Product Not Found
-          </h2>
-          <p className="text-gray-600 text-lg">
-            The product you&apos;re looking for doesn&apos;t exist.
-          </p>
-          <button
-            onClick={() => router.back()}
-            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
-          >
-            Go Back
-          </button>
         </motion.div>
       </div>
     );

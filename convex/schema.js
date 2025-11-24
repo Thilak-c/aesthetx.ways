@@ -546,4 +546,89 @@ export default defineSchema({
     .index("by_active", ["isActive"])
     .index("by_display_order", ["displayOrder"])
     .index("by_type", ["type"]),
+
+  // User Activity table for tracking all user actions
+  userActivity: defineTable({
+    // User identification
+    userId: v.optional(v.id("users")), // Null for anonymous users
+    sessionId: v.string(), // Unique session identifier
+    
+    // Activity details
+    activityType: v.string(), // 'page_view', 'action', 'event'
+    actionType: v.optional(v.string()), // Specific action like 'add_to_cart'
+    
+    // Page/location data
+    page: v.string(), // Current page URL
+    previousPage: v.optional(v.string()),
+    
+    // Action data
+    actionData: v.optional(v.any()), // JSON data about the action
+    
+    // Session metadata
+    deviceType: v.string(), // 'mobile', 'tablet', 'desktop'
+    browser: v.string(),
+    os: v.string(),
+    screenResolution: v.optional(v.string()),
+    
+    // Location data (approximate)
+    country: v.optional(v.string()),
+    city: v.optional(v.string()),
+    postal: v.optional(v.string()), // Postal/PIN code
+    ipAddress: v.optional(v.string()), // Hashed for privacy
+    
+    // Referrer data
+    referrer: v.optional(v.string()),
+    referrerDomain: v.optional(v.string()),
+    utmSource: v.optional(v.string()),
+    utmMedium: v.optional(v.string()),
+    utmCampaign: v.optional(v.string()),
+    
+    // Timestamps
+    timestamp: v.string(),
+    duration: v.optional(v.number()), // Time spent on page (ms)
+    
+    // Privacy
+    isAnonymized: v.boolean(),
+    optedOut: v.optional(v.boolean()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_session", ["sessionId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_activity_type", ["activityType"])
+    .index("by_action_type", ["actionType"])
+    .index("by_page", ["page"])
+    .index("by_user_timestamp", ["userId", "timestamp"]),
+
+  // Active Sessions table for tracking current user sessions
+  activeSessions: defineTable({
+    sessionId: v.string(),
+    userId: v.optional(v.id("users")),
+    
+    // Current state
+    currentPage: v.string(),
+    lastActivity: v.string(), // ISO timestamp
+    
+    // Session metadata
+    deviceType: v.string(),
+    browser: v.string(),
+    os: v.string(),
+    
+    // Location
+    country: v.optional(v.string()),
+    city: v.optional(v.string()),
+    postal: v.optional(v.string()), // Postal/PIN code
+    
+    // Session stats
+    pageViews: v.number(),
+    actionsCount: v.number(),
+    sessionStart: v.string(),
+    sessionDuration: v.number(), // milliseconds
+    
+    // Status
+    isActive: v.boolean(), // Active if last activity < 5 minutes ago
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_user", ["userId"])
+    .index("by_active", ["isActive"])
+    .index("by_last_activity", ["lastActivity"]),
 });

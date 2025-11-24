@@ -3,7 +3,7 @@ import { api } from "@/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 
 export async function generateMetadata({ params }) {
-  const { productId } = params;
+  const { productId } = await params;
 
   try {
     // Fetch product data for metadata

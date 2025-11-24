@@ -9,10 +9,11 @@ import { api } from "@/convex/_generated/api";
 import { Toaster } from "react-hot-toast";
 import HelpChatWidget from "./HelpChatWidget";
 import Footer from "../ components/footer";
+import PageViewTracker from "./PageViewTracker";
 
 export default function LayoutWrapper({ children }) {
   const [token, setToken] = useState(null);
-  const [showLoading, setShowLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
   const pathname = usePathname();
   // const { client, ConvexProvider } = getConvexClient(); // Removed destructuring
 
@@ -27,13 +28,25 @@ export default function LayoutWrapper({ children }) {
     }
   }, []);
 
-  // Minimum 3-second loading duration
+  // Check if we should show loading screen (only once per session)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowLoading(false);
-    }, 3000);
+    try {
+      const hasShown = sessionStorage.getItem('initialLoadingShown');
+      if (!hasShown) {
+        setShowLoading(true);
+        
+        // Show for 3 seconds minimum
+        const timer = setTimeout(() => {
+          sessionStorage.setItem('initialLoadingShown', 'true');
+          setShowLoading(false);
+        }, 3000);
 
-    return () => clearTimeout(timer);
+        return () => clearTimeout(timer);
+      }
+    } catch (e) {
+      // SessionStorage unavailable - don't show loading
+      console.error('SessionStorage unavailable:', e);
+    }
   }, []);
 
   // Fetch user data using Convex query (happens in background)
@@ -44,6 +57,7 @@ export default function LayoutWrapper({ children }) {
     <>
       {/* Render content in background while loading */}
       <div style={{ visibility: showLoading ? 'hidden' : 'visible' }}>
+        <PageViewTracker userId={user?._id} />
         {children}
         <Toaster />
         {!isCheckoutOrAdmin && <HelpChatWidget />}
