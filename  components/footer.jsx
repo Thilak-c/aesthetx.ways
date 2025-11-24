@@ -8,7 +8,7 @@ import {
   FaRocket, FaSun, FaMoon, FaLightbulb, FaPaperPlane,
 } from 'react-icons/fa';
 
-import Galaxy from './Galaxy/Galaxy';
+// import Galaxy from './Galaxy/Galaxy';
 
 
 import addSubscriber from '../utils/addSubscriber';
@@ -236,7 +236,7 @@ export default function Footer() {
       {/* iiii */}
 
       <div className="w-full h-[700px]">
-        <Galaxy />
+        {/* <Galaxy /> */}
       </div>
 
 
