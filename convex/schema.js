@@ -208,14 +208,14 @@ export default defineSchema({
       country: v.string(),
     }),
     paymentDetails: v.object({
-      razorpayOrderId: v.string(),
-      razorpayPaymentId: v.string(),
+      razorpayOrderId: v.optional(v.string()),
+      razorpayPaymentId: v.optional(v.string()),
       amount: v.float64(),
       currency: v.string(),
       status: v.string(), // 'pending', 'completed', 'failed'
       paidAt: v.optional(v.number()), // Payment timestamp
       paidBy: v.optional(v.string()), // Payment method or payer name
-      paymentMethod: v.optional(v.string()), // 'upi', 'card', 'netbanking', 'wallet'
+      paymentMethod: v.optional(v.string()), // 'upi', 'card', 'netbanking', 'wallet', 'cod'
     }),
     orderTotal: v.float64(),
     status: v.string(), // 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled'

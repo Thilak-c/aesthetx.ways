@@ -46,6 +46,7 @@ export default function CheckoutPage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("upi");
 
   // Form states
   const [shippingDetails, setShippingDetails] = useState({
@@ -70,6 +71,22 @@ export default function CheckoutPage() {
     pincode: "",
     country: "India",
   });
+
+  // Razorpay script loader function
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(window.Razorpay);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(window.Razorpay);
+      script.onerror = () => resolve(null);
+      document.body.appendChild(script);
+    });
+  };
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -144,6 +161,11 @@ export default function CheckoutPage() {
       setIsLoggedIn(false);
     }
   }, [me, token]);
+
+  // Preload Razorpay script on page load for faster checkout
+  useEffect(() => {
+    loadRazorpayScript();
+  }, []);
 
   // Cart data - only fetch if not a direct purchase
   const userCart = useQuery(
@@ -342,21 +364,6 @@ export default function CheckoutPage() {
   };
 
   // Razorpay Integration Functions
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(window.Razorpay);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(window.Razorpay);
-      script.onerror = () => resolve(null);
-      document.body.appendChild(script);
-    });
-  };
-
   const createRazorpayOrder = async () => {
     try {
       const response = await fetch("/api/create-order", {
@@ -402,6 +409,98 @@ export default function CheckoutPage() {
     }
 
     setIsProcessing(true);
+    
+    // Handle COD orders separately
+    if (selectedPaymentMethod === "cod") {
+      try {
+        // Map items to order format
+        let mappedItems;
+        if (isDirectPurchase) {
+          mappedItems = [
+            {
+              productId: directPurchaseItem.productId,
+              name: directPurchaseItem.productName,
+              price: directPurchaseItem.price,
+              quantity: directPurchaseItem.quantity,
+              size: directPurchaseItem.size,
+              image: directPurchaseItem.productImage,
+            },
+          ];
+        } else {
+          mappedItems = userCart.items.map((item) => ({
+            productId: item.productId,
+            name: item.productName,
+            price: item.price,
+            quantity: item.quantity,
+            size: item.size,
+            image: item.productImage,
+          }));
+        }
+
+        const orderResult = await createOrderMutation({
+          userId: me?._id || null,
+          items: mappedItems,
+          shippingDetails: getCurrentShippingDetails(),
+          paymentDetails: {
+            amount: finalTotal,
+            currency: "INR",
+            status: "pending",
+            paymentMethod: "cod",
+          },
+          orderTotal: finalTotal,
+          status: "confirmed",
+        });
+
+        if (orderResult.success) {
+          showToastMessage("Order placed successfully! Pay on delivery.");
+
+          // Send order confirmation email (non-blocking - fire and forget)
+          fetch("/api/send-order-confirmation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userEmail: getCurrentShippingDetails().email,
+              userName: getCurrentShippingDetails().fullName,
+              orderNumber: orderResult.orderNumber,
+              orderItems: mappedItems,
+              orderTotal: finalTotal,
+              shippingDetails: getCurrentShippingDetails(),
+              paymentDetails: {
+                amount: finalTotal,
+                currency: "INR",
+                status: "pending",
+                paymentMethod: "cod",
+              },
+            }),
+          }).catch((emailError) => {
+            console.error("Error sending order confirmation email:", emailError);
+          });
+
+          // Clear cart after successful order
+          if (!isDirectPurchase && me) {
+            try {
+              await clearCartMutation({ userId: me._id });
+            } catch (error) {
+              console.error("Error clearing cart:", error);
+            }
+          }
+
+          setTimeout(() => {
+            router.push(`/order-success?orderNumber=${orderResult.orderNumber}`);
+          }, 1500);
+        } else {
+          showToastMessage("Order creation failed. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error creating COD order:", error);
+        showToastMessage("Failed to place order. Please try again.");
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    // Handle online payment (Razorpay)
     try {
       // Load Razorpay script
       const Razorpay = await loadRazorpayScript();
@@ -505,42 +604,33 @@ export default function CheckoutPage() {
                     "Payment successful! Order placed successfully."
                   );
 
-                  // Send order confirmation email
-                  try {
-                    const emailResponse = await fetch("/api/send-order-confirmation", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
+                  // Send order confirmation email (non-blocking - fire and forget)
+                  fetch("/api/send-order-confirmation", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      userEmail: getCurrentShippingDetails().email,
+                      userName: getCurrentShippingDetails().fullName,
+                      orderNumber: orderResult.orderNumber,
+                      orderItems: mappedItems,
+                      orderTotal: finalTotal,
+                      shippingDetails: getCurrentShippingDetails(),
+                      paymentDetails: {
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        amount: finalTotal,
+                        currency: "INR",
+                        status: "paid",
+                        paidAt: Date.now(),
+                        paidBy: getCurrentShippingDetails().fullName,
+                        paymentMethod: "razorpay",
                       },
-                      body: JSON.stringify({
-                        userEmail: getCurrentShippingDetails().email,
-                        userName: getCurrentShippingDetails().fullName,
-                        orderNumber: orderResult.orderNumber,
-                        orderItems: mappedItems,
-                        orderTotal: finalTotal,
-                        shippingDetails: getCurrentShippingDetails(),
-                        paymentDetails: {
-                          razorpayOrderId: response.razorpay_order_id,
-                          razorpayPaymentId: response.razorpay_payment_id,
-                          amount: finalTotal,
-                          currency: "INR",
-                          status: "paid",
-                          paidAt: Date.now(),
-                          paidBy: getCurrentShippingDetails().fullName,
-                          paymentMethod: "razorpay",
-                        },
-                      }),
-                    });
-
-                    const emailData = await emailResponse.json();
-                    if (emailData.success) {
-                    } else {
-                      console.error("Failed to send order confirmation email:", emailData.message);
-                    }
-                  } catch (emailError) {
+                    }),
+                  }).catch((emailError) => {
                     console.error("Error sending order confirmation email:", emailError);
-                    // Don't block the success flow if email sending fails
-                  }
+                  });
 
                   // Clear cart after successful order (only for cart-based purchases)
                   if (!isDirectPurchase) {
@@ -556,7 +646,7 @@ export default function CheckoutPage() {
                     router.push(
                       `/order-success?orderNumber=${orderResult.orderNumber}`
                     );
-                  }, 2000);
+                  }, 1500);
                 } else {
                   showToastMessage(
                     "Order creation failed. Please contact support."
@@ -828,7 +918,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50" style={{ fontWeight: 500 }}>
       {/* Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
@@ -1199,7 +1289,8 @@ export default function CheckoutPage() {
                         id="upi"
                         name="paymentMethod"
                         value="upi"
-                        defaultChecked
+                        checked={selectedPaymentMethod === "upi"}
+                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                         className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 border-gray-300 focus:ring-gray-500"
                         style={{ accentColor: "#4B5563" }}
                       />
@@ -1228,6 +1319,8 @@ export default function CheckoutPage() {
                         id="card"
                         name="paymentMethod"
                         value="card"
+                        checked={selectedPaymentMethod === "card"}
+                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                         className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 border-gray-300 focus:ring-gray-500"
                         style={{ accentColor: "#4B5563" }}
                       />
@@ -1256,6 +1349,8 @@ export default function CheckoutPage() {
                         id="netbanking"
                         name="paymentMethod"
                         value="netbanking"
+                        checked={selectedPaymentMethod === "netbanking"}
+                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                         className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 border-gray-300 focus:ring-gray-500"
                         style={{ accentColor: "#4B5563" }}
                       />
@@ -1278,33 +1373,31 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* COD Option */}
-                    <div className="flex items-center space-x-3 sm:space-x-4 p-2 pl-4 pr-0 sm:p-5 border-2 border-gray-200 rounded-xl bg-gray-100 opacity-60 cursor-not-allowed">
+                    <div className="flex items-center space-x-3 sm:space-x-4 p-2 pl-4 pr-0 sm:p-5 border-2 border-gray-300 rounded-xl hover:border-gray-400 transition-all cursor-pointer">
                       <input
                         type="radio"
                         id="cod"
                         name="paymentMethod"
                         value="cod"
-                        disabled
-                        className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 border-gray-300 cursor-not-allowed"
-                        style={{ accentColor: "#9CA3AF" }}
+                        checked={selectedPaymentMethod === "cod"}
+                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 border-gray-300 focus:ring-gray-500"
+                        style={{ accentColor: "#000000" }}
                       />
                       <label
                         htmlFor="cod"
-                        className="flex items-center space-x-3 sm:space-x-4 cursor-not-allowed w-full"
+                        className="flex items-center space-x-3 sm:space-x-4 cursor-pointer w-full"
                       >
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-lg flex items-center justify-center">
-                          <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center space-x-2">
-                            <span className="font-semibold text-sm sm:text-lg text-gray-500">
+                            <span className="font-semibold text-sm sm:text-lg text-gray-900">
                               Cash on Delivery
                             </span>
-                            <span className="md:px-2 py-0.5 sm:py-1 bg- text-gray-600 text-[11px] rounded-full font-medium">
-                              Coming Soon
-                            </span>
                           </div>
-                          <p className="text-gray-500 text-xs sm:text-sm">
+                          <p className="text-gray-600 text-xs sm:text-sm">
                             Pay when you receive your order
                           </p>
                         </div>

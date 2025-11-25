@@ -70,8 +70,8 @@ export const createOrder = mutation({
       country: v.string(),
     }),
     paymentDetails: v.object({
-      razorpayOrderId: v.string(),
-      razorpayPaymentId: v.string(),
+      razorpayOrderId: v.optional(v.string()),
+      razorpayPaymentId: v.optional(v.string()),
       amount: v.float64(),
       currency: v.string(),
       status: v.string(),
