@@ -227,6 +227,12 @@ export const updateOrderStatus = mutation({
     updatedBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Get order details before updating
+    const order = await ctx.db.get(args.orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
     const updateData = {
       status: args.status,
       updatedAt: Date.now(),
@@ -240,7 +246,25 @@ export const updateOrderStatus = mutation({
     }
     
     await ctx.db.patch(args.orderId, updateData);
-    return { success: true, message: "Order status updated" };
+    
+    // Return order details for email notification
+    return { 
+      success: true, 
+      message: "Order status updated",
+      orderDetails: {
+        orderNumber: order.orderNumber,
+        customerEmail: order.shippingDetails.email,
+        customerName: order.shippingDetails.fullName,
+        status: args.status,
+        items: order.items,
+        orderTotal: order.orderTotal,
+        shippingDetails: order.shippingDetails,
+        paymentDetails: order.paymentDetails,
+        deliveryDetails: order.deliveryDetails || [],
+        createdAt: order.createdAt,
+        estimatedDeliveryDate: order.estimatedDeliveryDate,
+      }
+    };
   },
 });
 
@@ -278,10 +302,19 @@ export const addDeliveryUpdate = mutation({
       updatedAt: Date.now(),
     });
 
+    // Return order details for email notification
     return { 
       success: true, 
       message: "Delivery status updated",
-      deliveryUpdate: newDeliveryUpdate 
+      deliveryUpdate: newDeliveryUpdate,
+      orderDetails: {
+        orderNumber: order.orderNumber,
+        customerEmail: order.shippingDetails.email,
+        customerName: order.shippingDetails.fullName,
+        status: args.status,
+        items: order.items,
+        orderTotal: order.orderTotal,
+      }
     };
   },
 });

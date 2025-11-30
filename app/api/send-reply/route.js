@@ -6,7 +6,7 @@ import nodemailer from 'nodemailer';
 const transporter = nodemailer.createTransport({
   host: "​smtp.hostinger.com",
   port: 465,
-  secure: true, 
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -125,15 +125,15 @@ export async function POST(req) {
     // Send email
     await transporter.sendMail(mailOptions);
 
-    return NextResponse.json({ 
-      ok: true, 
-      message: 'Reply sent successfully' 
+    return NextResponse.json({
+      ok: true,
+      message: 'Reply sent successfully'
     });
 
   } catch (error) {
     console.error('Email send error:', error);
-    return NextResponse.json({ 
-      error: 'Failed to send email. Please check your email configuration.' 
+    return NextResponse.json({
+      error: 'Failed to send email. Please check your email configuration.'
     }, { status: 500 });
   }
 }

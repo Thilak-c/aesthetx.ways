@@ -4,18 +4,18 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Package, 
-  Truck, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
+import {
+  Search,
+  Filter,
+  Download,
+  Eye,
+  Edit,
+  Trash2,
+  Package,
+  Truck,
+  CheckCircle,
+  XCircle,
+  Clock,
   Calendar,
   MapPin,
   Phone,
@@ -133,11 +133,33 @@ export default function AdminOrdersPage() {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       setIsLoading(true);
-      await updateOrderStatus({ 
-        orderId, 
-        status: newStatus, 
-        updatedBy: "admin" 
+      const result = await updateOrderStatus({
+        orderId,
+        status: newStatus,
+        updatedBy: "admin"
       });
+
+      console.log("Status update result:", result);
+      console.log("Result keys:", Object.keys(result));
+      console.log("Has orderDetails?", "orderDetails" in result);
+      console.log("orderDetails value:", result.orderDetails);
+
+      // Send email notification to customer (non-blocking)
+      if (result.success && result.orderDetails) {
+        console.log("Sending email to:", result.orderDetails.customerEmail);
+        fetch("/api/send-order-status-update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result.orderDetails),
+        })
+          .then(response => response.json())
+          .then(data => console.log("Email sent:", data))
+          .catch((error) => {
+            console.error("Error sending status update email:", error);
+          });
+      } else {
+        console.log("No order details to send email");
+      }
     } catch (error) {
       console.error("Error updating status:", error);
     } finally {
@@ -147,13 +169,13 @@ export default function AdminOrdersPage() {
 
   const handleBulkStatusUpdate = async (newStatus) => {
     if (selectedOrders.length === 0) return;
-    
+
     try {
       setIsLoading(true);
-      await bulkUpdateStatus({ 
-        orderIds: selectedOrders, 
-        status: newStatus, 
-        updatedBy: "admin" 
+      await bulkUpdateStatus({
+        orderIds: selectedOrders,
+        status: newStatus,
+        updatedBy: "admin"
       });
       setSelectedOrders([]);
     } catch (error) {
@@ -166,10 +188,10 @@ export default function AdminOrdersPage() {
   const handleCancelOrder = async (orderId, reason) => {
     try {
       setIsLoading(true);
-      await cancelOrder({ 
-        orderId, 
-        reason, 
-        updatedBy: "admin" 
+      await cancelOrder({
+        orderId,
+        reason,
+        updatedBy: "admin"
       });
     } catch (error) {
       console.error("Error cancelling order:", error);
@@ -179,8 +201,8 @@ export default function AdminOrdersPage() {
   };
 
   const handleSelectOrder = (orderId) => {
-    setSelectedOrders(prev => 
-      prev.includes(orderId) 
+    setSelectedOrders(prev =>
+      prev.includes(orderId)
         ? prev.filter(id => id !== orderId)
         : [...prev, orderId]
     );
@@ -196,12 +218,12 @@ export default function AdminOrdersPage() {
 
   const handleExport = () => {
     // Export functionality
-    const csvContent = "data:text/csv;charset=utf-8," + 
+    const csvContent = "data:text/csv;charset=utf-8," +
       "Order Number,Customer Name,Email,Phone,Status,Total,Date\n" +
-      orders?.map(order => 
+      orders?.map(order =>
         `${order.orderNumber},${order.shippingDetails.fullName},${order.shippingDetails.email},${order.shippingDetails.phone},${order.status},${order.orderTotal},${formatDate(order.createdAt)}`
       ).join("\n");
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -227,7 +249,7 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
           <p className="text-gray-600 mt-1">Manage and track all customer orders</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -236,7 +258,7 @@ export default function AdminOrdersPage() {
             <Filter className="w-4 h-4" />
             Filters
           </button>
-          <button 
+          <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -322,7 +344,7 @@ export default function AdminOrdersPage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Search by Email</label>
                 <div className="relative">
@@ -336,7 +358,7 @@ export default function AdminOrdersPage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                 <input
@@ -346,7 +368,7 @@ export default function AdminOrdersPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
                 <input
@@ -370,7 +392,7 @@ export default function AdminOrdersPage() {
                 </select>
               </div>
             </div>
-            
+
             {/* Clear Filters Button */}
             <div className="flex justify-end mt-4">
               <button
@@ -397,19 +419,17 @@ export default function AdminOrdersPage() {
               <button
                 key={status.value}
                 onClick={() => setSelectedStatus(status.value)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  selectedStatus === status.value
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${selectedStatus === status.value
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 {getStatusIcon(status.value)}
                 {status.label}
-                <span className={`ml-1 py-0.5 px-2 rounded-full text-xs ${
-                  status.value === "all" 
-                    ? "bg-gray-100 text-gray-600"
-                    : STATUS_COLORS[status.value] || "bg-gray-100 text-gray-600"
-                }`}>
+                <span className={`ml-1 py-0.5 px-2 rounded-full text-xs ${status.value === "all"
+                  ? "bg-gray-100 text-gray-600"
+                  : STATUS_COLORS[status.value] || "bg-gray-100 text-gray-600"
+                  }`}>
                   {status.count}
                 </span>
               </button>
@@ -465,7 +485,7 @@ export default function AdminOrdersPage() {
                     onChange={() => handleSelectOrder(order._id)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3">
                       <h3 className="text-lg font-medium text-gray-900">
@@ -476,7 +496,7 @@ export default function AdminOrdersPage() {
                         <span className="ml-1 capitalize">{order.status}</span>
                       </span>
                     </div>
-                    
+
                     {/* User Information */}
                     <div className="mt-2 flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center space-x-2">
@@ -514,7 +534,7 @@ export default function AdminOrdersPage() {
                       <ChevronDown className="w-5 h-5" />
                     )}
                   </button>
-                  
+
                   <div className="relative">
                     <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                       <MoreVertical className="w-5 h-5" />
@@ -639,7 +659,7 @@ export default function AdminOrdersPage() {
                           <option value="delivered">Delivered</option>
                           <option value="cancelled">Cancelled</option>
                         </select>
-                        
+
                         {order.status !== "cancelled" && (
                           <button
                             onClick={() => {
@@ -652,7 +672,7 @@ export default function AdminOrdersPage() {
                           </button>
                         )}
                       </div>
-                      
+
                       <div className="text-right">
                         <p className="text-sm text-gray-500">Order Total</p>
                         <p className="text-lg font-bold text-gray-900">{formatCurrency(order.orderTotal)}</p>
