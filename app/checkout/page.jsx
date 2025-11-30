@@ -19,6 +19,7 @@ import {
   Mail,
   Calendar,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { Smartphone, Landmark, Wallet, Banknote, Home } from "lucide-react";
 
@@ -47,12 +48,16 @@ export default function CheckoutPage() {
   const [toastMessage, setToastMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("upi");
+  const [showCODConfirmation, setShowCODConfirmation] = useState(false);
 
   // Form states
   const [shippingDetails, setShippingDetails] = useState({
     fullName: "",
     email: "",
     phone: "",
+    houseNo: "",
+    street: "",
+    landmark: "",
     address: "",
     city: "",
     state: "",
@@ -65,6 +70,9 @@ export default function CheckoutPage() {
     fullName: "",
     email: "",
     phone: "",
+    houseNo: "",
+    street: "",
+    landmark: "",
     address: "",
     city: "",
     state: "",
@@ -395,6 +403,98 @@ export default function CheckoutPage() {
       throw error;
     }
   };
+
+  const handleCODConfirmation = async () => {
+    setShowCODConfirmation(false);
+    setIsProcessing(true);
+
+    try {
+      // Map items to order format
+      let mappedItems;
+      if (isDirectPurchase) {
+        mappedItems = [
+          {
+            productId: directPurchaseItem.productId,
+            name: directPurchaseItem.productName,
+            price: directPurchaseItem.price,
+            quantity: directPurchaseItem.quantity,
+            size: directPurchaseItem.size,
+            image: directPurchaseItem.productImage,
+          },
+        ];
+      } else {
+        mappedItems = userCart.items.map((item) => ({
+          productId: item.productId,
+          name: item.productName,
+          price: item.price,
+          quantity: item.quantity,
+          size: item.size,
+          image: item.productImage,
+        }));
+      }
+
+      const orderResult = await createOrderMutation({
+        userId: me?._id || null,
+        items: mappedItems,
+        shippingDetails: getCurrentShippingDetails(),
+        paymentDetails: {
+          amount: finalTotal,
+          currency: "INR",
+          status: "pending",
+          paymentMethod: "cod",
+        },
+        orderTotal: finalTotal,
+        status: "confirmed",
+      });
+
+      if (orderResult.success) {
+        showToastMessage("Order placed successfully! Pay on delivery.");
+
+        // Send order confirmation email (non-blocking)
+        fetch("/api/send-order-confirmation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userEmail: getCurrentShippingDetails().email,
+            userName: getCurrentShippingDetails().fullName,
+            orderNumber: orderResult.orderNumber,
+            orderItems: mappedItems,
+            orderTotal: finalTotal,
+            shippingDetails: getCurrentShippingDetails(),
+            paymentDetails: {
+              amount: finalTotal,
+              currency: "INR",
+              status: "pending",
+              paymentMethod: "cod",
+            },
+          }),
+        }).catch((emailError) => {
+          console.error("Error sending order confirmation email:", emailError);
+        });
+
+        // Clear cart after successful order
+        if (!isDirectPurchase && me) {
+          try {
+            await clearCartMutation({ userId: me._id });
+          } catch (error) {
+            console.error("Error clearing cart:", error);
+          }
+        }
+
+        setTimeout(() => {
+          router.push(`/order-success?orderNumber=${orderResult.orderNumber}`);
+        }, 1500);
+      } else {
+        showToastMessage("Order creation failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error creating COD order:", error);
+      showToastMessage("Failed to place order. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handlePayment = async () => {
     if (!isFormValid()) {
       showToastMessage("Please fill all required fields");
@@ -408,108 +508,37 @@ export default function CheckoutPage() {
       return;
     }
 
-    setIsProcessing(true);
-    
-    // Handle COD orders separately
+    // Handle COD orders separately - show confirmation first
     if (selectedPaymentMethod === "cod") {
-      try {
-        // Map items to order format
-        let mappedItems;
-        if (isDirectPurchase) {
-          mappedItems = [
-            {
-              productId: directPurchaseItem.productId,
-              name: directPurchaseItem.productName,
-              price: directPurchaseItem.price,
-              quantity: directPurchaseItem.quantity,
-              size: directPurchaseItem.size,
-              image: directPurchaseItem.productImage,
-            },
-          ];
-        } else {
-          mappedItems = userCart.items.map((item) => ({
-            productId: item.productId,
-            name: item.productName,
-            price: item.price,
-            quantity: item.quantity,
-            size: item.size,
-            image: item.productImage,
-          }));
-        }
-
-        const orderResult = await createOrderMutation({
-          userId: me?._id || null,
-          items: mappedItems,
-          shippingDetails: getCurrentShippingDetails(),
-          paymentDetails: {
-            amount: finalTotal,
-            currency: "INR",
-            status: "pending",
-            paymentMethod: "cod",
-          },
-          orderTotal: finalTotal,
-          status: "confirmed",
-        });
-
-        if (orderResult.success) {
-          showToastMessage("Order placed successfully! Pay on delivery.");
-
-          // Send order confirmation email (non-blocking - fire and forget)
-          fetch("/api/send-order-confirmation", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userEmail: getCurrentShippingDetails().email,
-              userName: getCurrentShippingDetails().fullName,
-              orderNumber: orderResult.orderNumber,
-              orderItems: mappedItems,
-              orderTotal: finalTotal,
-              shippingDetails: getCurrentShippingDetails(),
-              paymentDetails: {
-                amount: finalTotal,
-                currency: "INR",
-                status: "pending",
-                paymentMethod: "cod",
-              },
-            }),
-          }).catch((emailError) => {
-            console.error("Error sending order confirmation email:", emailError);
-          });
-
-          // Clear cart after successful order
-          if (!isDirectPurchase && me) {
-            try {
-              await clearCartMutation({ userId: me._id });
-            } catch (error) {
-              console.error("Error clearing cart:", error);
-            }
-          }
-
-          setTimeout(() => {
-            router.push(`/order-success?orderNumber=${orderResult.orderNumber}`);
-          }, 1500);
-        } else {
-          showToastMessage("Order creation failed. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error creating COD order:", error);
-        showToastMessage("Failed to place order. Please try again.");
-      } finally {
-        setIsProcessing(false);
-      }
+      setShowCODConfirmation(true);
       return;
     }
 
-    // Handle online payment (Razorpay)
-    try {
-      // Load Razorpay script
-      const Razorpay = await loadRazorpayScript();
-      if (!Razorpay) {
-        throw new Error("Failed to load Razorpay");
-      }
+    setIsProcessing(true);
 
-      // Create order
+    // Handle online payment (Razorpay) - Redirect to payment page
+    try {
+      // Create order first
       const order = await createRazorpayOrder();
+
+      // Create payment session data
+      const paymentData = {
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        customerDetails: getCurrentShippingDetails(),
+        items: isDirectPurchase ? [directPurchaseItem] : userCart.items,
+        orderTotal: finalTotal,
+        isDirectPurchase,
+        userId: me?._id,
+      };
+
+      // Encode payment data as base64 token
+      const paymentToken = btoa(JSON.stringify(paymentData));
+
+      // Redirect to Vercel payment page
+      window.location.href = `https://aesthetx-ways.vercel.app/payment/raz?token=${paymentToken}`;
+      return;
 
       // Configure Razorpay options
       const options = {
@@ -582,7 +611,7 @@ export default function CheckoutPage() {
 
                 const orderResult = await createOrderMutation({
                   userId: me?._id || null, // null for guest users
-               
+
                   items: mappedItems,
                   shippingDetails: getCurrentShippingDetails(),
                   paymentDetails: {
@@ -752,7 +781,23 @@ export default function CheckoutPage() {
 
   // Get current shipping details based on selection
   const getCurrentShippingDetails = () => {
-    return useDefaultAddress ? shippingDetails : customAddress;
+    const details = useDefaultAddress ? shippingDetails : customAddress;
+
+    // Combine address fields if they exist separately
+    if (details.houseNo || details.street || details.landmark) {
+      const addressParts = [
+        details.houseNo,
+        details.street,
+        details.landmark
+      ].filter(Boolean);
+
+      return {
+        ...details,
+        address: addressParts.length > 0 ? addressParts.join(", ") : details.address
+      };
+    }
+
+    return details;
   };
 
   const isFormValid = () => {
@@ -1028,16 +1073,16 @@ export default function CheckoutPage() {
                       <label
                         onClick={() => handleAddressToggle(true)}
                         className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${useDefaultAddress
-                            ? "border-gray-900 bg-gray-100 shadow-md"
-                            : "border-gray-200 hover:border-gray-400"
+                          ? "border-gray-900 bg-gray-100 shadow-md"
+                          : "border-gray-200 hover:border-gray-400"
                           }`}
                       >
                         {/* Radio */}
                         <div className="flex-shrink-0">
                           <div
                             className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${useDefaultAddress
-                                ? "border-gray-50 bg-gray-900"
-                                : "border-gray-300"
+                              ? "border-gray-50 bg-gray-900"
+                              : "border-gray-300"
                               }`}
                           >
                             {useDefaultAddress && (
@@ -1088,16 +1133,16 @@ export default function CheckoutPage() {
                     <label
                       onClick={() => handleAddressToggle(false)}
                       className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${!useDefaultAddress
-                          ? "border-gray-900 bg-gray-100 shadow-md"
-                          : "border-gray-200 hover:border-gray-400"
+                        ? "border-gray-900 bg-gray-100 shadow-md"
+                        : "border-gray-200 hover:border-gray-400"
                         }`}
                     >
                       {/* Radio */}
                       <div className="flex-shrink-0">
                         <div
                           className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${!useDefaultAddress
-                              ? "border-gray-900 bg-gray-900"
-                              : "border-gray-300"
+                            ? "border-gray-900 bg-gray-900"
+                            : "border-gray-300"
                             }`}
                         >
                           {!useDefaultAddress && (
@@ -1198,19 +1243,51 @@ export default function CheckoutPage() {
                         />
                       </div>
 
-                      {/* Address */}
-                      <div className="md:col-span-2">
+                      {/* House/Flat Number */}
+                      <div>
                         <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          Address *
+                          House/Flat No. *
                         </label>
                         <input
                           type="text"
-                          value={getCurrentShippingDetails().address}
+                          value={useDefaultAddress ? shippingDetails.houseNo : customAddress.houseNo}
                           onChange={(e) =>
-                            handleInputChange("address", e.target.value)
+                            handleInputChange("houseNo", e.target.value)
                           }
                           className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="House/Flat number, Street, Landmark, Area"
+                          placeholder="e.g., 123, A-45, Flat 301"
+                        />
+                      </div>
+
+                      {/* Street/Area */}
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                          Street/Area *
+                        </label>
+                        <input
+                          type="text"
+                          value={useDefaultAddress ? shippingDetails.street : customAddress.street}
+                          onChange={(e) =>
+                            handleInputChange("street", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                          placeholder="e.g., MG Road, Sector 5"
+                        />
+                      </div>
+
+                      {/* Landmark */}
+                      <div className="md:col-span-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                          Landmark (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={useDefaultAddress ? shippingDetails.landmark : customAddress.landmark}
+                          onChange={(e) =>
+                            handleInputChange("landmark", e.target.value)
+                          }
+                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                          placeholder="e.g., Near City Mall, Opposite Park"
                         />
                       </div>
 
@@ -1582,6 +1659,145 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* COD Confirmation Modal */}
+      <AnimatePresence>
+        {showCODConfirmation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowCODConfirmation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-black text-white p-4 md:p-6 rounded-t-xl md:rounded-t-2xl">
+                <h2 className="text-lg md:text-2xl font-bold">Confirm Your Order</h2>
+                <p className="text-gray-300 text-xs md:text-sm mt-1">Please review your order details</p>
+              </div>
+
+              {/* Content */}
+              <div className="p-3 md:p-6 space-y-4 md:space-y-6">
+                {/* Order Items */}
+                <div>
+                  <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-2 md:mb-3 flex items-center">
+                    <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
+                    Order Items
+                  </h3>
+                  <div className="space-y-2 md:space-y-3">
+                    {(isDirectPurchase ? [directPurchaseItem] : userCart?.items || []).map((item, index) => (
+                      <div key={index} className="flex items-center gap-2 md:gap-4 p-2 md:p-3 bg-gray-50 rounded-lg">
+                        <img
+                          src={item.productImage || item.image}
+                          alt={item.productName || item.name}
+                          className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-lg"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 text-xs md:text-base truncate">{item.productName || item.name}</p>
+                          <p className="text-xs md:text-sm text-gray-600">Size: {item.size} | Qty: {item.quantity}</p>
+                        </div>
+                        <p className="font-semibold text-gray-900 text-xs md:text-base whitespace-nowrap">₹{item.price.toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Shipping Details */}
+                <div>
+                  <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-2 md:mb-3 flex items-center">
+                    <MapPin className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
+                    Delivery Address
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-3 md:p-4 space-y-2">
+                    <div className="flex items-start">
+                      <User className="w-3 h-3 md:w-4 md:h-4 mr-2 mt-0.5 md:mt-1 text-gray-600 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 text-xs md:text-base">{getCurrentShippingDetails().fullName}</p>
+                        <p className="text-xs md:text-sm text-gray-600">{getCurrentShippingDetails().phone}</p>
+                        <p className="text-xs md:text-sm text-gray-600 truncate">{getCurrentShippingDetails().email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start pt-2 border-t border-gray-200">
+                      <MapPin className="w-3 h-3 md:w-4 md:h-4 mr-2 mt-0.5 md:mt-1 text-gray-600 flex-shrink-0" />
+                      <p className="text-xs md:text-sm text-gray-700 leading-relaxed">
+                        {getCurrentShippingDetails().address}, {getCurrentShippingDetails().city}, {getCurrentShippingDetails().state} - {getCurrentShippingDetails().pincode}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Method */}
+                <div>
+                  <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-2 md:mb-3 flex items-center">
+                    <CreditCard className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
+                    Payment Method
+                  </h3>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 md:p-4 flex items-center">
+                    <Truck className="w-5 h-5 md:w-6 md:h-6 text-black mr-2 md:mr-3 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-gray-900 text-xs md:text-base">Cash on Delivery</p>
+                      <p className="text-xs md:text-sm text-gray-600">Pay when you receive</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Summary */}
+                <div>
+                  <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">Order Summary</h3>
+                  <div className="bg-gray-50 rounded-lg p-3 md:p-4 space-y-1.5 md:space-y-2">
+                    <div className="flex justify-between text-xs md:text-sm">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs md:text-sm">
+                      <span className="text-gray-600">Delivery Fee</span>
+                      <span className="font-medium text-gray-900">{deliveryFee === 0 ? "Free" : `₹${deliveryFee.toFixed(2)}`}</span>
+                    </div>
+                    <div className="border-t border-gray-300 pt-1.5 md:pt-2 flex justify-between">
+                      <span className="font-bold text-gray-900 text-sm md:text-base">Total Amount</span>
+                      <span className="font-bold text-gray-900 text-base md:text-lg">₹{finalTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="sticky bottom-0 bg-gray-50 p-3 md:p-6 rounded-b-xl md:rounded-b-2xl border-t border-gray-200 flex gap-2 md:gap-3">
+                <button
+                  onClick={() => setShowCODConfirmation(false)}
+                  className="flex-1 px-4 md:px-6 py-2.5 md:py-3 border-2 border-gray-300 text-gray-700 rounded-lg md:rounded-xl text-sm md:text-base font-semibold hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCODConfirmation}
+                  disabled={isProcessing}
+                  className="flex-1 px-4 md:px-6 py-2.5 md:py-3 bg-black text-white rounded-lg md:rounded-xl text-sm md:text-base font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2 animate-spin" />
+                      <span className="text-xs md:text-base">Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
+                      <span className="text-xs md:text-base">Confirm</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
