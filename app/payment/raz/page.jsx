@@ -18,7 +18,7 @@ export default function RazorpayPaymentPage() {
 
   useEffect(() => {
     const token = searchParams.get("token");
-    
+
     if (!token) {
       setError("Invalid payment link");
       setIsProcessing(false);
@@ -29,7 +29,7 @@ export default function RazorpayPaymentPage() {
       // Decode payment data
       const decoded = JSON.parse(atob(token));
       setPaymentData(decoded);
-      
+
       // Load Razorpay and initiate payment
       loadRazorpayAndPay(decoded);
     } catch (err) {
@@ -111,7 +111,7 @@ export default function RazorpayPaymentPage() {
         handler: async function (response) {
           try {
             setIsProcessing(true);
-            
+
             // Verify payment
             const verifyResponse = await fetch("/api/verify-payment", {
               method: "POST",
@@ -202,8 +202,25 @@ export default function RazorpayPaymentPage() {
         },
         modal: {
           ondismiss: function () {
-            // Redirect back to main domain on cancel
-            window.location.href = "https://aesthetxways.com/checkout";
+            // Redirect back to checkout with original parameters if direct purchase
+            if (data.isDirectPurchase && data.items && data.items.length > 0) {
+              const item = data.items[0];
+              const params = new URLSearchParams({
+                productId: item.productId,
+                productName: item.productName,
+                productImage: item.productImage,
+                price: item.price,
+                size: item.size,
+                quantity: item.quantity,
+                category: item.category || '',
+                brand: item.brand || '',
+                action: 'buyNow'
+              });
+              window.location.href = `https://aesthetxways.com/checkout?${params.toString()}`;
+            } else {
+              // Regular cart checkout
+              window.location.href = "https://aesthetxways.com/checkout";
+            }
           },
         },
       };
@@ -215,7 +232,24 @@ export default function RazorpayPaymentPage() {
         setError("Payment failed. Please try again.");
         setIsProcessing(false);
         setTimeout(() => {
-          window.location.href = "https://aesthetxways.com/checkout";
+          // Redirect back to checkout with original parameters if direct purchase
+          if (data.isDirectPurchase && data.items && data.items.length > 0) {
+            const item = data.items[0];
+            const params = new URLSearchParams({
+              productId: item.productId,
+              productName: item.productName,
+              productImage: item.productImage,
+              price: item.price,
+              size: item.size,
+              quantity: item.quantity,
+              category: item.category || '',
+              brand: item.brand || '',
+              action: 'buyNow'
+            });
+            window.location.href = `https://aesthetxways.com/checkout?${params.toString()}`;
+          } else {
+            window.location.href = "https://aesthetxways.com/checkout";
+          }
         }, 3000);
       });
 
@@ -255,7 +289,26 @@ export default function RazorpayPaymentPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Error</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <button
-              onClick={() => (window.location.href = "https://aesthetxways.com/checkout")}
+              onClick={() => {
+                // Redirect back to checkout with original parameters if direct purchase
+                if (paymentData?.isDirectPurchase && paymentData?.items && paymentData.items.length > 0) {
+                  const item = paymentData.items[0];
+                  const params = new URLSearchParams({
+                    productId: item.productId,
+                    productName: item.productName,
+                    productImage: item.productImage,
+                    price: item.price,
+                    size: item.size,
+                    quantity: item.quantity,
+                    category: item.category || '',
+                    brand: item.brand || '',
+                    action: 'buyNow'
+                  });
+                  window.location.href = `https://aesthetxways.com/checkout?${params.toString()}`;
+                } else {
+                  window.location.href = "https://aesthetxways.com/checkout";
+                }
+              }}
               className="px-6 py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
             >
               Return to Checkout
