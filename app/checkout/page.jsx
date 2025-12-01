@@ -409,6 +409,18 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
+      // Validate shipping details before proceeding
+      const currentShippingDetails = getCurrentShippingDetails();
+      console.log("Shipping Details:", currentShippingDetails);
+      
+      if (!currentShippingDetails.fullName || !currentShippingDetails.email || 
+          !currentShippingDetails.phone || !currentShippingDetails.address || 
+          !currentShippingDetails.city || !currentShippingDetails.pincode) {
+        showToastMessage("Please fill all required shipping details");
+        setIsProcessing(false);
+        return;
+      }
+
       // Map items to order format
       let mappedItems;
       if (isDirectPurchase) {
@@ -433,10 +445,16 @@ export default function CheckoutPage() {
         }));
       }
 
+      console.log("Creating COD order with:", {
+        userId: me?._id || null,
+        itemsCount: mappedItems.length,
+        orderTotal: finalTotal,
+      });
+
       const orderResult = await createOrderMutation({
         userId: me?._id || null,
         items: mappedItems,
-        shippingDetails: getCurrentShippingDetails(),
+        shippingDetails: currentShippingDetails,
         paymentDetails: {
           amount: finalTotal,
           currency: "INR",
@@ -447,7 +465,9 @@ export default function CheckoutPage() {
         status: "confirmed",
       });
 
-      if (orderResult.success) {
+      console.log("Order creation result:", orderResult);
+
+      if (orderResult && orderResult.success) {
         showToastMessage("Order placed successfully! Pay on delivery.");
 
         // Send order confirmation email (non-blocking)
@@ -455,12 +475,12 @@ export default function CheckoutPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userEmail: getCurrentShippingDetails().email,
-            userName: getCurrentShippingDetails().fullName,
+            userEmail: currentShippingDetails.email,
+            userName: currentShippingDetails.fullName,
             orderNumber: orderResult.orderNumber,
             orderItems: mappedItems,
             orderTotal: finalTotal,
-            shippingDetails: getCurrentShippingDetails(),
+            shippingDetails: currentShippingDetails,
             paymentDetails: {
               amount: finalTotal,
               currency: "INR",
@@ -485,11 +505,12 @@ export default function CheckoutPage() {
           router.push(`/order-success?orderNumber=${orderResult.orderNumber}`);
         }, 1500);
       } else {
-        showToastMessage("Order creation failed. Please try again.");
+        console.error("Order creation failed:", orderResult);
+        showToastMessage(orderResult?.message || "Order creation failed. Please try again.");
       }
     } catch (error) {
       console.error("Error creating COD order:", error);
-      showToastMessage("Failed to place order. Please try again.");
+      showToastMessage(`Failed to place order: ${error.message || "Please try again"}`);
     } finally {
       setIsProcessing(false);
     }
@@ -793,6 +814,7 @@ export default function CheckoutPage() {
     const details = useDefaultAddress ? shippingDetails : customAddress;
 
     // Combine address fields if they exist separately
+    let finalAddress = details.address;
     if (details.houseNo || details.street || details.landmark) {
       const addressParts = [
         details.houseNo,
@@ -800,13 +822,22 @@ export default function CheckoutPage() {
         details.landmark
       ].filter(Boolean);
 
-      return {
-        ...details,
-        address: addressParts.length > 0 ? addressParts.join(", ") : details.address
-      };
+      if (addressParts.length > 0) {
+        finalAddress = addressParts.join(", ");
+      }
     }
 
-    return details;
+    // Ensure all required fields are present with fallbacks
+    return {
+      fullName: details.fullName || "",
+      email: details.email || "",
+      phone: details.phone || "",
+      address: finalAddress || details.address || "",
+      city: details.city || "",
+      state: details.state || "",
+      pincode: details.pincode || "",
+      country: details.country || "India",
+    };
   };
 
   const isFormValid = () => {
