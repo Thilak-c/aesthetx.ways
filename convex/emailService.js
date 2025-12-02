@@ -2,7 +2,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 
-// Send email using external service
+// Send email using Next.js API route
 export const sendEmail = action({
   args: {
     to: v.string(),
@@ -12,66 +12,9 @@ export const sendEmail = action({
   },
   handler: async (ctx, args) => {
     try {
-      // Option 1: Using a webhook service like Zapier or Make.com
-      // This is the simplest approach - create a webhook that sends emails
-      
-      // Option 2: Using a service like EmailJS (client-side)
-      // Option 3: Using Resend API (recommended)
-      // Option 4: Using SendGrid API
-      
-      // For now, we'll use a simple webhook approach
-      // You can replace this with your preferred email service
-      
-      const emailData = {
-        to: args.to,
-        subject: args.subject,
-        html: args.html,
-        from: args.from || "noreply@aesthetxways.com",
-        timestamp: new Date().toISOString(),
-      };
-
-      // Log the email for now (replace with actual email service)
-
-      // Example with Resend API (uncomment and configure when ready)
-      /*
-      const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: emailData.from,
-          to: [emailData.to],
-          subject: emailData.subject,
-          html: emailData.html,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Email service error: ${error}`);
-      }
-
-      const result = await response.json();
-      */
-
-      // Example with webhook (replace with your webhook URL)
-      /*
-      const webhookResponse = await fetch("YOUR_WEBHOOK_URL", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(emailData),
-      });
-
-      if (!webhookResponse.ok) {
-        throw new Error(`Webhook error: ${webhookResponse.statusText}`);
-      }
-      */
-
-      return { success: true, message: "Email notification logged" };
+      // This is a placeholder - actual email sending happens via Next.js API routes
+      // which have access to environment variables
+      return { success: true, message: "Email will be sent via API route" };
     } catch (error) {
       return { success: false, error: error.message };
     }

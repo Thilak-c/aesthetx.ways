@@ -15,48 +15,85 @@ export const sendOrderNotificationEmail = action({
         name: v.string(),
         quantity: v.number(),
         price: v.number(),
+        size: v.optional(v.string()),
+        image: v.optional(v.string()),
       })),
       shippingAddress: v.string(),
+      shippingDetails: v.optional(v.any()),
+      paymentDetails: v.optional(v.any()),
     }),
   },
   handler: async (ctx, args) => {
     const { orderData } = args;
 
+    console.log('Sending admin notification for order:', orderData.orderNumber);
+
     try {
-      // Email configuration
-      const adminEmail = "yashodanandkumar15@gmail.com";
-      const subject = `🛍️ New Order - ${orderData.orderNumber} - ₹${orderData.orderTotal.toLocaleString()}`;
+      // Call the Next.js API route to send admin notification
+      const apiUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-      // Create email content using template
-      const emailContent = createOrderNotificationTemplate(orderData);
+      console.log('Calling admin notification API:', `${apiUrl}/api/send-admin-notification`);
 
-      // Send email using email service
-      const result = await ctx.runAction(api.emailService.sendEmail, {
-        to: adminEmail,
-        subject: subject,
-        html: emailContent,
-        from: "orders@aesthetxways.com",
+      const payload = {
+        orderNumber: orderData.orderNumber,
+        customerName: orderData.customerName,
+        customerEmail: orderData.customerEmail,
+        orderTotal: orderData.orderTotal,
+        items: orderData.items,
+        shippingAddress: orderData.shippingAddress,
+        shippingDetails: orderData.shippingDetails || {
+          phone: '',
+          address: orderData.shippingAddress,
+          city: '',
+          state: '',
+          pincode: '',
+        },
+        paymentDetails: orderData.paymentDetails || {
+          status: 'pending',
+          paymentMethod: 'online',
+        },
+      };
+
+      console.log('Payload:', JSON.stringify(payload, null, 2));
+
+      const response = await fetch(`${apiUrl}/api/send-admin-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
+
+      console.log('API response status:', response.status);
+
+      const result = await response.json();
+      console.log('API response:', result);
 
       // Log the notification
-      await ctx.runMutation(api.emailNotifications.logOrderNotification, {
-        orderNumber: orderData.orderNumber,
-        customerEmail: orderData.customerEmail,
-        adminEmail: adminEmail,
-        status: result.success ? "sent" : "failed",
-        error: result.success ? undefined : result.error,
-      });
+      const adminEmails = ["yashodanandkumar15@gmail.com", "maskeyishere@gmail.com"];
+      for (const adminEmail of adminEmails) {
+        await ctx.runMutation(api.emailNotifications.logOrderNotification, {
+          orderNumber: orderData.orderNumber,
+          customerEmail: orderData.customerEmail,
+          adminEmail: adminEmail,
+          status: result.success ? "sent" : "failed",
+          error: result.success ? undefined : result.message,
+        });
+      }
 
       return result;
     } catch (error) {
-      // Log the failed notification
-      await ctx.runMutation(api.emailNotifications.logOrderNotification, {
-        orderNumber: orderData.orderNumber,
-        customerEmail: orderData.customerEmail,
-        adminEmail: "yashodanandkumar15@gmail.com",
-        status: "failed",
-        error: error.message,
-      });
+      // Log the failed notification for all admins
+      const adminEmails = ["yashodanandkumar15@gmail.com", "maskeyishere@gmail.com"];
+      for (const adminEmail of adminEmails) {
+        await ctx.runMutation(api.emailNotifications.logOrderNotification, {
+          orderNumber: orderData.orderNumber,
+          customerEmail: orderData.customerEmail,
+          adminEmail: adminEmail,
+          status: "failed",
+          error: error.message,
+        });
+      }
 
       return { success: false, error: error.message };
     }

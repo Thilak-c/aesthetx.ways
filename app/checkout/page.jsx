@@ -492,6 +492,31 @@ export default function CheckoutPage() {
           console.error("Error sending order confirmation email:", emailError);
         });
 
+        // Send admin notification email (non-blocking)
+        fetch("/api/send-admin-notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderNumber: orderResult.orderNumber,
+            customerName: currentShippingDetails.fullName,
+            customerEmail: currentShippingDetails.email,
+            orderTotal: finalTotal,
+            items: mappedItems,
+            shippingAddress: `${currentShippingDetails.address}, ${currentShippingDetails.city}, ${currentShippingDetails.state} - ${currentShippingDetails.pincode}`,
+            shippingDetails: currentShippingDetails,
+            paymentDetails: {
+              amount: finalTotal,
+              currency: "INR",
+              status: "pending",
+              paymentMethod: "cod",
+            },
+          }),
+        }).then(res => res.json()).then(data => {
+          console.log("Admin notification sent:", data);
+        }).catch((emailError) => {
+          console.error("Error sending admin notification:", emailError);
+        });
+
         // Clear cart after successful order
         if (!isDirectPurchase && me) {
           try {
@@ -689,6 +714,35 @@ export default function CheckoutPage() {
                     }),
                   }).catch((emailError) => {
                     console.error("Error sending order confirmation email:", emailError);
+                  });
+
+                  // Send admin notification email (non-blocking)
+                  fetch("/api/send-admin-notification", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      orderNumber: orderResult.orderNumber,
+                      customerName: getCurrentShippingDetails().fullName,
+                      customerEmail: getCurrentShippingDetails().email,
+                      orderTotal: finalTotal,
+                      items: mappedItems,
+                      shippingAddress: `${getCurrentShippingDetails().address}, ${getCurrentShippingDetails().city}, ${getCurrentShippingDetails().state} - ${getCurrentShippingDetails().pincode}`,
+                      shippingDetails: getCurrentShippingDetails(),
+                      paymentDetails: {
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        amount: finalTotal,
+                        currency: "INR",
+                        status: "paid",
+                        paidAt: Date.now(),
+                        paidBy: getCurrentShippingDetails().fullName,
+                        paymentMethod: "razorpay",
+                      },
+                    }),
+                  }).then(res => res.json()).then(data => {
+                    console.log("Admin notification sent:", data);
+                  }).catch((emailError) => {
+                    console.error("Error sending admin notification:", emailError);
                   });
 
                   // Clear cart after successful order (only for cart-based purchases)

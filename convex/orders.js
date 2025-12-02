@@ -117,25 +117,8 @@ export const createOrder = mutation({
         updatedAt: orderTimestamp,
       });
 
-      // Send email notification to admin
-      try {
-        await ctx.runAction(api.emailNotifications.sendOrderNotificationEmail, {
-          orderData: {
-            orderNumber,
-            customerName: args.shippingDetails.fullName,
-            customerEmail: args.shippingDetails.email,
-            orderTotal: args.orderTotal,
-            items: args.items.map(item => ({
-              name: item.name,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-            shippingAddress: `${args.shippingDetails.address}, ${args.shippingDetails.city}, ${args.shippingDetails.state} - ${args.shippingDetails.pincode}`,
-          },
-        });
-      } catch (emailError) {
-        // Don't fail the order creation if email fails
-      }
+      // Admin notification is now sent from the frontend checkout page
+      // This avoids Convex action/mutation limitations
 
       // Update stock for each item
       for (const item of args.items) {
