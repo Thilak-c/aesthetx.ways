@@ -1555,7 +1555,7 @@ export default function CheckoutPage() {
                     {/* Hybrid Payment Option - FIRST - 20% Online + COD with 5% Discount */}
                     <div
                       onClick={() => setSelectedPaymentMethod("hybrid")}
-                      className={`relative flex items-center space-x-2 sm:space-x-4 p-2.5 pl-3 pr-2 sm:p-5 border-2 rounded-xl transition-all cursor-pointer ${selectedPaymentMethod === "hybrid" ? "border-green-500 bg-green0 shadow-md shadow-green-100" : "border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 hover:border-green-400"}`}
+                      className={`relative flex items-center space-x-2 sm:space-x-4 p-2.5 pl-3 pr-2 sm:p-5 border-2 rounded-xl transition-all cursor-pointer ${selectedPaymentMethod === "hybrid" ? "border-green-500 bg-green-500/0 shadow-md shadow-green-100" : "border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 hover:border-green-400"}`}
                     >
                       {/* Best Value Badge */}
                       <div className="absolute -top-2 sm:-top-2.5 left-3 sm:left-4 bg-green-500 text-white text-[9px] sm:text-xs font-bold px-2 sm:px-3 py-0.5 rounded-full flex items-center gap-1">
