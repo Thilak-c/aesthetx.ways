@@ -731,3 +731,142 @@ export const getPageViewsAnalytics = query({
     };
   }
 });
+
+
+// Get payment methods analytics from orders
+export const getPaymentMethodsAnalytics = query({
+  args: {
+    startDate: v.optional(v.string()), // Format: "YYYY-MM-DD"
+    endDate: v.optional(v.string()),   // Format: "YYYY-MM-DD"
+  },
+  handler: async (ctx, { startDate, endDate }) => {
+    // Get all orders
+    const orders = await ctx.db
+      .query("orders")
+      .order("desc")
+      .collect();
+
+    // Filter by date range if provided
+    let filteredOrders = orders;
+    
+    if (startDate) {
+      const startTs = new Date(startDate).getTime();
+      filteredOrders = filteredOrders.filter(o => o.createdAt >= startTs);
+    }
+    
+    if (endDate) {
+      const endTs = new Date(endDate).setHours(23, 59, 59, 999);
+      filteredOrders = filteredOrders.filter(o => o.createdAt <= endTs);
+    }
+
+    // Separate cancelled orders
+    const activeOrders = filteredOrders.filter(o => o.status !== "cancelled");
+    const cancelledOrders = filteredOrders.filter(o => o.status === "cancelled");
+
+    // Payment method breakdown (active orders only for revenue)
+    const paymentMethods = {};
+    const paymentMethodRevenue = {};
+    const dailyPaymentData = {};
+
+    // Order status breakdown
+    const orderStatusBreakdown = {};
+    filteredOrders.forEach(order => {
+      const status = order.status || "unknown";
+      orderStatusBreakdown[status] = (orderStatusBreakdown[status] || 0) + 1;
+    });
+
+    // Cancelled orders by payment method
+    const cancelledByMethod = {};
+    const cancelledRevenue = {};
+    cancelledOrders.forEach(order => {
+      const method = order.paymentDetails?.paymentMethod || "razorpay";
+      const amount = order.orderTotal || 0;
+      cancelledByMethod[method] = (cancelledByMethod[method] || 0) + 1;
+      cancelledRevenue[method] = (cancelledRevenue[method] || 0) + amount;
+    });
+
+    activeOrders.forEach(order => {
+      const method = order.paymentDetails?.paymentMethod || "razorpay";
+      const amount = order.orderTotal || 0;
+      const orderDate = new Date(order.createdAt);
+      const dateKey = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}-${String(orderDate.getDate()).padStart(2, '0')}`;
+
+      // Count by payment method
+      paymentMethods[method] = (paymentMethods[method] || 0) + 1;
+      
+      // Revenue by payment method
+      paymentMethodRevenue[method] = (paymentMethodRevenue[method] || 0) + amount;
+
+      // Daily breakdown
+      if (!dailyPaymentData[dateKey]) {
+        dailyPaymentData[dateKey] = {
+          date: dateKey,
+          razorpay: 0,
+          cod: 0,
+          cancelled: 0,
+          razorpayRevenue: 0,
+          codRevenue: 0,
+          total: 0,
+          totalRevenue: 0,
+        };
+      }
+      
+      if (method === "cod") {
+        dailyPaymentData[dateKey].cod++;
+        dailyPaymentData[dateKey].codRevenue += amount;
+      } else {
+        dailyPaymentData[dateKey].razorpay++;
+        dailyPaymentData[dateKey].razorpayRevenue += amount;
+      }
+      dailyPaymentData[dateKey].total++;
+      dailyPaymentData[dateKey].totalRevenue += amount;
+    });
+
+    // Add cancelled orders to daily data
+    cancelledOrders.forEach(order => {
+      const orderDate = new Date(order.createdAt);
+      const dateKey = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}-${String(orderDate.getDate()).padStart(2, '0')}`;
+      
+      if (!dailyPaymentData[dateKey]) {
+        dailyPaymentData[dateKey] = {
+          date: dateKey,
+          razorpay: 0,
+          cod: 0,
+          cancelled: 0,
+          razorpayRevenue: 0,
+          codRevenue: 0,
+          total: 0,
+          totalRevenue: 0,
+        };
+      }
+      dailyPaymentData[dateKey].cancelled++;
+    });
+
+    // Convert daily data to sorted array
+    const dailyData = Object.values(dailyPaymentData)
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Format for display
+    const formattedDailyData = dailyData.map(day => {
+      const [, m, d] = day.date.split('-');
+      return {
+        ...day,
+        displayDate: `${m}/${d}`,
+      };
+    });
+
+    return {
+      paymentMethods,
+      paymentMethodRevenue,
+      dailyData: formattedDailyData,
+      totalOrders: filteredOrders.length,
+      activeOrders: activeOrders.length,
+      cancelledOrders: cancelledOrders.length,
+      cancelledByMethod,
+      cancelledRevenue,
+      totalCancelledRevenue: cancelledOrders.reduce((sum, o) => sum + (o.orderTotal || 0), 0),
+      orderStatusBreakdown,
+      totalRevenue: activeOrders.reduce((sum, o) => sum + (o.orderTotal || 0), 0),
+    };
+  }
+});

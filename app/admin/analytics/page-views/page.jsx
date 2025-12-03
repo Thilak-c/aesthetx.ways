@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { ArrowLeft, TrendingUp, Eye, Clock, Users } from "lucide-react";
@@ -30,21 +29,16 @@ function getLast30Days() {
   for (let i = 0; i < 30; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    // Format as YYYY-MM-DD in local timezone
     const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
     dates.push(`${year}-${month}-${day}`);
   }
-  console.log('Generated dates:', dates);
   return dates;
 }
 
 export default function PageViewsAnalytics() {
   const [timeRange, setTimeRange] = useState("30d");
-  const [separateCharts, setSeparateCharts] = useState(false);
-
-  // Progressive loading state
   const [aggregatedData, setAggregatedData] = useState({
     hourlyViews: [],
     topPages: [],
@@ -60,7 +54,7 @@ export default function PageViewsAnalytics() {
     currentDate: null,
   });
 
-  // Progressive day-by-day loading
+
   useEffect(() => {
     let isCancelled = false;
 
@@ -83,31 +77,23 @@ export default function PageViewsAnalytics() {
       let totalViews = 0;
       const allVisitors = new Set();
 
-      // Load days sequentially for progressive rendering
       for (let i = 0; i < dates.length; i++) {
         if (isCancelled) break;
 
         const date = dates[i];
-        setLoadingState(prev => ({ ...prev, currentDate: date, loaded: i }));
+        setLoadingState((prev) => ({ ...prev, currentDate: date, loaded: i }));
 
         try {
-          // Call Convex directly (no API route needed)
           const { ConvexHttpClient } = await import("convex/browser");
           const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
           const dayData = await client.query(api.analytics.getAnalyticsForDay, { date });
 
-          // Check if data is valid
-          if (!dayData || dayData.error) {
-            console.error(`Error loading ${date}:`, dayData?.error);
-            continue;
-          }
+          if (!dayData || dayData.error) continue;
 
-          // Aggregate hourly data
           if (dayData.hourlyViews && Array.isArray(dayData.hourlyViews)) {
-            dayData.hourlyViews.forEach(hourData => {
-              // Format: "12/01 14:00" (MM/DD HH:00)
-              const [y, m, d] = date.split('-');
-              const hourStr = String(hourData.hour).padStart(2, '0');
+            dayData.hourlyViews.forEach((hourData) => {
+              const [, m, d] = date.split("-");
+              const hourStr = String(hourData.hour).padStart(2, "0");
               allHourlyData.push({
                 hour: `${m}/${d} ${hourStr}:00`,
                 views: hourData.views,
@@ -116,21 +102,18 @@ export default function PageViewsAnalytics() {
             });
           }
 
-          // Aggregate top pages
           if (dayData.topPages && Array.isArray(dayData.topPages)) {
-            dayData.topPages.forEach(page => {
+            dayData.topPages.forEach((page) => {
               allTopPages[page.path] = (allTopPages[page.path] || 0) + page.views;
             });
           }
 
-          // Aggregate devices
           if (dayData.deviceBreakdown) {
             Object.entries(dayData.deviceBreakdown).forEach(([device, count]) => {
               allDevices[device] = (allDevices[device] || 0) + count;
             });
           }
 
-          // Aggregate browsers
           if (dayData.browserBreakdown) {
             Object.entries(dayData.browserBreakdown).forEach(([browser, count]) => {
               allBrowsers[browser] = (allBrowsers[browser] || 0) + count;
@@ -140,10 +123,6 @@ export default function PageViewsAnalytics() {
           if (dayData.meta) {
             totalViews += dayData.meta.totalViews || 0;
           }
-
-          // Update UI progressively
-          console.log(`Day ${date} loaded. Total hourly data points:`, allHourlyData.length);
-          console.log('Sample hourly data:', allHourlyData.slice(0, 3));
 
           setAggregatedData({
             hourlyViews: [...allHourlyData],
@@ -157,12 +136,9 @@ export default function PageViewsAnalytics() {
             uniqueVisitors: allVisitors.size,
           });
 
-          // Small delay for smooth animation
-          await new Promise(resolve => setTimeout(resolve, 100));
-
+          await new Promise((resolve) => setTimeout(resolve, 100));
         } catch (error) {
           console.error(`Failed to load ${date}:`, error);
-          // Continue loading other days
         }
       }
 
@@ -170,25 +146,13 @@ export default function PageViewsAnalytics() {
     }
 
     loadProgressively();
-
-    return () => {
-      isCancelled = true;
-    };
+    return () => { isCancelled = true; };
   }, [timeRange]);
 
   const { hourlyViews, topPages, deviceBreakdown, browserBreakdown, totalViews, uniqueVisitors } = aggregatedData;
 
-  // Format device data for pie chart
-  const deviceChartData = Object.entries(deviceBreakdown).map(([name, value]) => ({
-    name,
-    value,
-  }));
-
-  // Format browser data for bar chart
-  const browserChartData = Object.entries(browserBreakdown).map(([name, value]) => ({
-    name,
-    value,
-  }));
+  const deviceChartData = Object.entries(deviceBreakdown).map(([name, value]) => ({ name, value }));
+  const browserChartData = Object.entries(browserBreakdown).map(([name, value]) => ({ name, value }));
 
   return (
     <div className="min-h-screen w-full bg-gray-100 text-gray-900 p-6">
@@ -203,8 +167,8 @@ export default function PageViewsAnalytics() {
         </Link>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Page Views Analytics (Progressive)</h1>
-            <p className="text-gray-600">Loading data day by day for instant feedback</p>
+            <h1 className="text-3xl font-bold mb-2">Page Views Analytics</h1>
+            <p className="text-gray-600">Track page views and visitor trends</p>
           </div>
           <select
             value={timeRange}
@@ -240,39 +204,17 @@ export default function PageViewsAnalytics() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <StatsCard
-          title="Total Views"
-          value={totalViews}
-          icon={<Eye className="w-6 h-6" />}
-          color="bg-blue-500"
-        />
-        <StatsCard
-          title="Unique Visitors"
-          value={uniqueVisitors}
-          icon={<Users className="w-6 h-6" />}
-          color="bg-green-500"
-        />
-        <StatsCard
-          title="Days Loaded"
-          value={`${loadingState.loaded}/${loadingState.total}`}
-          icon={<Clock className="w-6 h-6" />}
-          color="bg-purple-500"
-        />
-        <StatsCard
-          title="Status"
-          value={loadingState.isLoading ? "Loading..." : "Complete"}
-          icon={<TrendingUp className="w-6 h-6" />}
-          color="bg-orange-500"
-        />
+        <StatsCard title="Total Views" value={totalViews} icon={<Eye className="w-6 h-6" />} color="bg-blue-500" />
+        <StatsCard title="Unique Visitors" value={uniqueVisitors} icon={<Users className="w-6 h-6" />} color="bg-green-500" />
+        <StatsCard title="Days Loaded" value={`${loadingState.loaded}/${loadingState.total}`} icon={<Clock className="w-6 h-6" />} color="bg-purple-500" />
+        <StatsCard title="Status" value={loadingState.isLoading ? "Loading..." : "Complete"} icon={<TrendingUp className="w-6 h-6" />} color="bg-orange-500" />
       </div>
 
-      {/* Combined Line Chart */}
+      {/* Line Chart */}
       <div className="bg-white p-6 rounded-xl shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Page Views & Unique Visitors Over Time</h2>
         {hourlyViews.length === 0 ? (
-          <div className="h-[400px] flex items-center justify-center text-gray-500">
-            Waiting for data...
-          </div>
+          <div className="h-[400px] flex items-center justify-center text-gray-500">Waiting for data...</div>
         ) : (
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={hourlyViews}>
@@ -281,22 +223,8 @@ export default function PageViewsAnalytics() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="views"
-                stroke="#3B82F6"
-                strokeWidth={2}
-                dot={false}
-                name="Page Views"
-              />
-              <Line
-                type="monotone"
-                dataKey="uniqueVisitors"
-                stroke="#10B981"
-                strokeWidth={2}
-                dot={false}
-                name="Unique Visitors"
-              />
+              <Line type="monotone" dataKey="views" stroke="#3B82F6" strokeWidth={2} dot={false} name="Page Views" />
+              <Line type="monotone" dataKey="uniqueVisitors" stroke="#10B981" strokeWidth={2} dot={false} name="Unique Visitors" />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -332,7 +260,7 @@ export default function PageViewsAnalytics() {
                 outerRadius={80}
                 dataKey="value"
               >
-                {deviceChartData.map((entry, index) => (
+                {deviceChartData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
