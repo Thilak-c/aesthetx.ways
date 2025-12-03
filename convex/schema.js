@@ -70,6 +70,18 @@ export default defineSchema({
     .index("by_token", ["sessionToken"])
     .index("by_userId", ["userId"]),
 
+  // Password Reset OTPs table
+  passwordResetOTPs: defineTable({
+    email: v.string(),
+    otp: v.string(),
+    expiresAt: v.string(),
+    createdAt: v.string(),
+    used: v.boolean(),
+    verified: v.optional(v.boolean()),
+  })
+    .index("by_email", ["email"])
+    .index("by_otp", ["otp"]),
+
   // Trash table for storing deleted items that can be restored
   trash: defineTable({
     originalId: v.id("users"), // Original record ID

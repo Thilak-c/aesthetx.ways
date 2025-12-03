@@ -337,3 +337,174 @@ export const signOut = mutation({
 		return { success: true };
 	},
 });
+
+
+// Generate 6-digit OTP
+function generateOTP() {
+	return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Mutation: Request password reset OTP
+export const requestPasswordResetOTP = mutation({
+	args: {
+		email: v.string(),
+	},
+	handler: async (ctx, { email }) => {
+		const normalizedEmail = email.toLowerCase().trim();
+
+		// Check if user exists
+		const user = await ctx.db
+			.query("users")
+			.withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+			.unique();
+
+		if (!user) {
+			// Don't reveal if email exists or not for security
+			return { success: true, message: "If the email exists, an OTP has been sent." };
+		}
+
+		if (user.isDeleted) {
+			return { success: false, message: "This account has been deleted." };
+		}
+
+		// Generate OTP
+		const otp = generateOTP();
+		const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+
+		// Delete any existing OTP for this user
+		const existingOTPs = await ctx.db
+			.query("passwordResetOTPs")
+			.filter((q) => q.eq(q.field("email"), normalizedEmail))
+			.collect();
+
+		for (const existingOTP of existingOTPs) {
+			await ctx.db.delete(existingOTP._id);
+		}
+
+		// Store OTP in database
+		await ctx.db.insert("passwordResetOTPs", {
+			email: normalizedEmail,
+			otp,
+			expiresAt,
+			createdAt: nowIso(),
+			used: false,
+		});
+
+		return {
+			success: true,
+			message: "OTP generated successfully",
+			otp, // Return OTP to send via email API
+			email: normalizedEmail,
+			userName: user.name || "User",
+		};
+	},
+});
+
+// Mutation: Verify OTP
+export const verifyPasswordResetOTP = mutation({
+	args: {
+		email: v.string(),
+		otp: v.string(),
+	},
+	handler: async (ctx, { email, otp }) => {
+		const normalizedEmail = email.toLowerCase().trim();
+
+		// Find OTP record
+		const otpRecord = await ctx.db
+			.query("passwordResetOTPs")
+			.filter((q) => 
+				q.and(
+					q.eq(q.field("email"), normalizedEmail),
+					q.eq(q.field("otp"), otp),
+					q.eq(q.field("used"), false)
+				)
+			)
+			.first();
+
+		if (!otpRecord) {
+			return { success: false, message: "Invalid OTP. Please try again." };
+		}
+
+		// Check if OTP is expired
+		if (new Date(otpRecord.expiresAt) < new Date()) {
+			await ctx.db.delete(otpRecord._id);
+			return { success: false, message: "OTP has expired. Please request a new one." };
+		}
+
+		// Mark OTP as verified (but not used yet - will be used when password is reset)
+		await ctx.db.patch(otpRecord._id, { verified: true });
+
+		return { success: true, message: "OTP verified successfully" };
+	},
+});
+
+// Mutation: Reset password with OTP
+export const resetPasswordWithOTP = mutation({
+	args: {
+		email: v.string(),
+		otp: v.string(),
+		newPassword: v.string(),
+	},
+	handler: async (ctx, { email, otp, newPassword }) => {
+		const normalizedEmail = email.toLowerCase().trim();
+
+		// Validate password
+		if (newPassword.length < 8) {
+			return { success: false, message: "Password must be at least 8 characters long" };
+		}
+
+		// Find verified OTP record
+		const otpRecord = await ctx.db
+			.query("passwordResetOTPs")
+			.filter((q) => 
+				q.and(
+					q.eq(q.field("email"), normalizedEmail),
+					q.eq(q.field("otp"), otp),
+					q.eq(q.field("used"), false)
+				)
+			)
+			.first();
+
+		if (!otpRecord) {
+			return { success: false, message: "Invalid or expired OTP. Please request a new one." };
+		}
+
+		// Check if OTP is expired
+		if (new Date(otpRecord.expiresAt) < new Date()) {
+			await ctx.db.delete(otpRecord._id);
+			return { success: false, message: "OTP has expired. Please request a new one." };
+		}
+
+		// Find user
+		const user = await ctx.db
+			.query("users")
+			.withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+			.unique();
+
+		if (!user) {
+			return { success: false, message: "User not found" };
+		}
+
+		// Update password
+		const passwordHash = await simpleHash(newPassword);
+		await ctx.db.patch(user._id, {
+			passwordHash,
+			updatedAt: nowIso(),
+		});
+
+		// Mark OTP as used
+		await ctx.db.patch(otpRecord._id, { used: true });
+
+		// Delete all sessions for this user (force re-login)
+		const sessions = await ctx.db
+			.query("sessions")
+			.filter((q) => q.eq(q.field("userId"), user._id))
+			.collect();
+
+		for (const session of sessions) {
+			await ctx.db.delete(session._id);
+		}
+
+		return { success: true, message: "Password reset successfully. Please login with your new password." };
+	},
+});

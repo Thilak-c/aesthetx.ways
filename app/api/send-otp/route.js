@@ -3,9 +3,9 @@ import nodemailer from 'nodemailer';
 
 // Configure email transporter
 const transporter = nodemailer.createTransport({
- host: "﻿​﻿smtp.hostinger.com", // or your provider’s SMTP host
-      port: 465,
-      secure: true, 
+  host: "﻿​﻿smtp.hostinger.com", // or your provider’s SMTP host
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -25,31 +25,31 @@ export async function POST(request) {
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     // Store OTP in memory (in production, use Redis or database)
     // For now, we'll use a simple in-memory store with better persistence
     if (!global.otpStore) {
       global.otpStore = new Map();
     }
-    
+
     // Also store in a more persistent way for development
     if (!global.otpStorePersistent) {
       global.otpStorePersistent = new Map();
     }
-    
+
     const otpData = {
       otp,
       expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
       createdAt: Date.now()
     };
-    
+
     // Store OTP with expiration (5 minutes)
     global.otpStore.set(email, otpData);
     global.otpStorePersistent.set(email, otpData);
 
     // Email content
     const mailOptions = {
- from: `AesthetX Ways <${process.env.EMAIL_USER}>`,
+      from: `AesthetX Ways <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Email Verification OTP',
       html: `
@@ -124,7 +124,7 @@ export async function POST(request) {
 
     // For development: also return the OTP in the response
     const isDevelopment = process.env.NODE_ENV === 'development';
-    
+
     return NextResponse.json({
       success: true,
       message: 'OTP sent successfully',
