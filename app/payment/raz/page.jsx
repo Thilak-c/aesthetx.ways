@@ -127,6 +127,11 @@ export default function RazorpayPaymentPage() {
 
             const verifyData = await verifyResponse.json();
             if (verifyData.success) {
+              // Determine payment method and amounts based on hybrid or regular payment
+              const isHybrid = data.isHybridPayment;
+              const paymentMethod = isHybrid ? "hybrid" : "razorpay";
+              const paymentStatus = isHybrid ? "partial" : "paid";
+              
               // Create order
               const orderResult = await createOrderMutation({
                 userId: data.userId || null,
@@ -137,10 +142,17 @@ export default function RazorpayPaymentPage() {
                   razorpayPaymentId: response.razorpay_payment_id,
                   amount: data.orderTotal,
                   currency: "INR",
-                  status: "paid",
+                  status: paymentStatus,
                   paidAt: Date.now(),
                   paidBy: data.customerDetails.fullName,
-                  paymentMethod: "razorpay",
+                  paymentMethod: paymentMethod,
+                  // Hybrid payment specific fields
+                  ...(isHybrid && {
+                    upfrontPaid: data.hybridDetails.upfrontAmount,
+                    codPending: data.hybridDetails.codAmount,
+                    discount: data.hybridDetails.discount,
+                    originalTotal: data.hybridDetails.originalTotal,
+                  }),
                 },
                 orderTotal: data.orderTotal,
                 status: "confirmed",
@@ -165,10 +177,15 @@ export default function RazorpayPaymentPage() {
                       razorpayPaymentId: response.razorpay_payment_id,
                       amount: data.orderTotal,
                       currency: "INR",
-                      status: "paid",
+                      status: paymentStatus,
                       paidAt: Date.now(),
                       paidBy: data.customerDetails.fullName,
-                      paymentMethod: "razorpay",
+                      paymentMethod: paymentMethod,
+                      ...(isHybrid && {
+                        upfrontPaid: data.hybridDetails.upfrontAmount,
+                        codPending: data.hybridDetails.codAmount,
+                        discount: data.hybridDetails.discount,
+                      }),
                     },
                   }),
                 }).catch((emailError) => {

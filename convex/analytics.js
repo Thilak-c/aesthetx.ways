@@ -803,9 +803,11 @@ export const getPaymentMethodsAnalytics = query({
           date: dateKey,
           razorpay: 0,
           cod: 0,
+          hybrid: 0,
           cancelled: 0,
           razorpayRevenue: 0,
           codRevenue: 0,
+          hybridRevenue: 0,
           total: 0,
           totalRevenue: 0,
         };
@@ -814,6 +816,9 @@ export const getPaymentMethodsAnalytics = query({
       if (method === "cod") {
         dailyPaymentData[dateKey].cod++;
         dailyPaymentData[dateKey].codRevenue += amount;
+      } else if (method === "hybrid") {
+        dailyPaymentData[dateKey].hybrid++;
+        dailyPaymentData[dateKey].hybridRevenue += amount;
       } else {
         dailyPaymentData[dateKey].razorpay++;
         dailyPaymentData[dateKey].razorpayRevenue += amount;

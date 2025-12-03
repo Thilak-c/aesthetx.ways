@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
-import { ArrowLeft, TrendingUp, CreditCard, Banknote, ShoppingCart, XCircle } from "lucide-react";
+import { ArrowLeft, TrendingUp, CreditCard, Banknote, ShoppingCart, XCircle, Sparkles } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -22,7 +22,7 @@ import {
   Area,
 } from "recharts";
 
-const PAYMENT_COLORS = { razorpay: "#3B82F6", cod: "#F59E0B", cancelled: "#EF4444" };
+const PAYMENT_COLORS = { razorpay: "#3B82F6", cod: "#F59E0B", hybrid: "#10B981", cancelled: "#EF4444" };
 
 export default function PaymentDetailsAnalytics() {
   const [timeRange, setTimeRange] = useState("30d");
@@ -101,7 +101,7 @@ export default function PaymentDetailsAnalytics() {
       ) : paymentData ? (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             <StatsCard
               title="Total Orders"
               value={paymentData.totalOrders}
@@ -109,25 +109,31 @@ export default function PaymentDetailsAnalytics() {
               color="bg-blue-500"
             />
             <StatsCard
-              title="Razorpay Orders"
+              title="Razorpay"
               value={paymentData.paymentMethods?.razorpay || 0}
               icon={<CreditCard className="w-6 h-6" />}
               color="bg-indigo-500"
             />
             <StatsCard
-              title="COD Orders"
+              title="Hybrid (20%+COD)"
+              value={paymentData.paymentMethods?.hybrid || 0}
+              icon={<Sparkles className="w-6 h-6" />}
+              color="bg-emerald-500"
+            />
+            <StatsCard
+              title="COD"
               value={paymentData.paymentMethods?.cod || 0}
               icon={<Banknote className="w-6 h-6" />}
               color="bg-amber-500"
             />
             <StatsCard
-              title="Cancelled Orders"
+              title="Cancelled"
               value={paymentData.cancelledOrders || 0}
               icon={<XCircle className="w-6 h-6" />}
               color="bg-red-500"
             />
             <StatsCard
-              title="Total Revenue"
+              title="Revenue"
               value={`₹${paymentData.totalRevenue?.toLocaleString() || 0}`}
               icon={<TrendingUp className="w-6 h-6" />}
               color="bg-green-500"
@@ -145,13 +151,13 @@ export default function PaymentDetailsAnalytics() {
                   <YAxis />
                   <Tooltip
                     formatter={(value, name) => {
-                      const labels = { razorpay: "Razorpay", cod: "COD", cancelled: "Cancelled" };
+                      const labels = { razorpay: "Razorpay", cod: "COD", hybrid: "Hybrid (20%+COD)", cancelled: "Cancelled" };
                       return [value, labels[name] || name];
                     }}
                   />
                   <Legend
                     formatter={(value) => {
-                      const labels = { razorpay: "Razorpay", cod: "COD", cancelled: "Cancelled" };
+                      const labels = { razorpay: "Razorpay", cod: "COD", hybrid: "Hybrid", cancelled: "Cancelled" };
                       return labels[value] || value;
                     }}
                   />
@@ -163,6 +169,15 @@ export default function PaymentDetailsAnalytics() {
                     fill={PAYMENT_COLORS.razorpay}
                     fillOpacity={0.6}
                     name="razorpay"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="hybrid"
+                    stackId="1"
+                    stroke={PAYMENT_COLORS.hybrid}
+                    fill={PAYMENT_COLORS.hybrid}
+                    fillOpacity={0.6}
+                    name="hybrid"
                   />
                   <Area
                     type="monotone"
@@ -200,6 +215,7 @@ export default function PaymentDetailsAnalytics() {
                   <Pie
                     data={[
                       { name: "Razorpay", value: paymentData.paymentMethods?.razorpay || 0 },
+                      { name: "Hybrid", value: paymentData.paymentMethods?.hybrid || 0 },
                       { name: "COD", value: paymentData.paymentMethods?.cod || 0 },
                     ].filter((d) => d.value > 0)}
                     cx="50%"
@@ -210,6 +226,7 @@ export default function PaymentDetailsAnalytics() {
                     dataKey="value"
                   >
                     <Cell fill={PAYMENT_COLORS.razorpay} />
+                    <Cell fill={PAYMENT_COLORS.hybrid} />
                     <Cell fill={PAYMENT_COLORS.cod} />
                   </Pie>
                   <Tooltip />
