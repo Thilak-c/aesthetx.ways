@@ -9,7 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { Toaster } from "react-hot-toast";
 import HelpChatWidget from "./HelpChatWidget";
 import Footer from "../ components/footer";
-import PageViewTracker from "./PageViewTracker";
+// import PageViewTracker from "./PageViewTracker"; // TEMPORARILY DISABLED
 
 export default function LayoutWrapper({ children }) {
   const [token, setToken] = useState(null);
@@ -57,7 +57,7 @@ export default function LayoutWrapper({ children }) {
     <>
       {/* Render content in background while loading */}
       <div style={{ visibility: showLoading ? 'hidden' : 'visible' }}>
-        <PageViewTracker userId={user?._id} />
+        {/* <PageViewTracker userId={user?._id} /> */} {/* TEMPORARILY DISABLED */}
         {children}
         <Toaster />
         {!isCheckoutOrAdmin && <HelpChatWidget />}

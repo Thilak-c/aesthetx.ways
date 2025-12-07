@@ -1,5 +1,39 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { FiAlertCircle } from "react-icons/fi";
+
+export default function AnalyticsPage() {
+  const router = useRouter();
+
+  return (
+    <div className="min-h-screen w-full bg-gray-100 flex items-center justify-center p-6">
+      <div className="max-w-md mx-auto text-center">
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="bg-yellow-100 text-yellow-600 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+            <FiAlertCircle className="w-10 h-10" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Analytics Temporarily Disabled</h1>
+          <p className="text-gray-600 mb-6">
+            The analytics dashboard is currently under maintenance. Please check back later.
+          </p>
+          <button
+            onClick={() => router.push("/admin")}
+            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*
+ORIGINAL CODE - UNCOMMENT TO RESTORE:
+
+"use client";
+
 import Link from "next/link";
 import { FiUsers, FiEye, FiMap } from "react-icons/fi";
 import { CreditCard } from "lucide-react";
@@ -70,3 +104,4 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+*/

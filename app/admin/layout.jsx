@@ -90,7 +90,7 @@ export default function AdminLayout({ children }) {
     { label: "Orders", href: "/admin/orders", icon: <FiFileText /> },
     { label: "Users", href: "/admin/users", icon: <FiUsers /> },
     { label: "Chat Support", href: "/admin/chat", icon: <FiMessageCircle /> },
-    { label: "Analytics & Reports", href: "/admin/analytics", icon: <FiBarChart2 /> },
+    // { label: "Analytics & Reports", href: "/admin/analytics", icon: <FiBarChart2 /> },
     { label: "Email Notifications", href: "/admin/notifications", icon: <FiBell /> },
     { label: "Contacts", href: "/admin/contacts", icon: <FiMail /> },
 
