@@ -1,11 +1,12 @@
 "use client";
-import { FiEdit, FiUpload, FiBox, FiShoppingCart, FiUsers, FiBarChart2, FiActivity } from "react-icons/fi";
+import { FiEdit, FiUpload, FiBox, FiShoppingCart, FiUsers, FiBarChart2, FiActivity, FiRefreshCw } from "react-icons/fi";
 import React, { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Bar } from "react-chartjs-2";
 import 'chart.js/auto';
 import Link from "next/link";
+import toast from "react-hot-toast";
 // Animated Number Component
 function AnimatedNumber({ value }) {
   const [displayValue, setDisplayValue] = React.useState(0);
@@ -31,6 +32,36 @@ function AnimatedNumber({ value }) {
 export default function AdminHomePage() {
   const products = useQuery(api.products.getAll) || [];
   const [search, setSearch] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
+
+  // Manual sync to backup database
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/cron/backup", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || ""}`,
+        },
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setLastSync(new Date().toLocaleTimeString());
+        toast.success(
+          `Sync complete! Users: ${data.results.users.synced}, Products: ${data.results.products.synced}, Orders: ${data.results.orders.synced}`,
+          { duration: 4000 }
+        );
+      } else {
+        toast.error("Sync failed: " + (data.error || "Unknown error"));
+      }
+    } catch (err) {
+      toast.error("Sync failed: " + err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // Period state for each card
   const [salesPeriod, setSalesPeriod] = useState("today");
@@ -109,6 +140,26 @@ export default function AdminHomePage() {
     <div className="min-h-screen w-[100%]  bg-gray-100 text-gray-900 p-6">
       {/* Header */}
    
+
+      {/* Sync Button */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          {lastSync && <p className="text-sm text-gray-500">Last sync: {lastSync}</p>}
+        </div>
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all shadow-md ${
+            syncing 
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+              : "bg-gray-900 text-white hover:bg-gray-800 hover:shadow-lg"
+          }`}
+        >
+          <FiRefreshCw className={`w-5 h-5 ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Syncing..." : "Sync Backup"}
+        </button>
+      </div>
 
       {/* Top Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
