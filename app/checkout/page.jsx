@@ -1685,7 +1685,7 @@ export default function CheckoutPage() {
                       </label>
                     </div>
                     
-                    {/* COD Option 
+                    {/* COD Option */}
                     <div
                       onClick={() => handlePaymentMethodChange("cod")}
                       className={`flex items-center space-x-3 sm:space-x-4 p-2 pl-4 sm:p-5 border-2 rounded-xl transition-all cursor-pointer ${selectedPaymentMethod === "cod" ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"}`}
@@ -1713,7 +1713,6 @@ export default function CheckoutPage() {
                         </div>
                       </label>
                     </div>
-                    */}
                   </div>
                 </div>
                 
