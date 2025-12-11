@@ -47,7 +47,9 @@ export default function AdminLogin() {
         result = await adminSignIn({ email: form.email, password: form.password });
       }
       
-      document.cookie = `sessionToken=${result.sessionToken}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+      const isSecure = window.location.protocol === 'https:';
+      const cookieOptions = `Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}${isSecure ? '; Secure' : ''}`;
+      document.cookie = `sessionToken=${result.sessionToken}; ${cookieOptions}`;
       router.push("/admin");
     } catch (err) {
       if (err.message.includes("Super admin already exists")) {

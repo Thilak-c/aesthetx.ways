@@ -138,9 +138,13 @@ export default function Signup() {
       const signupResult = await signup({ email: form.email, password: form.password, name: form.name });
       console.log("Signup result:", signupResult);
       
+      // Determine if we're on HTTPS
+      const isSecure = window.location.protocol === 'https:';
+      const cookieOptions = `Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}${isSecure ? '; Secure' : ''}`;
+      
       // If signup returns a session token directly, use it
       if (signupResult?.sessionToken) {
-        document.cookie = `sessionToken=${signupResult.sessionToken}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+        document.cookie = `sessionToken=${signupResult.sessionToken}; ${cookieOptions}`;
         router.push("/onboarding");
         return;
       }
@@ -154,7 +158,7 @@ export default function Signup() {
         throw new Error("No session token received");
       }
       
-      document.cookie = `sessionToken=${sessionToken}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+      document.cookie = `sessionToken=${sessionToken}; ${cookieOptions}`;
       router.push("/onboarding");
     } catch (err) {
       console.error('Signup error:', err);

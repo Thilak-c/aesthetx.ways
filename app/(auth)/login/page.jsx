@@ -66,8 +66,12 @@ export default function Login() {
         return;
       }
 
+      // Determine if we're on HTTPS
+      const isSecure = window.location.protocol === 'https:';
+      const cookieOptions = `Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}${isSecure ? '; Secure' : ''}`;
+
       if (result.status === "success") {
-        document.cookie = `sessionToken=${result.sessionToken}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+        document.cookie = `sessionToken=${result.sessionToken}; ${cookieOptions}`;
         router.push("/onboarding");
         return;
       }
@@ -75,7 +79,7 @@ export default function Login() {
       // Handle case where result doesn't have expected status
       if (result.sessionToken) {
         // Backward compatibility - old format
-        document.cookie = `sessionToken=${result.sessionToken}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+        document.cookie = `sessionToken=${result.sessionToken}; ${cookieOptions}`;
         router.push("/onboarding");
         return;
       }
