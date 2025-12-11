@@ -115,15 +115,16 @@ export default function Signup() {
 
       if (data.success) {
         toast.success("Email verified successfully!");
+        setIsVerifyingOtp(false); // Stop verifying state before account creation
         // Continue with account creation
         await createAccount();
       } else {
         toast.error(data.message || "Invalid OTP");
+        setIsVerifyingOtp(false);
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       toast.error("Failed to verify OTP. Please try again.");
-    } finally {
       setIsVerifyingOtp(false);
     }
   };
@@ -132,8 +133,27 @@ export default function Signup() {
     setBusy(true);
     setError("");
     try {
-      await signup({ email: form.email, password: form.password, name: form.name });
-      const { sessionToken } = await signIn({ email: form.email, password: form.password });
+      console.log("Starting signup with:", { email: form.email, name: form.name });
+      
+      const signupResult = await signup({ email: form.email, password: form.password, name: form.name });
+      console.log("Signup result:", signupResult);
+      
+      // If signup returns a session token directly, use it
+      if (signupResult?.sessionToken) {
+        document.cookie = `sessionToken=${signupResult.sessionToken}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+        router.push("/onboarding");
+        return;
+      }
+      
+      console.log("Signing in after signup...");
+      const signInResult = await signIn({ email: form.email, password: form.password });
+      console.log("SignIn result:", signInResult);
+      
+      const sessionToken = signInResult?.sessionToken;
+      if (!sessionToken) {
+        throw new Error("No session token received");
+      }
+      
       document.cookie = `sessionToken=${sessionToken}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
       router.push("/onboarding");
     } catch (err) {
@@ -317,10 +337,10 @@ export default function Signup() {
 
             <button
               type="submit"
-              disabled={!otp || otp.length !== 6 || isVerifyingOtp}
+              disabled={!otp || otp.length !== 6 || isVerifyingOtp || busy}
               className="w-full bg-gradient-to-r from-gray-900 to-black text-white font-bold py-3.5 sm:py-4 rounded-xl hover:from-black hover:to-gray-950 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 active:scale-95"
             >
-              {isVerifyingOtp ? "Verifying..." : "Verify & Create Account"}
+              {isVerifyingOtp ? "Verifying..." : busy ? "Creating Account..." : "Verify & Create Account"}
             </button>
 
             <div className="text-center space-y-2">
@@ -336,7 +356,6 @@ export default function Signup() {
                   : "Resend OTP"
                 }
               </button>
-
 
             </div>
           </>
