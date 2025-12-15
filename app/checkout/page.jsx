@@ -1003,9 +1003,9 @@ export default function CheckoutPage() {
   const getOrderTotals = () => {
     if (isDirectPurchase) {
       const subtotal = directPurchaseItem.price * directPurchaseItem.quantity;
-      const deliveryFee = subtotal >= 999 ? 0 : 50;
-      const protectPromiseFee = directPurchaseItem.quantity * 9;
-      const finalTotal = subtotal + protectPromiseFee + deliveryFee;
+      const deliveryFee = 0; // Free delivery
+      const protectPromiseFee = 0; // Removed
+      const finalTotal = subtotal;
 
       return {
         subtotal,
@@ -1024,14 +1024,14 @@ export default function CheckoutPage() {
         };
       }
 
-      const deliveryFee = userCart.totalPrice >= 999 ? 0 : 50;
-      const finalTotal =
-        userCart.totalPrice + userCart.totalItems * 9 + deliveryFee;
+      const deliveryFee = 0; // Free delivery
+      const protectPromiseFee = 0; // Removed
+      const finalTotal = userCart.totalPrice;
 
       return {
         subtotal: userCart.totalPrice,
         deliveryFee,
-        protectPromiseFee: userCart.totalItems * 9,
+        protectPromiseFee,
         finalTotal,
       };
     }
@@ -1684,7 +1684,7 @@ export default function CheckoutPage() {
                         </div>
                       </label>
                     </div>
-                    
+
                     {/* COD Option */}
                     <div
                       onClick={() => handlePaymentMethodChange("cod")}
@@ -1715,7 +1715,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Debug Section - Remove this after debugging */}
 
                 {/* Stock Validation Warning */}

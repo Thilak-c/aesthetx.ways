@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { motion } from "framer-motion";
 import { Loader2, Lock, CreditCard } from "lucide-react";
+
+// Main server URL for API calls
+const MAIN_SERVER_URL = "https://aesthetxways.com";
 
 export default function RazorpayPaymentPage() {
   const searchParams = useSearchParams();
@@ -12,9 +13,6 @@ export default function RazorpayPaymentPage() {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
-
-  const createOrderMutation = useMutation(api.orders.createOrder);
-  const clearCartMutation = useMutation(api.cart.clearCart);
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -132,35 +130,67 @@ export default function RazorpayPaymentPage() {
               const paymentMethod = isHybrid ? "hybrid" : "razorpay";
               const paymentStatus = isHybrid ? "partial" : "paid";
               
-              // Create order
-              const orderResult = await createOrderMutation({
-                userId: data.userId || null,
-                items: mappedItems,
-                shippingDetails: data.customerDetails,
-                paymentDetails: {
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  amount: data.orderTotal,
-                  currency: "INR",
-                  status: paymentStatus,
-                  paidAt: Date.now(),
-                  paidBy: data.customerDetails.fullName,
-                  paymentMethod: paymentMethod,
-                  // Hybrid payment specific fields
-                  ...(isHybrid && {
-                    upfrontPaid: data.hybridDetails.upfrontAmount,
-                    codPending: data.hybridDetails.codAmount,
-                    discount: data.hybridDetails.discount,
-                    originalTotal: data.hybridDetails.originalTotal,
-                  }),
-                },
+              // Create order via main server API
+              console.log("Creating order via main server API:", {
+                userId: data.userId,
+                itemsCount: mappedItems.length,
                 orderTotal: data.orderTotal,
-                status: "confirmed",
+                paymentMethod,
+                isHybrid,
               });
+              
+              let orderResult;
+              try {
+                const orderResponse = await fetch(`${MAIN_SERVER_URL}/api/create-order-external`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": process.env.NEXT_PUBLIC_INTERNAL_API_KEY || "aesthetx-internal-key-2024",
+                  },
+                  body: JSON.stringify({
+                    userId: data.userId || null,
+                    items: mappedItems,
+                    shippingDetails: data.customerDetails,
+                    paymentDetails: {
+                      razorpayOrderId: response.razorpay_order_id,
+                      razorpayPaymentId: response.razorpay_payment_id,
+                      amount: data.orderTotal,
+                      currency: "INR",
+                      status: paymentStatus,
+                      paidAt: Date.now(),
+                      paidBy: data.customerDetails.fullName,
+                      paymentMethod: paymentMethod,
+                      // Hybrid payment specific fields
+                      ...(isHybrid && {
+                        upfrontPaid: data.hybridDetails.upfrontAmount,
+                        codPending: data.hybridDetails.codAmount,
+                        discount: data.hybridDetails.discount,
+                        originalTotal: data.hybridDetails.originalTotal,
+                      }),
+                    },
+                    orderTotal: data.orderTotal,
+                    status: "confirmed",
+                  }),
+                });
+                
+                orderResult = await orderResponse.json();
+                console.log("Order creation result:", orderResult);
+                
+                if (!orderResult.success) {
+                  throw new Error(orderResult.error || "Order creation failed");
+                }
+              } catch (orderError) {
+                console.error("Order creation failed:", orderError);
+                // Payment was successful but order creation failed
+                // Show error with payment ID so customer can contact support
+                setError(`Payment successful (ID: ${response.razorpay_payment_id}) but order creation failed. Please contact support with this payment ID.`);
+                setIsProcessing(false);
+                return;
+              }
 
               if (orderResult.success) {
-                // Send order confirmation email (non-blocking)
-                fetch("/api/send-order-confirmation", {
+                // Send order confirmation email via main server (non-blocking)
+                fetch(`${MAIN_SERVER_URL}/api/send-order-confirmation`, {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
@@ -192,10 +222,17 @@ export default function RazorpayPaymentPage() {
                   console.error("Error sending order confirmation email:", emailError);
                 });
 
-                // Clear cart if not direct purchase
+                // Clear cart if not direct purchase (via main server)
                 if (!data.isDirectPurchase && data.userId) {
                   try {
-                    await clearCartMutation({ userId: data.userId });
+                    await fetch(`${MAIN_SERVER_URL}/api/clear-cart-external`, {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "x-api-key": process.env.NEXT_PUBLIC_INTERNAL_API_KEY || "aesthetx-internal-key-2024",
+                      },
+                      body: JSON.stringify({ userId: data.userId }),
+                    });
                   } catch (error) {
                     console.error("Error clearing cart:", error);
                   }
