@@ -14,6 +14,8 @@ export default function AddProductPage() {
     description: "",
     mainImage: "",
     otherImages: [],
+    color: "",
+    garmentType: "upper", // "upper" or "lower"
     availableSizes: ["S", "M", "L", "XL"],
     sizeStock: {
       S: "10",
@@ -21,6 +23,11 @@ export default function AddProductPage() {
       L: "",
       XL: "",
       XXL: "",
+      "26": "",
+      "28": "",
+      "30": "",
+      "32": "",
+      "34": "",
     },
   });
   const [loading, setLoading] = useState(false);
@@ -31,9 +38,17 @@ export default function AddProductPage() {
       // Handle multiple select for type field
       const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
       setForm((prev) => ({ ...prev, [name]: selectedOptions }));
+    } else if (name === "garmentType") {
+      // When garment type changes, reset sizes
+      const newSizes = value === "lower" ? ["28", "30", "32"] : ["S", "M", "L", "XL"];
+      setForm((prev) => ({ 
+        ...prev, 
+        [name]: value,
+        availableSizes: newSizes
+      }));
     } else {
-      // Auto-capitalize text inputs (except price, description, and category dropdown)
-      const capitalizedValue = (name === "price" || name === "description" || name === "category")
+      // Auto-capitalize text inputs (except price, description, category, color, and garmentType dropdown)
+      const capitalizedValue = (name === "price" || name === "description" || name === "category" || name === "color" || name === "garmentType")
         ? value
         : value.toUpperCase();
       setForm((prev) => ({ ...prev, [name]: capitalizedValue }));
@@ -121,6 +136,8 @@ export default function AddProductPage() {
       mainImage: form.mainImage,
       createdAt: new Date().toISOString(),
       otherImages: form.otherImages,
+      color: form.color,
+      garmentType: form.garmentType,
       availableSizes: form.availableSizes,
       sizeStock: Object.fromEntries(
         Object.entries(form.sizeStock).map(([size, stock]) => [
@@ -143,6 +160,8 @@ export default function AddProductPage() {
       description: "",
       mainImage: "",
       otherImages: [],
+      color: "",
+      garmentType: "upper",
       availableSizes: ["S", "M", "L", "XL", "XXL"],
       sizeStock: {
         S: "10",
@@ -150,6 +169,11 @@ export default function AddProductPage() {
         L: "",
         XL: "",
         XXL: "",
+        "26": "",
+        "28": "",
+        "30": "",
+        "32": "",
+        "34": "",
       },
     });
     setLoading(false);
@@ -263,6 +287,52 @@ export default function AddProductPage() {
             </select>
           </div>
 
+          {/* Color */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Color *</label>
+            <select
+              name="color"
+              value={form.color}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+            >
+              <option value="" disabled>-- Select Color --</option>
+              <option value="Black">Black</option>
+              <option value="White">White</option>
+              <option value="Red">Red</option>
+              <option value="Blue">Blue</option>
+              <option value="Green">Green</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Pink">Pink</option>
+              <option value="Purple">Purple</option>
+              <option value="Orange">Orange</option>
+              <option value="Brown">Brown</option>
+              <option value="Gray">Gray</option>
+              <option value="Beige">Beige</option>
+            </select>
+          </div>
+
+          {/* Garment Type */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Garment Type *</label>
+            <select
+              name="garmentType"
+              value={form.garmentType}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+            >
+              <option value="upper">Upper (Shirts, T-Shirts, Tops)</option>
+              <option value="lower">Lower (Pants, Jeans, Shorts)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {form.garmentType === "upper" 
+                ? "Sizes: S, M, L, XL, XXL" 
+                : "Sizes: 26, 28, 30, 32, 34"}
+            </p>
+          </div>
+
           {/* Price */}
           <div>
             <label className="block text-sm font-medium mb-1">Price</label>
@@ -308,7 +378,10 @@ export default function AddProductPage() {
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-gray-700">Available Sizes</h4>
               <div className="flex flex-wrap gap-2">
-                {["S", "M", "L", "XL", "XXL"].map((size) => (
+                {(form.garmentType === "upper" 
+                  ? ["S", "M", "L", "XL", "XXL"] 
+                  : ["26", "28", "30", "32", "34"]
+                ).map((size) => (
                   <button
                     key={size}
                     type="button"
@@ -328,7 +401,10 @@ export default function AddProductPage() {
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-gray-700">Stock for Each Size</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {["S", "M", "L", "XL", "XXL"].map((size) => (
+                {(form.garmentType === "upper" 
+                  ? ["S", "M", "L", "XL", "XXL"] 
+                  : ["26", "28", "30", "32", "34"]
+                ).map((size) => (
                   <div key={size} className={`p-4 rounded-lg border-2 transition-all ${form.availableSizes.includes(size)
                     ? "border-blue-200 bg-blue-50"
                     : "border-gray-200 bg-gray-50 opacity-50"
@@ -341,7 +417,7 @@ export default function AddProductPage() {
                     </label>
                     <input
                       type="number"
-                      value={form.sizeStock[size]}
+                      value={form.sizeStock[size] || ""}
                       onChange={(e) => handleSizeStockChange(size, e.target.value)}
                       min="0"
                       disabled={!form.availableSizes.includes(size)}

@@ -114,17 +114,12 @@ export default defineSchema({
     price: v.float64(),
     subcategories: v.optional(v.string()),
     type: v.optional(v.array(v.string())), // Array of product types
+    // New fields for color and garment type
+    color: v.optional(v.string()), // Product color
+    garmentType: v.optional(v.string()), // "upper" or "lower"
     // Size-based inventory tracking
-    availableSizes: v.optional(v.array(v.string())), // ["S", "M", "L", "XL"]
-    sizeStock: v.optional(
-      v.object({
-        S: v.optional(v.number()),
-        M: v.optional(v.number()),
-        L: v.optional(v.number()),
-        XL: v.optional(v.number()),
-        XXL: v.optional(v.number()),
-      })
-    ),
+    availableSizes: v.optional(v.array(v.string())), // ["S", "M", "L", "XL"] or ["26", "28", "30", "32", "34"]
+    sizeStock: v.optional(v.any()), // Dynamic object to support both letter and numeric sizes
     // Legacy inventory fields (keeping for backward compatibility)
     inStock: v.optional(v.boolean()),
     totalAvailable: v.optional(v.number()),
@@ -136,7 +131,10 @@ export default defineSchema({
     // Add these missing fields
     updatedAt: v.optional(v.string()),
     updatedBy: v.optional(v.string()),
-  }).index("by_deleted", ["isDeleted"]),
+  })
+    .index("by_deleted", ["isDeleted"])
+    .index("by_color", ["color"])
+    .index("by_garment_type", ["garmentType"]),
 
   // Reviews table for product reviews
   reviews: defineTable({

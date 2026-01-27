@@ -80,7 +80,7 @@ export default function AdminLayout({ children }) {
       console.error("Logout error:", error);
       // Force logout even if API call fails
       document.cookie = "sessionToken=; Path=/; SameSite=Lax; Max-Age=0";
-      router.push("/admin/login");
+      router.push("/login");
     }
   };
   const navLinks = [

@@ -22,7 +22,7 @@ import {
   Area,
 } from "recharts";
 
-const PAYMENT_COLORS = { razorpay: "#3B82F6", cod: "#F59E0B", hybrid: "#10B981", cancelled: "#EF4444" };
+const PAYMENT_COLORS = { razorpay: "#3B82F6", cancelled: "#EF4444" };
 
 export default function PaymentDetailsAnalytics() {
   const [timeRange, setTimeRange] = useState("30d");
@@ -101,7 +101,7 @@ export default function PaymentDetailsAnalytics() {
       ) : paymentData ? (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
             <StatsCard
               title="Total Orders"
               value={paymentData.totalOrders}
@@ -113,18 +113,6 @@ export default function PaymentDetailsAnalytics() {
               value={paymentData.paymentMethods?.razorpay || 0}
               icon={<CreditCard className="w-6 h-6" />}
               color="bg-indigo-500"
-            />
-            <StatsCard
-              title="Hybrid (20%+COD)"
-              value={paymentData.paymentMethods?.hybrid || 0}
-              icon={<Sparkles className="w-6 h-6" />}
-              color="bg-emerald-500"
-            />
-            <StatsCard
-              title="COD"
-              value={paymentData.paymentMethods?.cod || 0}
-              icon={<Banknote className="w-6 h-6" />}
-              color="bg-amber-500"
             />
             <StatsCard
               title="Cancelled"
@@ -151,13 +139,13 @@ export default function PaymentDetailsAnalytics() {
                   <YAxis />
                   <Tooltip
                     formatter={(value, name) => {
-                      const labels = { razorpay: "Razorpay", cod: "COD", hybrid: "Hybrid (20%+COD)", cancelled: "Cancelled" };
+                      const labels = { razorpay: "Razorpay", cancelled: "Cancelled" };
                       return [value, labels[name] || name];
                     }}
                   />
                   <Legend
                     formatter={(value) => {
-                      const labels = { razorpay: "Razorpay", cod: "COD", hybrid: "Hybrid", cancelled: "Cancelled" };
+                      const labels = { razorpay: "Razorpay", cancelled: "Cancelled" };
                       return labels[value] || value;
                     }}
                   />
@@ -169,24 +157,6 @@ export default function PaymentDetailsAnalytics() {
                     fill={PAYMENT_COLORS.razorpay}
                     fillOpacity={0.6}
                     name="razorpay"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="hybrid"
-                    stackId="1"
-                    stroke={PAYMENT_COLORS.hybrid}
-                    fill={PAYMENT_COLORS.hybrid}
-                    fillOpacity={0.6}
-                    name="hybrid"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="cod"
-                    stackId="1"
-                    stroke={PAYMENT_COLORS.cod}
-                    fill={PAYMENT_COLORS.cod}
-                    fillOpacity={0.6}
-                    name="cod"
                   />
                   <Area
                     type="monotone"
@@ -215,8 +185,6 @@ export default function PaymentDetailsAnalytics() {
                   <Pie
                     data={[
                       { name: "Razorpay", value: paymentData.paymentMethods?.razorpay || 0 },
-                      { name: "Hybrid", value: paymentData.paymentMethods?.hybrid || 0 },
-                      { name: "COD", value: paymentData.paymentMethods?.cod || 0 },
                     ].filter((d) => d.value > 0)}
                     cx="50%"
                     cy="50%"
@@ -226,8 +194,6 @@ export default function PaymentDetailsAnalytics() {
                     dataKey="value"
                   >
                     <Cell fill={PAYMENT_COLORS.razorpay} />
-                    <Cell fill={PAYMENT_COLORS.hybrid} />
-                    <Cell fill={PAYMENT_COLORS.cod} />
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -242,10 +208,6 @@ export default function PaymentDetailsAnalytics() {
                     {
                       name: "Razorpay",
                       revenue: paymentData.paymentMethodRevenue?.razorpay || 0,
-                    },
-                    {
-                      name: "COD",
-                      revenue: paymentData.paymentMethodRevenue?.cod || 0,
                     },
                   ]}
                   layout="vertical"
@@ -276,10 +238,6 @@ export default function PaymentDetailsAnalytics() {
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="text-gray-600">Razorpay Cancelled</span>
                     <span className="font-medium">{paymentData.cancelledByMethod?.razorpay || 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600">COD Cancelled</span>
-                    <span className="font-medium">{paymentData.cancelledByMethod?.cod || 0}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
                     <span className="text-gray-600">Lost Revenue</span>
@@ -335,7 +293,6 @@ export default function PaymentDetailsAnalytics() {
                     formatter={(value, name) => {
                       const labels = {
                         razorpayRevenue: "Razorpay Revenue",
-                        codRevenue: "COD Revenue",
                         totalRevenue: "Total Revenue",
                       };
                       return [`₹${value.toLocaleString()}`, labels[name] || name];
@@ -345,7 +302,6 @@ export default function PaymentDetailsAnalytics() {
                     formatter={(value) => {
                       const labels = {
                         razorpayRevenue: "Razorpay Revenue",
-                        codRevenue: "COD Revenue",
                         totalRevenue: "Total Revenue",
                       };
                       return labels[value] || value;
@@ -358,14 +314,6 @@ export default function PaymentDetailsAnalytics() {
                     strokeWidth={2}
                     dot={false}
                     name="razorpayRevenue"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="codRevenue"
-                    stroke={PAYMENT_COLORS.cod}
-                    strokeWidth={2}
-                    dot={false}
-                    name="codRevenue"
                   />
                   <Line
                     type="monotone"
