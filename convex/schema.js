@@ -116,10 +116,13 @@ export default defineSchema({
     type: v.optional(v.array(v.string())), // Array of product types
     // New fields for color and garment type
     color: v.optional(v.string()), // Product color
-    garmentType: v.optional(v.string()), // "upper" or "lower"
-    // Size-based inventory tracking
+    garmentType: v.optional(v.string()), // "upper", "lower", or "pendant"
+    // Size-based inventory tracking (for upper and lower)
     availableSizes: v.optional(v.array(v.string())), // ["S", "M", "L", "XL"] or ["26", "28", "30", "32", "34"]
     sizeStock: v.optional(v.any()), // Dynamic object to support both letter and numeric sizes
+    // Color-based inventory tracking (for pendant)
+    availableColors: v.optional(v.array(v.string())), // ["Black", "White", "Red", etc.]
+    colorStock: v.optional(v.any()), // Dynamic object for color-based stock
     // Legacy inventory fields (keeping for backward compatibility)
     inStock: v.optional(v.boolean()),
     totalAvailable: v.optional(v.number()),
