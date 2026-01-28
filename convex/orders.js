@@ -134,26 +134,52 @@ export const createOrder = mutation({
             .unique();
 
           if (product) {
-            // Update size-specific stock
-            const updatedSizeStock = { ...product.sizeStock };
-            if (updatedSizeStock[item.size] !== undefined) {
-              updatedSizeStock[item.size] = Math.max(0, updatedSizeStock[item.size] - item.quantity);
+            // Check if it's a pendant (uses colors) or garment (uses sizes)
+            const isPendant = product.garmentType === "pendant";
+            
+            if (isPendant) {
+              // Update color-specific stock for pendants
+              const updatedColorStock = { ...product.colorStock };
+              if (updatedColorStock[item.size] !== undefined) {
+                updatedColorStock[item.size] = Math.max(0, updatedColorStock[item.size] - item.quantity);
+              }
+
+              // Update total stock and buys count
+              const newCurrentStock = Math.max(0, (product.currentStock || 0) - item.quantity);
+              const newBuys = (product.buys || 0) + item.quantity;
+
+              // Check if product is now out of stock
+              const totalStock = Object.values(updatedColorStock).reduce((sum, stock) => sum + (stock || 0), 0);
+              const stillInStock = totalStock > 0 && newCurrentStock > 0;
+
+              await ctx.db.patch(product._id, {
+                colorStock: updatedColorStock,
+                currentStock: newCurrentStock,
+                buys: newBuys,
+                inStock: stillInStock,
+              });
+            } else {
+              // Update size-specific stock for garments
+              const updatedSizeStock = { ...product.sizeStock };
+              if (updatedSizeStock[item.size] !== undefined) {
+                updatedSizeStock[item.size] = Math.max(0, updatedSizeStock[item.size] - item.quantity);
+              }
+
+              // Update total stock and buys count
+              const newCurrentStock = Math.max(0, (product.currentStock || 0) - item.quantity);
+              const newBuys = (product.buys || 0) + item.quantity;
+
+              // Check if product is now out of stock
+              const totalStock = Object.values(updatedSizeStock).reduce((sum, stock) => sum + (stock || 0), 0);
+              const stillInStock = totalStock > 0 && newCurrentStock > 0;
+
+              await ctx.db.patch(product._id, {
+                sizeStock: updatedSizeStock,
+                currentStock: newCurrentStock,
+                buys: newBuys,
+                inStock: stillInStock,
+              });
             }
-
-            // Update total stock and buys count
-            const newCurrentStock = Math.max(0, (product.currentStock || 0) - item.quantity);
-            const newBuys = (product.buys || 0) + item.quantity;
-
-            // Check if product is now out of stock
-            const totalStock = Object.values(updatedSizeStock).reduce((sum, stock) => sum + (stock || 0), 0);
-            const stillInStock = totalStock > 0 && newCurrentStock > 0;
-
-            await ctx.db.patch(product._id, {
-              sizeStock: updatedSizeStock,
-              currentStock: newCurrentStock,
-              buys: newBuys,
-              inStock: stillInStock,
-            });
           }
         } catch (error) {
           // Don't fail the order creation if stock update fails

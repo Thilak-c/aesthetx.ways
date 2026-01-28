@@ -224,22 +224,41 @@ export default function CheckoutPage() {
         return { isValid: false, message: "Product is currently out of stock" };
       }
 
-      if (
-        !directPurchaseProduct.availableSizes?.includes(directPurchaseItem.size)
-      ) {
-        return {
-          isValid: false,
-          message: `Size ${directPurchaseItem.size} is not available`,
-        };
-      }
+      // Check if it's a pendant (uses colors) or garment (uses sizes)
+      const isPendant = directPurchaseProduct.garmentType === "pendant";
+      
+      if (isPendant) {
+        // For pendants, check color availability
+        if (!directPurchaseProduct.availableColors?.includes(directPurchaseItem.size)) {
+          return {
+            isValid: false,
+            message: `Color ${directPurchaseItem.size} is not available`,
+          };
+        }
 
-      const availableStock =
-        directPurchaseProduct.sizeStock?.[directPurchaseItem.size] || 0;
-      if (availableStock < directPurchaseItem.quantity) {
-        return {
-          isValid: false,
-          message: `Only ${availableStock} units available in size ${directPurchaseItem.size}`,
-        };
+        const availableStock = directPurchaseProduct.colorStock?.[directPurchaseItem.size] || 0;
+        if (availableStock < directPurchaseItem.quantity) {
+          return {
+            isValid: false,
+            message: `Only ${availableStock} units available in color ${directPurchaseItem.size}`,
+          };
+        }
+      } else {
+        // For garments, check size availability
+        if (!directPurchaseProduct.availableSizes?.includes(directPurchaseItem.size)) {
+          return {
+            isValid: false,
+            message: `Size ${directPurchaseItem.size} is not available`,
+          };
+        }
+
+        const availableStock = directPurchaseProduct.sizeStock?.[directPurchaseItem.size] || 0;
+        if (availableStock < directPurchaseItem.quantity) {
+          return {
+            isValid: false,
+            message: `Only ${availableStock} units available in size ${directPurchaseItem.size}`,
+          };
+        }
       }
 
       return { isValid: true, message: "Product is in stock" };
@@ -299,46 +318,93 @@ export default function CheckoutPage() {
             continue;
           }
 
-          // Check if the requested size is available
-          if (!product.availableSizes?.includes(cartItem.size)) {
-            invalidItems.push({
-              isValid: false,
-              productName: cartItem.productName,
-              message: `Size ${cartItem.size} is not available`,
-            });
-            continue;
-          }
-
-          // Check size-specific stock
-          const availableStock = product.sizeStock?.[cartItem.size] || 0;
-
-          if (availableStock < cartItem.quantity) {
-            // Show available stock in other sizes for better user experience
-            const otherSizesStock = product.availableSizes
-              ?.filter(
-                (size) =>
-                  size !== cartItem.size && (product.sizeStock?.[size] || 0) > 0
-              )
-              ?.map((size) => `${size}(${product.sizeStock[size]})`)
-              ?.join(", ");
-
-            let stockMessage;
-            if (availableStock === 0) {
-              stockMessage = `Size ${cartItem.size} is out of stock`;
-            } else {
-              stockMessage = `Only ${availableStock} of ${cartItem.quantity} units available in size ${cartItem.size}`;
+          // Check if it's a pendant (uses colors) or garment (uses sizes)
+          const isPendant = product.garmentType === "pendant";
+          
+          if (isPendant) {
+            // For pendants, check color availability
+            if (!product.availableColors?.includes(cartItem.size)) {
+              invalidItems.push({
+                isValid: false,
+                productName: cartItem.productName,
+                message: `Color ${cartItem.size} is not available`,
+              });
+              continue;
             }
 
-            if (otherSizesStock) {
-              stockMessage += `. Available in: ${otherSizesStock}`;
+            // Check color-specific stock
+            const availableStock = product.colorStock?.[cartItem.size] || 0;
+
+            if (availableStock < cartItem.quantity) {
+              // Show available stock in other colors for better user experience
+              const otherColorsStock = product.availableColors
+                ?.filter(
+                  (color) =>
+                    color !== cartItem.size && (product.colorStock?.[color] || 0) > 0
+                )
+                ?.map((color) => `${color}(${product.colorStock[color]})`)
+                ?.join(", ");
+
+              let stockMessage;
+              if (availableStock === 0) {
+                stockMessage = `Color ${cartItem.size} is out of stock`;
+              } else {
+                stockMessage = `Only ${availableStock} of ${cartItem.quantity} units available in color ${cartItem.size}`;
+              }
+
+              if (otherColorsStock) {
+                stockMessage += `. Available in: ${otherColorsStock}`;
+              }
+
+              invalidItems.push({
+                isValid: false,
+                productName: cartItem.productName,
+                message: stockMessage,
+              });
+              continue;
+            }
+          } else {
+            // For garments, check size availability
+            if (!product.availableSizes?.includes(cartItem.size)) {
+              invalidItems.push({
+                isValid: false,
+                productName: cartItem.productName,
+                message: `Size ${cartItem.size} is not available`,
+              });
+              continue;
             }
 
-            invalidItems.push({
-              isValid: false,
-              productName: cartItem.productName,
-              message: stockMessage,
-            });
-            continue;
+            // Check size-specific stock
+            const availableStock = product.sizeStock?.[cartItem.size] || 0;
+
+            if (availableStock < cartItem.quantity) {
+              // Show available stock in other sizes for better user experience
+              const otherSizesStock = product.availableSizes
+                ?.filter(
+                  (size) =>
+                    size !== cartItem.size && (product.sizeStock?.[size] || 0) > 0
+                )
+                ?.map((size) => `${size}(${product.sizeStock[size]})`)
+                ?.join(", ");
+
+              let stockMessage;
+              if (availableStock === 0) {
+                stockMessage = `Size ${cartItem.size} is out of stock`;
+              } else {
+                stockMessage = `Only ${availableStock} of ${cartItem.quantity} units available in size ${cartItem.size}`;
+              }
+
+              if (otherSizesStock) {
+                stockMessage += `. Available in: ${otherSizesStock}`;
+              }
+
+              invalidItems.push({
+                isValid: false,
+                productName: cartItem.productName,
+                message: stockMessage,
+              });
+              continue;
+            }
           }
         }
 
@@ -770,9 +836,9 @@ export default function CheckoutPage() {
   const getOrderTotals = () => {
     if (isDirectPurchase) {
       const subtotal = directPurchaseItem.price * directPurchaseItem.quantity;
-      const deliveryFee = 0; // Free delivery
+      const deliveryFee = subtotal < 999 ? 50 : 0; // ₹50 delivery fee for orders under ₹999
       const protectPromiseFee = 0; // Removed
-      const finalTotal = subtotal;
+      const finalTotal = subtotal + deliveryFee;
 
       return {
         subtotal,
@@ -791,12 +857,13 @@ export default function CheckoutPage() {
         };
       }
 
-      const deliveryFee = 0; // Free delivery
+      const subtotal = userCart.totalPrice;
+      const deliveryFee = subtotal < 999 ? 50 : 0; // ₹50 delivery fee for orders under ₹999
       const protectPromiseFee = 0; // Removed
-      const finalTotal = userCart.totalPrice;
+      const finalTotal = subtotal + deliveryFee;
 
       return {
-        subtotal: userCart.totalPrice,
+        subtotal,
         deliveryFee,
         protectPromiseFee,
         finalTotal,
@@ -1020,281 +1087,166 @@ export default function CheckoutPage() {
                     Delivery Address
                   </h3>
 
-                  <div className="space-y-3 sm:space-y-4">
-                    {/* Default Address */}
-                    {/* Conditional Address Section - Only shows if user is logged in */}
-                    {me ? (
-                      <label
-                        onClick={() => handleAddressToggle(true)}
-                        className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${useDefaultAddress
-                          ? "border-gray-900 bg-gray-100 shadow-md"
-                          : "border-gray-200 hover:border-gray-400"
-                          }`}
-                      >
-                        {/* Radio */}
-                        <div className="flex-shrink-0">
-                          <div
-                            className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${useDefaultAddress
-                              ? "border-gray-50 bg-gray-900"
-                              : "border-gray-300"
-                              }`}
-                          >
-                            {useDefaultAddress && (
-                              <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Icon + Text */}
-                        <div className="flex items-center space-x-2">
-                          <Home className="w-5 h-5 text-gray-700" />
-                          <div>
-                            <p className="font-semibold text-sm sm:text-lg">
-                              Deliver to Default Address
-                            </p>
-                            <p className="text-gray-600 text-xs sm:text-sm">
-                              {me?.address?.fullAddress ||
-                                me?.address ||
-                                "No default address set"}
-                            </p>
-                          </div>
-                        </div>
+                  {/* Address Form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    {/* Full Name */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Full Name *
                       </label>
-                    ) : (
-                      // Disabled state when not logged in
-                      <div className="flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed">
-                        {/* Radio */}
-                        <div className="flex-shrink-0">
-                          <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-gray-300" />
-                        </div>
+                      <input
+                        type="text"
+                        value={getCurrentShippingDetails().fullName}
+                        onChange={(e) =>
+                          handleInputChange("fullName", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="Enter your full name"
+                      />
+                    </div>
 
-                        {/* Icon + Text */}
-                        <div className="flex items-center space-x-2">
-                          <Home className="w-5 h-5 text-gray-400" />
-                          <div>
-                            <p className="font-semibold text-sm sm:text-lg text-gray-400">
-                              Deliver to Default Address
-                            </p>
-                            <p className="text-gray-400 text-xs sm:text-sm">
-                              Please log in to use default address
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    {/* Email */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        value={getCurrentShippingDetails().email}
+                        onChange={(e) =>
+                          handleInputChange("email", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="Enter your email address"
+                      />
+                    </div>
 
-                    {/* Custom Address */}
-                    <label
-                      onClick={() => handleAddressToggle(false)}
-                      className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${!useDefaultAddress
-                        ? "border-gray-900 bg-gray-100 shadow-md"
-                        : "border-gray-200 hover:border-gray-400"
-                        }`}
-                    >
-                      {/* Radio */}
-                      <div className="flex-shrink-0">
-                        <div
-                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${!useDefaultAddress
-                            ? "border-gray-900 bg-gray-900"
-                            : "border-gray-300"
-                            }`}
-                        >
-                          {!useDefaultAddress && (
-                            <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                          )}
-                        </div>
-                      </div>
+                    {/* Phone */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Phone *
+                      </label>
+                      <input
+                        type="tel"
+                        value={getCurrentShippingDetails().phone}
+                        onChange={(e) =>
+                          handleInputChange("phone", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="10 digits"
+                      />
+                    </div>
 
-                      {/* Icon + Text */}
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-5 h-5 text-gray-700" />
-                        <div>
-                          <p className="font-semibold text-sm sm:text-lg">
-                            Deliver to Another Address
-                          </p>
-                          <p className="text-gray-600 text-xs sm:text-sm">
-                            Enter a different delivery address
-                          </p>
-                        </div>
-                      </div>
-                    </label>
+                    {/* Country (disabled) */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Country
+                      </label>
+                      <input
+                        type="text"
+                        value={getCurrentShippingDetails().country}
+                        disabled
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl bg-gray-50 text-gray-600 text-xs sm:text-base"
+                      />
+                    </div>
+
+                    {/* House/Flat Number */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        House/Flat No. *
+                      </label>
+                      <input
+                        type="text"
+                        value={getCurrentShippingDetails().houseNo}
+                        onChange={(e) =>
+                          handleInputChange("houseNo", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="e.g., 123, A-45, Flat 301"
+                      />
+                    </div>
+
+                    {/* Street/Area */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Street/Area *
+                      </label>
+                      <input
+                        type="text"
+                        value={getCurrentShippingDetails().street}
+                        onChange={(e) =>
+                          handleInputChange("street", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="e.g., MG Road, Sector 5"
+                      />
+                    </div>
+
+                    {/* Landmark */}
+                    <div className="md:col-span-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Landmark (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={getCurrentShippingDetails().landmark}
+                        onChange={(e) =>
+                          handleInputChange("landmark", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="e.g., Near City Mall, Opposite Park"
+                      />
+                    </div>
+
+                    {/* City */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        value={getCurrentShippingDetails().city}
+                        onChange={(e) =>
+                          handleInputChange("city", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="Enter your city name"
+                      />
+                    </div>
+
+                    {/* State */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        State *
+                      </label>
+                      <input
+                        type="text"
+                        value={getCurrentShippingDetails().state}
+                        onChange={(e) =>
+                          handleInputChange("state", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="Enter your state name"
+                      />
+                    </div>
+
+                    {/* Pincode */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        Pincode *
+                      </label>
+                      <input
+                        type="text"
+                        value={getCurrentShippingDetails().pincode}
+                        onChange={(e) =>
+                          handleInputChange("pincode", e.target.value)
+                        }
+                        className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
+                        placeholder="Enter 6-digit pincode"
+                      />
+                    </div>
                   </div>
                 </div>
-
-                {/* Address Form – Only Show if Custom */}
-                <AnimatePresence>
-                  {!useDefaultAddress && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0, y: -20 }}
-                      animate={{ opacity: 1, height: "auto", y: 0 }}
-                      exit={{ opacity: 0, height: 0, y: -20 }}
-                      transition={{
-                        duration: 0.4,
-                        ease: "easeInOut",
-                        opacity: { duration: 0.3 },
-                        height: { duration: 0.4 },
-                      }}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 sm:gap-4 sm:mt-6 overflow-hidden"
-                    >
-                      {/* Full Name */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          value={getCurrentShippingDetails().fullName}
-                          onChange={(e) =>
-                            handleInputChange("fullName", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="Enter your full name"
-                        />
-                      </div>
-
-                      {/* Email */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          Email *
-                        </label>
-                        <input
-                          type="email"
-                          value={getCurrentShippingDetails().email}
-                          onChange={(e) =>
-                            handleInputChange("email", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="Enter your email address"
-                        />
-                      </div>
-
-                      {/* Phone */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          Phone *
-                        </label>
-                        <input
-                          type="tel"
-                          value={getCurrentShippingDetails().phone}
-                          onChange={(e) =>
-                            handleInputChange("phone", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="10 digits"
-                        />
-                      </div>
-
-                      {/* Country (disabled) */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          Country
-                        </label>
-                        <input
-                          type="text"
-                          value={getCurrentShippingDetails().country}
-                          disabled
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl bg-gray-50 text-gray-600 text-xs sm:text-base"
-                        />
-                      </div>
-
-                      {/* House/Flat Number */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          House/Flat No. *
-                        </label>
-                        <input
-                          type="text"
-                          value={useDefaultAddress ? shippingDetails.houseNo : customAddress.houseNo}
-                          onChange={(e) =>
-                            handleInputChange("houseNo", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="e.g., 123, A-45, Flat 301"
-                        />
-                      </div>
-
-                      {/* Street/Area */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          Street/Area *
-                        </label>
-                        <input
-                          type="text"
-                          value={useDefaultAddress ? shippingDetails.street : customAddress.street}
-                          onChange={(e) =>
-                            handleInputChange("street", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="e.g., MG Road, Sector 5"
-                        />
-                      </div>
-
-                      {/* Landmark */}
-                      <div className="md:col-span-2">
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          Landmark (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={useDefaultAddress ? shippingDetails.landmark : customAddress.landmark}
-                          onChange={(e) =>
-                            handleInputChange("landmark", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="e.g., Near City Mall, Opposite Park"
-                        />
-                      </div>
-
-                      {/* City */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          City *
-                        </label>
-                        <input
-                          type="text"
-                          value={getCurrentShippingDetails().city}
-                          onChange={(e) =>
-                            handleInputChange("city", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="Enter your city name"
-                        />
-                      </div>
-
-                      {/* State */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          State *
-                        </label>
-                        <input
-                          type="text"
-                          value={getCurrentShippingDetails().state}
-                          onChange={(e) =>
-                            handleInputChange("state", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="Enter your state name"
-                        />
-                      </div>
-
-                      {/* Pincode */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                          Pincode *
-                        </label>
-                        <input
-                          type="text"
-                          value={getCurrentShippingDetails().pincode}
-                          onChange={(e) =>
-                            handleInputChange("pincode", e.target.value)
-                          }
-                          className="w-full px-2 py-2 sm:px-4 sm:py-3 border border-gray-200 sm:border-2 rounded-lg sm:rounded-xl focus:ring-1 sm:focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-xs sm:text-base"
-                          placeholder="Enter 6-digit pincode"
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
                 {/* Payment Method Selection */}
                 <div className="border-t border-gray-200 pt-6">

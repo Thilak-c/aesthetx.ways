@@ -276,7 +276,16 @@ export default function ProductPage() {
   // Add trending products query
 
   const handleAddToCart = async () => {
+    console.log("=== ADD TO CART DEBUG ===");
+    console.log("1. isLoggedIn:", isLoggedIn);
+    console.log("2. me:", me);
+    console.log("3. selectedSize:", selectedSize);
+    console.log("4. product.garmentType:", product?.garmentType);
+    console.log("5. product.colorStock:", product?.colorStock);
+    console.log("6. product.sizeStock:", product?.sizeStock);
+    
     if (!isLoggedIn || !me) {
+      console.log("❌ Not logged in - redirecting to login");
       // Redirect to login page with return URL
       const currentUrl = window.location.pathname + window.location.search;
       router.push(
@@ -286,6 +295,7 @@ export default function ProductPage() {
     }
 
     if (!selectedSize) {
+      console.log("❌ No size/color selected");
       setToastMessage(`Please select a ${product.garmentType === "pendant" ? "color" : "size"} first`);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -293,6 +303,7 @@ export default function ProductPage() {
     }
 
     if (!product) {
+      console.log("❌ No product data");
       setToastMessage("Product information not available");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -303,7 +314,23 @@ export default function ProductPage() {
     const stockKey = product.garmentType === "pendant" ? "colorStock" : "sizeStock";
     const availableStock = product[stockKey]?.[selectedSize] || 0;
     
+    console.log("7. stockKey:", stockKey);
+    console.log("8. availableStock:", availableStock);
+    console.log("9. quantity:", quantity);
+
+    // Check if the selected size/color is actually available
+    if (availableStock === 0) {
+      console.log("❌ Out of stock");
+      setToastMessage(
+        `${product.garmentType === "pendant" ? "Color" : "Size"} ${selectedSize} is not available`
+      );
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
     if (quantity > availableStock) {
+      console.log("❌ Quantity exceeds stock");
       setToastMessage(
         `Only ${availableStock} items available in this ${product.garmentType === "pendant" ? "color" : "size"}`
       );
@@ -313,6 +340,7 @@ export default function ProductPage() {
     }
 
     try {
+      console.log("✅ Adding to cart...");
       await addToCartMutation({
         userId: me._id,
         productId: productId,
@@ -323,11 +351,12 @@ export default function ProductPage() {
         quantity: quantity,
       });
 
+      console.log("✅ Successfully added to cart!");
       setToastMessage("Product added to cart successfully!");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error("❌ Error adding to cart:", error);
       setToastMessage("Failed to add product to cart");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -361,8 +390,18 @@ export default function ProductPage() {
     // Check if quantity exceeds available stock
     const stockKey = product.garmentType === "pendant" ? "colorStock" : "sizeStock";
     const availableStock = product[stockKey]?.[selectedSize];
-    
+
     if (selectedSize && availableStock !== undefined) {
+      // Check if the selected size/color is actually available
+      if (availableStock === 0) {
+        setToastMessage(
+          `${product.garmentType === "pendant" ? "Color" : "Size"} ${selectedSize} is not available`
+        );
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        return;
+      }
+      
       if (quantity > availableStock) {
         setToastMessage(
           `Only ${availableStock} units available in ${product.garmentType === "pendant" ? "color" : "size"} ${selectedSize}`
@@ -815,7 +854,7 @@ export default function ProductPage() {
                 <X className="w-6 h-6" />
               </button>
 
-              <div className="relative aspect-[4/5] lg:aspect-[3/4] bg-white rounded-2xl overflow-hidden">
+              <div className="relative aspect-[4/5] lg:aspect-[3/4] bg-white rounded-2xl overflow-hidden flex items-center justify-center">
                 <img
                   src={
                     modalImageIndex === 0
@@ -823,9 +862,10 @@ export default function ProductPage() {
                       : product?.otherImages[modalImageIndex - 1]
                   }
                   alt={product?.name}
-                  className="object-cover object-center"
+                  className="w-full h-full object-contain"
                 />
               </div>
+
 
               {/* Desktop Modal Navigation */}
               <div className="flex justify-center mt-4 space-x-2 overflow-x-auto">
@@ -925,7 +965,7 @@ export default function ProductPage() {
                       scale: { duration: 0.3 },
                       rotateY: { duration: 0.4 },
                     }}
-                    className="absolute inset-0"
+                    className="absolute inset-0 flex items-center justify-center bg-white"
                   >
                     <img
                       src={
@@ -934,8 +974,7 @@ export default function ProductPage() {
                           : product?.otherImages[selectedImage - 1]
                       }
                       alt={product?.name}
-
-                      className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -1241,6 +1280,13 @@ export default function ProductPage() {
                   Select Color
                 </label>
 
+                {/* Debug Info */}
+                <div className="bg-yellow-50 border border-yellow-200 p-2 rounded text-xs">
+                  <strong>Debug:</strong> garmentType={product.garmentType}, 
+                  availableColors={JSON.stringify(product.availableColors)}, 
+                  colorStock={JSON.stringify(product.colorStock)}
+                </div>
+
                 <div className="flex flex-wrap gap-2 lg:gap-3">
                   {product.availableColors.map((color) => {
                     const colorStock = product.colorStock?.[color] || 0;
@@ -1261,7 +1307,7 @@ export default function ProductPage() {
                             : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
                           }`}
                       >
-                        <span>{color}</span>
+                        <span>{color} ({colorStock})</span>
                         {colorStock > 0 && colorStock < 10 && (
                           <div className="absolute -top-1 -right-1 w-2 h-2 lg:w-3 lg:h-3 bg-orange-200 rounded-full"></div>
                         )}
@@ -1274,6 +1320,13 @@ export default function ProductPage() {
                     );
                   })}
                 </div>
+
+                {selectedSize && (
+                  <div className="bg-blue-50 border border-blue-200 p-2 rounded text-xs">
+                    <strong>Selected:</strong> {selectedSize}, 
+                    Stock: {product.colorStock?.[selectedSize] || 0}
+                  </div>
+                )}
 
                 {!selectedSize && product.availableColors.length > 0 && (
                   <div className="flex items-center space-x-2 text-xs lg:text-sm text-gray-600 bg-gray-50 p-3 lg:p-4 rounded-lg lg:rounded-xl border border-gray-200">
@@ -1369,11 +1422,11 @@ export default function ProductPage() {
                   onClick={() => setQuantity(quantity + 1)}
                   disabled={
                     selectedSize &&
-                    product?.garmentType === "pendant"
+                      product?.garmentType === "pendant"
                       ? product?.colorStock?.[selectedSize] !== undefined &&
-                        quantity >= product.colorStock[selectedSize]
+                      quantity >= product.colorStock[selectedSize]
                       : product?.sizeStock?.[selectedSize] !== undefined &&
-                        quantity >= product.sizeStock[selectedSize]
+                      quantity >= product.sizeStock[selectedSize]
                   }
                   className="p-2 lg:p-3 border-2 border-gray-200 rounded-xl lg:rounded-2xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -1447,13 +1500,10 @@ export default function ProductPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddToCart}
                 disabled={
-                  isLoggedIn &&
-                  (!selectedSize ||
-                    (selectedSize &&
-                      product?.sizeStock?.[selectedSize] === 0) ||
-                    (product?.availableSizes &&
-                      product.availableSizes.length > 0 &&
-                      !selectedSize))
+                  !selectedSize ||
+                  (product?.garmentType === "pendant" 
+                    ? (product?.colorStock?.[selectedSize] || 0) === 0
+                    : (product?.sizeStock?.[selectedSize] || 0) === 0)
                 }
                 className="w-full bg-gray-900 text-white py-3 lg:py-5 px-6 rounded-2xl font-light text-sm lg:text-base transition-all duration-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
               >
@@ -1465,13 +1515,10 @@ export default function ProductPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={handleBuyNow}
                 disabled={
-                  isLoggedIn &&
-                  (!selectedSize ||
-                    (selectedSize &&
-                      product?.sizeStock?.[selectedSize] === 0) ||
-                    (product?.availableSizes &&
-                      product.availableSizes.length > 0 &&
-                      !selectedSize))
+                  !selectedSize ||
+                  (product?.garmentType === "pendant" 
+                    ? (product?.colorStock?.[selectedSize] || 0) === 0
+                    : (product?.sizeStock?.[selectedSize] || 0) === 0)
                 }
                 className="w-full bg-white text-gray-900 py-3 lg:py-5 px-6 lg:px-8 rounded-2xl lg:rounded-3xl font-light text-sm lg:text-base border-3 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-900"
               >
