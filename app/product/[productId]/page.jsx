@@ -286,7 +286,7 @@ export default function ProductPage() {
     }
 
     if (!selectedSize) {
-      setToastMessage("Please select a size first");
+      setToastMessage(`Please select a ${product.garmentType === "pendant" ? "color" : "size"} first`);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
@@ -300,9 +300,12 @@ export default function ProductPage() {
     }
 
     // Check if quantity exceeds available stock
-    if (quantity > (product.sizeStock?.[selectedSize] || 0)) {
+    const stockKey = product.garmentType === "pendant" ? "colorStock" : "sizeStock";
+    const availableStock = product[stockKey]?.[selectedSize] || 0;
+    
+    if (quantity > availableStock) {
       setToastMessage(
-        `Only ${product.sizeStock?.[selectedSize] || 0} items available in this size`
+        `Only ${availableStock} items available in this ${product.garmentType === "pendant" ? "color" : "size"}`
       );
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -342,7 +345,7 @@ export default function ProductPage() {
     // }
 
     if (!selectedSize) {
-      setToastMessage("Please select a size first");
+      setToastMessage(`Please select a ${product.garmentType === "pendant" ? "color" : "size"} first`);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
@@ -356,11 +359,13 @@ export default function ProductPage() {
     }
 
     // Check if quantity exceeds available stock
-    if (selectedSize && product.sizeStock?.[selectedSize] !== undefined) {
-      const availableStock = product.sizeStock[selectedSize];
+    const stockKey = product.garmentType === "pendant" ? "colorStock" : "sizeStock";
+    const availableStock = product[stockKey]?.[selectedSize];
+    
+    if (selectedSize && availableStock !== undefined) {
       if (quantity > availableStock) {
         setToastMessage(
-          `Only ${availableStock} units available in size ${selectedSize}`
+          `Only ${availableStock} units available in ${product.garmentType === "pendant" ? "color" : "size"} ${selectedSize}`
         );
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
@@ -1223,8 +1228,62 @@ export default function ProductPage() {
               </motion.div>
             </div>
 
-            {/* Size Selection - Responsive */}
-            {product?.availableSizes && product.availableSizes.length > 0 && (
+            {/* Size/Color Selection - Responsive */}
+            {product?.garmentType === "pendant" && product?.availableColors && product.availableColors.length > 0 ? (
+              // Color selection for pendants
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="space-y-3 lg:space-y-4"
+              >
+                <label className="text-sm lg:text-base font-light text-gray-900">
+                  Select Color
+                </label>
+
+                <div className="flex flex-wrap gap-2 lg:gap-3">
+                  {product.availableColors.map((color) => {
+                    const colorStock = product.colorStock?.[color] || 0;
+                    const isOutOfStock = colorStock === 0;
+                    const isSelected = selectedSize === color; // Using selectedSize state for color
+
+                    return (
+                      <motion.button
+                        key={color}
+                        whileHover={{ scale: isOutOfStock ? 1 : 1.05 }}
+                        whileTap={{ scale: isOutOfStock ? 1 : 0.95 }}
+                        onClick={() => !isOutOfStock && setSelectedSize(color)}
+                        disabled={isOutOfStock}
+                        className={`relative px-3 py-2 lg:px-4 lg:py-3 rounded-sm lg:rounded-2xl border-2 font-medium transition-all duration-200 text-xs lg:text-sm ${isSelected
+                          ? "border-gray-900 bg-gray-900 text-white"
+                          : isOutOfStock
+                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                          }`}
+                      >
+                        <span>{color}</span>
+                        {colorStock > 0 && colorStock < 10 && (
+                          <div className="absolute -top-1 -right-1 w-2 h-2 lg:w-3 lg:h-3 bg-orange-200 rounded-full"></div>
+                        )}
+                        {isOutOfStock && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-full h-0.5 bg-gray-400 transform rotate-45"></div>
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {!selectedSize && product.availableColors.length > 0 && (
+                  <div className="flex items-center space-x-2 text-xs lg:text-sm text-gray-600 bg-gray-50 p-3 lg:p-4 rounded-lg lg:rounded-xl border border-gray-200">
+                    <Clock className="w-4 h-4 lg:w-5 lg:h-5" />
+                    <span>Please select a color to continue</span>
+                  </div>
+                )}
+              </motion.div>
+            ) : product?.availableSizes && product.availableSizes.length > 0 ? (
+              // Size selection for upper/lower garments
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1276,7 +1335,7 @@ export default function ProductPage() {
                   </div>
                 )}
               </motion.div>
-            )}
+            ) : null}
 
             {/* Quantity Selector - Responsive */}
             <motion.div
@@ -1310,8 +1369,11 @@ export default function ProductPage() {
                   onClick={() => setQuantity(quantity + 1)}
                   disabled={
                     selectedSize &&
-                    product?.sizeStock?.[selectedSize] !== undefined &&
-                    quantity >= product.sizeStock[selectedSize]
+                    product?.garmentType === "pendant"
+                      ? product?.colorStock?.[selectedSize] !== undefined &&
+                        quantity >= product.colorStock[selectedSize]
+                      : product?.sizeStock?.[selectedSize] !== undefined &&
+                        quantity >= product.sizeStock[selectedSize]
                   }
                   className="p-2 lg:p-3 border-2 border-gray-200 rounded-xl lg:rounded-2xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -1319,29 +1381,53 @@ export default function ProductPage() {
                 </motion.button>
               </div>
 
-              {selectedSize &&
-                product?.sizeStock?.[selectedSize] !== undefined && (
-                  <>
-                    {product.sizeStock[selectedSize] === 0 && (
-                      <div className="flex items-center space-x-2 text-sm lg:text-base text-red-600 bg-red-50 p-3 lg:p-4 rounded-lg lg:rounded-xl border border-red-200">
-                        <X className="w-4 h-4 lg:w-5 lg:h-5" />
-                        <span>
-                          Size {selectedSize} is currently out of stock
-                        </span>
-                      </div>
-                    )}
-
-                    {product.sizeStock[selectedSize] > 0 &&
-                      product.sizeStock[selectedSize] < 10 && (
-                        <div className="flex items-center space-x-2 text-sm lg:text-base text-gray-600 bg-gray-50 p-3 lg:p-4 rounded-lg lg:rounded-xl border border-gray-200">
-                          <Clock className="w-4 h-4 lg:w-5 lg:h-5" />
+              {selectedSize && (
+                <>
+                  {product?.garmentType === "pendant" && product?.colorStock?.[selectedSize] !== undefined ? (
+                    <>
+                      {product.colorStock[selectedSize] === 0 && (
+                        <div className="flex items-center space-x-2 text-sm lg:text-base text-red-600 bg-red-50 p-3 lg:p-4 rounded-lg lg:rounded-xl border border-red-200">
+                          <X className="w-4 h-4 lg:w-5 lg:h-5" />
                           <span>
-                            Only few units left in size {selectedSize}!
+                            Color {selectedSize} is currently out of stock
                           </span>
                         </div>
                       )}
-                  </>
-                )}
+
+                      {product.colorStock[selectedSize] > 0 &&
+                        product.colorStock[selectedSize] < 10 && (
+                          <div className="flex items-center space-x-2 text-sm lg:text-base text-gray-600 bg-gray-50 p-3 lg:p-4 rounded-lg lg:rounded-xl border border-gray-200">
+                            <Clock className="w-4 h-4 lg:w-5 lg:h-5" />
+                            <span>
+                              Only few units left in color {selectedSize}!
+                            </span>
+                          </div>
+                        )}
+                    </>
+                  ) : product?.sizeStock?.[selectedSize] !== undefined ? (
+                    <>
+                      {product.sizeStock[selectedSize] === 0 && (
+                        <div className="flex items-center space-x-2 text-sm lg:text-base text-red-600 bg-red-50 p-3 lg:p-4 rounded-lg lg:rounded-xl border border-red-200">
+                          <X className="w-4 h-4 lg:w-5 lg:h-5" />
+                          <span>
+                            Size {selectedSize} is currently out of stock
+                          </span>
+                        </div>
+                      )}
+
+                      {product.sizeStock[selectedSize] > 0 &&
+                        product.sizeStock[selectedSize] < 10 && (
+                          <div className="flex items-center space-x-2 text-sm lg:text-base text-gray-600 bg-gray-50 p-3 lg:p-4 rounded-lg lg:rounded-xl border border-gray-200">
+                            <Clock className="w-4 h-4 lg:w-5 lg:h-5" />
+                            <span>
+                              Only few units left in size {selectedSize}!
+                            </span>
+                          </div>
+                        )}
+                    </>
+                  ) : null}
+                </>
+              )}
 
               <div className="flex items-center space-x-2 text-sm lg:text-base text-gray-600">
                 <Check className="w-4 h-4 lg:w-5 lg:h-5 text-gray-500" />
