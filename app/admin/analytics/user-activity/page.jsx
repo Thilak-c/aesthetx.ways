@@ -1,8 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { ArrowLeft, Users, Activity, Eye, MousePointer } from "lucide-react";
 

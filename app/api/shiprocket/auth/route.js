@@ -1,4 +1,4 @@
-2// Directory: app/api/shiprocket/auth/route.js
+// Directory: app/api/shiprocket/auth/route.js
 // Next.js 15 App Router - Route handler for Shiprocket auth
 
 import { NextResponse } from 'next/server';

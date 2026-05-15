@@ -1,8 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import React, { useState, useEffect } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { FiSearch, FiFilter, FiMessageSquare, FiClock, FiUser, FiMail } from "react-icons/fi";
 import ChatSessionView from "./ChatSessionView";
 

@@ -1,9 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
-import { ConvexProvider, convex } from "../convexClient"; // Revert to named import
+import ClientLayout from "@/components/ClientLayout";
 import LayoutWrapper from "../components/LayoutWrapper";
-import { Suspense } from "react"; // Import Suspense
+import { Suspense } from "react";
 import { WebsiteStructuredData, OrganizationStructuredData } from "@/components/StructuredData";
 
 const geistSans = Geist({
@@ -29,7 +29,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  metadataBase: new URL('https://aesthetxways.com'), // Replace with your actual domain
+  metadataBase: new URL('https://aesthetxways.com'),
   title: {
     default: "AesthetX Ways - Premium Fashion & Lifestyle Store",
     template: "%s | AesthetX Ways"
@@ -39,50 +39,6 @@ export const metadata = {
   authors: [{ name: "AesthetX Ways" }],
   creator: "AesthetX Ways",
   publisher: "AesthetX Ways",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://aesthetxways.com",
-    title: "AesthetX Ways - Premium Fashion & Lifestyle Store",
-    description: "Discover premium fashion, sneakers, and lifestyle products. Shop the latest trends with fast shipping.",
-    siteName: "AesthetX Ways",
-    images: [
-      {
-        url: "/og-image.jpg", // You'll need to add this image
-        width: 1200,
-        height: 630,
-        alt: "AesthetX Ways Fashion Store",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "AesthetX Ways - Premium Fashion & Lifestyle Store",
-    description: "Discover premium fashion, sneakers, and lifestyle products.",
-    images: ["/og-image.jpg"],
-    creator: "@aesthetxways", // Replace with your Twitter handle
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  verification: {
-    google: "your-google-verification-code", // Add your Google Search Console verification
-    // yandex: "your-yandex-verification-code",
-    // bing: "your-bing-verification-code",
-  },
 };
 
 export default function RootLayout({ children }) {
@@ -95,17 +51,13 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} antialiased`}
       >
-        <ConvexProvider client={convex}>
-          {/* <AccessGate> */}
-          <Suspense fallback={<div>Loading page...</div>}>
-            {" "}
-            {/* Add Suspense boundary */}
+        <ClientLayout>
+          <Suspense fallback={<div>Loading...</div>}>
             <LayoutWrapper>
               {children}
             </LayoutWrapper>
           </Suspense>
-          {/* </AccessGate> */}
-        </ConvexProvider>
+        </ClientLayout>
       </body>
     </html>
   );

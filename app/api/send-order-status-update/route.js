@@ -13,8 +13,6 @@ export async function POST(request) {
       shippingDetails,
       paymentDetails,
       deliveryDetails,
-      createdAt,
-      estimatedDeliveryDate,
     } = await request.json();
 
     console.log("Sending order status update email to:", customerEmail);

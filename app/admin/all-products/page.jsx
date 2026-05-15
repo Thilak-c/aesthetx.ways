@@ -1,7 +1,6 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { FiShare2, FiEye, FiEdit, FiClock, FiTrendingUp, FiEyeOff } from "react-icons/fi";

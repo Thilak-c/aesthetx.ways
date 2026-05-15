@@ -1,0 +1,9 @@
+"use client";
+
+import { ConvexProvider, getConvex } from "../convexClient";
+
+export default function ConvexProviderTree({ children }) {
+  const convex = getConvex();
+  if (!convex) return children;
+  return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+}

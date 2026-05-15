@@ -1,7 +1,6 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import Navbar, { NavbarMobile } from "@/components/Navbar";

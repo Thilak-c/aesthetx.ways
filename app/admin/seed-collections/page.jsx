@@ -1,6 +1,5 @@
 "use client";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useState } from "react";
 
 export default function SeedCollectionsPage() {

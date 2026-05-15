@@ -1,4 +1,5 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import SidebarDrawer from "./SidebarDrawer";
@@ -7,8 +8,6 @@ import SearchDropdown from "./SearchDropdown";
 import MobileSearchModal from "./MobileSearchModal";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { ArrowLeftIcon, ShoppingBag, Heart, Search, Menu } from "lucide-react";
 
 import { useSearchParams, useRouter } from "next/navigation";

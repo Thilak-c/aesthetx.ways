@@ -1,29 +1,22 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import Navbar, { NavbarMobile } from "@/components/Navbar";
 import Footer from "@/components/footer";
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import ProductSlider from "@/components/ProductSlider";
 import CategoriesGrid from "@/components/CategoriesGrid";
 import NewArrivalsSlider from "@/components/NewArrivalsSlider";
 import TopPicksSlider from "@/components/TopPicksSlider";
 import ProductCard from "@/components/ProductCard";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 import {
-  Heart,
-  History,
-  Zap,
+  ShoppingBag,
   Star,
-  Sparkles,
   TrendingUp,
-  Eye,
 } from "lucide-react";
 import { Poppins, Inter } from "next/font/google";
-import { useProductView } from "@/hooks/useProductView";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -42,7 +35,6 @@ const fontClasses = {
 
 export default function Home() {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [token, setToken] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [queryTimeout, setQueryTimeout] = useState(false);
@@ -108,27 +100,13 @@ export default function Home() {
   // Get products for "You Might Also Like" section
   const allProducts = useQuery(api.products.getAllProducts, { limit: 10 });
 
-  // Debug logging
-  useEffect(() => {
-    if (allProducts !== undefined) {
-      console.log("allProducts loaded:", allProducts?.length, "items");
-    }
-  }, [allProducts]);
 
-  useEffect(() => {
-    if (trendingProducts !== undefined) {
-      console.log("trendingProducts loaded:", trendingProducts?.length, "items");
-    }
-  }, [trendingProducts]);
 
   // Add timeout for queries that take too long
   useEffect(() => {
     const timer = setTimeout(() => {
       if (allProducts === undefined || trendingProducts === undefined) {
         setQueryTimeout(true);
-        console.warn("Query timeout: Some products are taking too long to load");
-        console.warn("allProducts:", allProducts === undefined ? "undefined" : "loaded");
-        console.warn("trendingProducts:", trendingProducts === undefined ? "undefined" : "loaded");
       }
     }, 10000); // 10 second timeout
 
@@ -379,7 +357,6 @@ export default function Home() {
                 variants={itemVariants}
                 className="text-base lg:text-lg font-medium text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
-                {/* <Zap className="w-8 h-8 text-gray-500" /> */}
                 <span>Trending in Men</span>
               </motion.h2>
               <motion.p
@@ -469,7 +446,6 @@ export default function Home() {
                 variants={itemVariants}
                 className="text-base lg:text-lg font-medium text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
-                {/* <History className="w-8 h-8 text-gray-500" /> */}
                 <span>Recently Viewed</span>
               </motion.h2>
               <motion.p
@@ -575,7 +551,6 @@ export default function Home() {
                 variants={itemVariants}
                 className="text-base lg:text-lg font-medium text-gray-900 mb-4 flex items-center justify-center space-x-3"
               >
-                {/* <Heart className="w-8 h-8 text-gray-500" />/ */}
                 <span>For {me.name}</span>
               </motion.h2>
               <motion.p

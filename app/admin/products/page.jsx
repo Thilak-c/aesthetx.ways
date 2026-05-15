@@ -1,8 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";

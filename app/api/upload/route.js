@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { nanoid } from "nanoid";
+import { v4 as uuidv4 } from "uuid";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -35,7 +35,7 @@ export async function POST(req) {
     }
 
     // SECURITY: Use nanoid for safe random filename
-    const fileName = `${nanoid()}${ext}`;
+    const fileName = `${uuidv4()}${ext}`;
     const filePath = path.join(uploadsDir, fileName);
 
     const buffer = Buffer.from(await file.arrayBuffer());

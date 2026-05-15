@@ -1,7 +1,6 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, Users, Globe, Building, TrendingUp, ShoppingBag, IndianRupee, Package, Truck } from "lucide-react";

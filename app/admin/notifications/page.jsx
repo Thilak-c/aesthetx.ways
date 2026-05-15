@@ -1,8 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import React, { useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { FiMail, FiCheck, FiX, FiClock, FiFilter } from "react-icons/fi";
 
 const getSessionToken = () => {

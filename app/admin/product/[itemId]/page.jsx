@@ -1,11 +1,9 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import { use,useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import ShareButton from "@/ components/ShareButton";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-
+import ShareButton from "@/components/ShareButton";
 /* -------------------- Utilities -------------------- */
 const formatINR = (n) =>
   new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Number(n || 0));

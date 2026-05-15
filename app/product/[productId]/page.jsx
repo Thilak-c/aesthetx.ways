@@ -1,10 +1,9 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { api } from "@/convex/_generated/api";
-import { useQuery, useMutation } from "convex/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGuestCart } from "@/hooks/useGuestCart";
 import {

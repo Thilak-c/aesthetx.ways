@@ -1,8 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { FiEdit, FiUpload, FiBox, FiShoppingCart, FiUsers, FiBarChart2, FiActivity, FiRefreshCw } from "react-icons/fi";
 import React, { useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Bar } from "react-chartjs-2";
 import 'chart.js/auto';
 import Link from "next/link";

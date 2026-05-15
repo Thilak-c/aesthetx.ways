@@ -1,8 +1,6 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-
 export default function AddProductPage() {
   const addProduct = useMutation(api.products.insert);
   const [form, setForm] = useState({

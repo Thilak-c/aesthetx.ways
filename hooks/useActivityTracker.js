@@ -1,7 +1,6 @@
+"use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useEffect, useRef } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-
 // Generate unique session ID
 const generateSessionId = () => {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

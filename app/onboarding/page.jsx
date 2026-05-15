@@ -1,4 +1,5 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import {
   Search,
   Instagram,
@@ -11,8 +12,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";

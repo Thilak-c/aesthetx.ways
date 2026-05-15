@@ -1,7 +1,6 @@
+"use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useEffect, useRef } from 'react';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-
 /**
  * Hook to automatically track product views when a product card is rendered
  * @param {string} productId - The ID of the product to track

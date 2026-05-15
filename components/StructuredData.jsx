@@ -111,7 +111,7 @@ export function ProductStructuredData({ product, reviews, reviewStats }) {
         "@type": "Person",
         name: review.userName || "Anonymous",
       },
-      datePublished: new Date(review._creationTime).toISOString(),
+      datePublished: new Date(review.createdAt || review._creationTime).toISOString(),
       reviewBody: review.comment,
       name: review.title,
     }));

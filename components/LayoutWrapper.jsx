@@ -1,11 +1,9 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-// import getConvexClient from "../convexClient"; // Removed import
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Toaster } from "react-hot-toast";
 import HelpChatWidget from "./HelpChatWidget";
 import Footer from "../components/footer";

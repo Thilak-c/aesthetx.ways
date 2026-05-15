@@ -1,8 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { FiX, FiPlay, FiSave, FiFilter, FiCalendar } from "react-icons/fi";
 
 export default function ReportBuilder({ adminUser, onClose, onReportGenerated }) {

@@ -1,7 +1,6 @@
 "use client";
+import { useAction, useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useEffect, useState } from "react";
-import { useAction } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiShield, FiUser, FiLock, FiEye, FiEyeOff } from "react-icons/fi";

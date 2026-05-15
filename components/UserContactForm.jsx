@@ -1,8 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import React, { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { FiUser, FiMail, FiPhone, FiMessageSquare, FiSend } from "react-icons/fi";
 
 const CATEGORIES = [

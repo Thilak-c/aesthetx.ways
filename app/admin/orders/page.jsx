@@ -1,16 +1,12 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import {
   Search,
   Filter,
   Download,
   Eye,
-  Edit,
-  Trash2,
   Package,
   Truck,
   CheckCircle,
@@ -30,12 +26,6 @@ import {
   DollarSign,
   ShoppingBag,
   RefreshCw,
-  FileText,
-  Send,
-  Archive,
-  Users,
-  Settings,
-  BarChart3
 } from "lucide-react";
 
 const ORDER_STATUSES = [
@@ -139,29 +129,18 @@ export default function AdminOrdersPage() {
         updatedBy: "admin"
       });
 
-      console.log("Status update result:", result);
-      console.log("Result keys:", Object.keys(result));
-      console.log("Has orderDetails?", "orderDetails" in result);
-      console.log("orderDetails value:", result.orderDetails);
-
       // Send email notification to customer (non-blocking)
       if (result.success && result.orderDetails) {
-        console.log("Sending email to:", result.orderDetails.customerEmail);
         fetch("/api/send-order-status-update", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(result.orderDetails),
         })
-          .then(response => response.json())
-          .then(data => console.log("Email sent:", data))
           .catch((error) => {
             console.error("Error sending status update email:", error);
           });
-      } else {
-        console.log("No order details to send email");
       }
     } catch (error) {
-      console.error("Error updating status:", error);
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +158,6 @@ export default function AdminOrdersPage() {
       });
       setSelectedOrders([]);
     } catch (error) {
-      console.error("Error bulk updating status:", error);
     } finally {
       setIsLoading(false);
     }
@@ -194,7 +172,6 @@ export default function AdminOrdersPage() {
         updatedBy: "admin"
       });
     } catch (error) {
-      console.error("Error cancelling order:", error);
     } finally {
       setIsLoading(false);
     }

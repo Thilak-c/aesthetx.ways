@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 
 // Configure email transporter
 const transporter = nodemailer.createTransport({
-  host: "﻿​﻿smtp.hostinger.com", // or your provider’s SMTP host
+  host: "smtp.hostinger.com", // or your provider’s SMTP host
       port: 465,
       secure: true, 
   auth: {
@@ -178,7 +178,7 @@ export async function POST(request) {
             <!-- Footer -->
             <tr>
               <td style="padding:24px 32px; background:#f8f9fa; color:#999999; font-size:12px; text-align:center;">
-                © ${new Date().getFullYear()} Your Brand. All rights reserved.
+                © ${new Date().getFullYear()} AesthetX Ways. All rights reserved.
               </td>
             </tr>
 

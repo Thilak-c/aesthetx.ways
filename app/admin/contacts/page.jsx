@@ -7,7 +7,6 @@ import {
   Trash2,
   RefreshCw,
   Eye,
-  EyeOff,
   User,
   Reply,
   X,
@@ -35,7 +34,6 @@ export default function ContactsPage() {
       setError(null);
     } catch (err) {
       setError("Failed to load messages");
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -59,7 +57,6 @@ export default function ContactsPage() {
         );
       }
     } catch (error) {
-      console.error("Error marking as read:", error);
     }
   };
 
@@ -75,7 +72,6 @@ export default function ContactsPage() {
         setMessages(messages.filter((msg) => msg.id !== id));
       }
     } catch (error) {
-      console.error("Error deleting message:", error);
     }
   };
 
@@ -128,7 +124,6 @@ export default function ContactsPage() {
         alert(data.error || "Failed to send reply");
       }
     } catch (error) {
-      console.error("Error sending reply:", error);
       alert("Failed to send reply. Please try again.");
     } finally {
       setSendingReply(false);

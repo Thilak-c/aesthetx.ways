@@ -1,7 +1,6 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import React, { useState, useMemo } from "react";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import ProductCard from "./ProductCard";
 import Navbar, { NavbarMobile } from "@/components/Navbar";

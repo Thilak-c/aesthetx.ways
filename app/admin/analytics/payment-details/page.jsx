@@ -1,7 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import { useState, useEffect } from "react";
-import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { ArrowLeft, TrendingUp, CreditCard, Banknote, ShoppingCart, XCircle, Sparkles } from "lucide-react";
 import {
@@ -33,9 +33,6 @@ export default function PaymentDetailsAnalytics() {
     async function loadPaymentData() {
       setLoading(true);
       try {
-        const { ConvexHttpClient } = await import("convex/browser");
-        const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
-
         const endDate = new Date();
         const startDate = new Date();
         if (timeRange === "7d") {
@@ -47,10 +44,12 @@ export default function PaymentDetailsAnalytics() {
         const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`;
         const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
 
-        const data = await client.query(api.analytics.getPaymentMethodsAnalytics, {
-          startDate: startDateStr,
-          endDate: endDateStr,
+        const dataRes = await fetch('/api/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table: 'analytics', operation: 'getPaymentMethodsAnalytics', args: { startDate: startDateStr, endDate: endDateStr } }),
         });
+        const data = await dataRes.json();
 
         setPaymentData(data);
       } catch (error) {

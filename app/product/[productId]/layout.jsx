@@ -1,19 +1,13 @@
-// app/product/[productId]/layout.jsx
-import { api } from "@/convex/_generated/api";
-import { fetchQuery } from "convex/nextjs";
+import { executeDataOperation } from "@/lib/dataOperations";
 
 export async function generateMetadata({ params }) {
   const { productId } = await params;
 
   try {
-    // Fetch product data for metadata
-    const product = await fetchQuery(api.products.getProductById, { productId });
+    const product = await executeDataOperation({ table: "products", operation: "getProductById", args: { itemId: productId } });
 
     if (!product) {
-      return {
-        title: "Product Not Found",
-        description: "The product you're looking for doesn't exist.",
-      };
+      return { title: "Product Not Found", description: "The product you're looking for doesn't exist." };
     }
 
     const productName = product.name || "Product";
@@ -32,18 +26,8 @@ export async function generateMetadata({ params }) {
         type: "website",
         siteName: "AesthetX Ways",
         images: [
-          {
-            url: product.mainImage || "/default-product.jpg",
-            width: 800,
-            height: 1000,
-            alt: productName,
-          },
-          ...(product.otherImages || []).slice(0, 3).map((img) => ({
-            url: img,
-            width: 800,
-            height: 1000,
-            alt: `${productName} - Additional Image`,
-          })),
+          { url: product.mainImage || "/default-product.jpg", width: 800, height: 1000, alt: productName },
+          ...(product.otherImages || []).slice(0, 3).map((img) => ({ url: img, width: 800, height: 1000, alt: `${productName} - Additional Image` })),
         ],
         url: `https://aesthetxways.com/product/${productId}`,
       },
@@ -53,16 +37,11 @@ export async function generateMetadata({ params }) {
         description: `${productName} - ${category}. Price: ₹${price}`,
         images: [product.mainImage || "/default-product.jpg"],
       },
-      alternates: {
-        canonical: `https://aesthetxways.com/product/${productId}`,
-      },
+      alternates: { canonical: `https://aesthetxways.com/product/${productId}` },
     };
   } catch (error) {
     console.error("Error generating product metadata:", error);
-    return {
-      title: "Product | AesthetX Ways",
-      description: "Shop premium fashion and lifestyle products at AesthetX Ways.",
-    };
+    return { title: "Product | AesthetX Ways", description: "Shop premium fashion and lifestyle products at AesthetX Ways." };
   }
 }
 

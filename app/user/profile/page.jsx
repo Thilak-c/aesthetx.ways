@@ -1,7 +1,6 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { 
@@ -31,7 +30,7 @@ export default function ProfilePageRedesign() {
   const [isClient, setIsClient] = useState(false);
   
   // Convex queries and mutations
-  const me = useQuery(api.users.meByToken, { token: token || "" });
+  const me = useQuery(api.users.meByToken, token ? { token } : "skip");
   const updateProfile = useMutation(api.users.updateUserProfile);
   
   const [isEditing, setIsEditing] = useState(false);
@@ -476,7 +475,7 @@ export default function ProfilePageRedesign() {
                     ✓ Active
                   </span>
                   <span className="px-3 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-medium border border-white/20">
-                    Member since {new Date(me._creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    Member since {new Date(me.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                   </span>
                 </div>
               </div>

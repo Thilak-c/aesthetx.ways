@@ -1,7 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import { useState, useEffect } from "react";
-import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { ArrowLeft, TrendingUp, Eye, Clock, Users } from "lucide-react";
 import {
@@ -84,9 +84,8 @@ export default function PageViewsAnalytics() {
         setLoadingState((prev) => ({ ...prev, currentDate: date, loaded: i }));
 
         try {
-          const { ConvexHttpClient } = await import("convex/browser");
-          const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
-          const dayData = await client.query(api.analytics.getAnalyticsForDay, { date });
+          const res = await fetch('/api/analytics/day?date=' + encodeURIComponent(date));
+          const dayData = await res.json();
 
           if (!dayData || dayData.error) continue;
 

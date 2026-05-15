@@ -1,9 +1,7 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import React, { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-
 const getSessionToken = () => {
   if (typeof document === "undefined") return null;
   const m = document.cookie.match(/(?:^|; )sessionToken=([^;]+)/);

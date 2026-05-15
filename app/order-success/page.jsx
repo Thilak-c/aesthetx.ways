@@ -1,11 +1,9 @@
 "use client"
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, Home, ShoppingBag, Package, Calendar, MapPin } from "lucide-react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-
 export default function OrderSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();

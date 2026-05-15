@@ -1,7 +1,6 @@
 "use client";
+import { useAction, useQuery, useMutation, api } from "@/lib/convex-compat";
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useAction } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import {

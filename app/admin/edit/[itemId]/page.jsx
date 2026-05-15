@@ -1,10 +1,9 @@
 "use client";
+import { useQuery, useMutation, api } from "@/lib/convex-compat";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { toast } from "sonner"; // npm i sonner
 
 export default function EditProductPage({ params }) {
