@@ -7,4 +7,7 @@ const reportSchema = new mongoose.Schema({
   createdAt: { type: Number, required: true },
 });
 
+reportSchema.index({ userId: 1 });
+reportSchema.index({ createdAt: -1 });
+
 export default mongoose.models.Report || mongoose.model('Report', reportSchema);

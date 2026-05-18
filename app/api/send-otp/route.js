@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { connectDB } from '@/lib/db';
+import PasswordResetOTP from '@/models/PasswordResetOTP';
 
 // Configure email transporter
 const transporter = nodemailer.createTransport({
-  host: "smtp.hostinger.com", // or your provider’s SMTP host
+  host: "smtp.hostinger.com",
   port: 465,
   secure: true,
   auth: {
@@ -23,29 +25,20 @@ export async function POST(request) {
       );
     }
 
+    await connectDB();
+
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes
 
-    // Store OTP in memory (in production, use Redis or database)
-    // For now, we'll use a simple in-memory store with better persistence
-    if (!global.otpStore) {
-      global.otpStore = new Map();
-    }
-
-    // Also store in a more persistent way for development
-    if (!global.otpStorePersistent) {
-      global.otpStorePersistent = new Map();
-    }
-
-    const otpData = {
+    // Store OTP in MongoDB (replaces unreliable in-memory global.otpStore)
+    await PasswordResetOTP.deleteMany({ email: email.toLowerCase().trim() });
+    await PasswordResetOTP.create({
+      email: email.toLowerCase().trim(),
       otp,
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
-      createdAt: Date.now()
-    };
-
-    // Store OTP with expiration (5 minutes)
-    global.otpStore.set(email, otpData);
-    global.otpStorePersistent.set(email, otpData);
+      expiresAt,
+      used: false,
+    });
 
     // Email content
     const mailOptions = {
@@ -77,7 +70,7 @@ export async function POST(request) {
                   <tr>
                     <td style="padding:25px; text-align:center;">
                       <div style="font-size:36px; font-weight:bold; color:#111111; letter-spacing:10px; font-family: monospace;">
-                       {${otp}}
+                       ${otp}
                       </div>
                       <p style="color:#777777; font-size:14px; margin:12px 0 0 0;">
                         Enter this code in the verification field
@@ -122,13 +115,9 @@ export async function POST(request) {
     // Send email
     await transporter.sendMail(mailOptions);
 
-    // For development: also return the OTP in the response
-    const isDevelopment = process.env.NODE_ENV === 'development';
-
     return NextResponse.json({
       success: true,
       message: 'OTP sent successfully',
-      ...(isDevelopment && { debugOtp: otp }), // Only include in development
     });
 
   } catch (error) {

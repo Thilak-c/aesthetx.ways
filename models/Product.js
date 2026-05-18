@@ -30,7 +30,7 @@ const productSchema = new mongoose.Schema({
 productSchema.index({ isDeleted: 1 });
 productSchema.index({ color: 1 });
 productSchema.index({ garmentType: 1 });
-productSchema.index({ itemId: 1 });
+productSchema.index({ itemId: 1 }, { unique: true });
 productSchema.index({ category: 1 });
 
 export default mongoose.models.Product || mongoose.model('Product', productSchema);

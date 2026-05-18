@@ -85,7 +85,7 @@ export default function RazorpayPaymentPage() {
 
       // Configure Razorpay options
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_RAMQAuyK0c66gh",
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: data.amount,
         currency: data.currency,
         name: "AesthetX Ways",
@@ -139,7 +139,7 @@ export default function RazorpayPaymentPage() {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    "x-api-key": process.env.NEXT_PUBLIC_INTERNAL_API_KEY || "aesthetx-internal-key-2024",
+                    "x-api-key": process.env.NEXT_PUBLIC_INTERNAL_API_KEY,
                   },
                   body: JSON.stringify({
                     userId: data.userId || null,
@@ -211,7 +211,7 @@ export default function RazorpayPaymentPage() {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
-                        "x-api-key": process.env.NEXT_PUBLIC_INTERNAL_API_KEY || "aesthetx-internal-key-2024",
+                        "x-api-key": process.env.NEXT_PUBLIC_INTERNAL_API_KEY,
                       },
                       body: JSON.stringify({ userId: data.userId }),
                     });

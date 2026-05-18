@@ -35,7 +35,7 @@ const reportTemplateSchema = new mongoose.Schema({
   chartConfig: chartConfigSchema,
   permissions: [String],
   isActive: { type: Boolean, default: true },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
 reportTemplateSchema.index({ category: 1 });

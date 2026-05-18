@@ -523,7 +523,7 @@ export default function CheckoutPage() {
       // Configure Razorpay options
       const options = {
         key:
-          process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_RAMQAuyK0c66gh",
+          process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         name: "AesthetX Ways",

@@ -24,7 +24,7 @@ const collectionSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
-collectionSchema.index({ slug: 1 });
+collectionSchema.index({ slug: 1 }, { unique: true });
 collectionSchema.index({ isActive: 1 });
 collectionSchema.index({ displayOrder: 1 });
 collectionSchema.index({ type: 1 });

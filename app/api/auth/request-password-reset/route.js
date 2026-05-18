@@ -35,8 +35,7 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: 'OTP generated successfully',
-      otp,
+      message: 'If the email exists, an OTP has been sent.',
       email: normalizedEmail,
       userName: user.name || 'User',
     });

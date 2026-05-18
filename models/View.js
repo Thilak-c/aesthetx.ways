@@ -14,7 +14,7 @@ const viewSchema = new mongoose.Schema({
   isDeleted: { type: Boolean, default: false },
   deletedAt: String,
   deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-});
+}, { timestamps: true });
 
 viewSchema.index({ productId: 1 });
 viewSchema.index({ userId: 1 });

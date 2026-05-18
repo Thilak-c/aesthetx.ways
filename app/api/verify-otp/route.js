@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { connectDB } from '@/lib/db';
+import PasswordResetOTP from '@/models/PasswordResetOTP';
 
 export async function POST(request) {
   try {
@@ -11,50 +13,36 @@ export async function POST(request) {
       );
     }
 
-    // Get stored OTP data
-    if (!global.otpStore && !global.otpStorePersistent) {
-      return NextResponse.json(
-        { success: false, message: 'No OTP found. Please request a new one.' },
-        { status: 400 }
-      );
-    }
+    await connectDB();
+    const normalizedEmail = email.toLowerCase().trim();
 
-    // Try to get OTP from both stores
-    let storedData = global.otpStore?.get(email) || global.otpStorePersistent?.get(email);
+    // Find the OTP record in MongoDB
+    const storedData = await PasswordResetOTP.findOne({
+      email: normalizedEmail,
+      otp,
+      used: false,
+    });
 
     if (!storedData) {
       return NextResponse.json(
-        { success: false, message: 'No OTP found. Please request a new one.' },
+        { success: false, message: 'Invalid OTP. Please request a new one.' },
         { status: 400 }
       );
     }
 
     // Check if OTP has expired
-    const now = Date.now();
-    const isExpired = now > storedData.expiresAt;
-    
-    if (isExpired) {
-      global.otpStore?.delete(email);
-      global.otpStorePersistent?.delete(email);
+    if (new Date(storedData.expiresAt) < new Date()) {
+      await PasswordResetOTP.findByIdAndDelete(storedData._id);
       return NextResponse.json(
         { success: false, message: 'OTP has expired. Please request a new one.' },
         { status: 400 }
       );
     }
 
-    // Verify OTP
-    const isOtpValid = storedData.otp === otp;
-    
-    if (!isOtpValid) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid OTP. Please check and try again.' },
-        { status: 400 }
-      );
-    }
-
-    // OTP is valid - remove it from both stores
-    global.otpStore?.delete(email);
-    global.otpStorePersistent?.delete(email);
+    // OTP is valid — mark as used
+    storedData.used = true;
+    storedData.verified = true;
+    await storedData.save();
 
     return NextResponse.json({
       success: true,

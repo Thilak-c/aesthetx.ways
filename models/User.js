@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
   permanentAddressLocked: { type: Boolean, default: false },
 }, { timestamps: true });
 
-userSchema.index({ email: 1 });
+userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ isDeleted: 1 });
 
