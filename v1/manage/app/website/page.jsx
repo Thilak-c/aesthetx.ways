@@ -48,7 +48,7 @@ export default function WebsiteDashboard() {
                 <p className="text-blue-500 text-[10px] font-extrabold uppercase tracking-widest">Website Store</p>
               </div>
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight font-poppins">Inventory Overview</h1>
-              <p className="text-slate-500 text-sm mt-1">Live analytics, stock metrics, and fulfillment status for Aesthetx Ways Patna.</p>
+              {/* <p className="text-slate-500 text-sm mt-1">Live analytics, stock metrics, and fulfillment status for Aesthetx Ways Patna.</p> */}
             </div>
             
             {/* Quick action links */}
@@ -211,7 +211,7 @@ export default function WebsiteDashboard() {
                       <div key={cat} className="space-y-2">
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-500 font-medium">{cat}</span>
-                          <span className="text-slate-800 font-extrabold">{data.stock} Pairs ({ratio.toFixed(0)}%)</span>
+                          <span className="text-slate-800 font-extrabold">{data.stock} ({ratio.toFixed(0)}%)</span>
                         </div>
                         <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-50">
                           <div
@@ -285,7 +285,7 @@ export default function WebsiteDashboard() {
 
                       <div className="flex items-center gap-6">
                         <span className={`text-sm font-extrabold ${isStockIn ? "text-emerald-600" : "text-rose-500"}`}>
-                          {isStockIn ? "+" : "-"}{m.quantity} Pairs
+                          {isStockIn ? "+" : "-"}{m.quantity} 
                         </span>
                         <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap min-w-[70px] text-right">
                           {new Date(m.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}

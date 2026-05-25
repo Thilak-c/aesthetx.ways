@@ -18,11 +18,20 @@ export default function LoginPage() {
   
   const [storeType, setStoreType] = useState(null); // "website" or "offline"
 
-  // Demo credentials (replace with actual auth)
-  const VALID_CREDENTIALS = [
-    { adminId: "Aesthetx Ways", password: "aesthetx123" },
-    { adminId: "Thilak", password: "8008439762" }
-  ];
+  // Load valid credentials from environment variables
+  const VALID_CREDENTIALS = (() => {
+    try {
+      const envCreds = process.env.NEXT_PUBLIC_VALID_CREDENTIALS;
+      if (envCreds) return JSON.parse(envCreds);
+    } catch (e) {
+      console.error("Failed to parse NEXT_PUBLIC_VALID_CREDENTIALS:", e);
+    }
+    return [
+      { adminId: "Aesthetx Ways", password: "aesthetx123" },
+      { adminId: "Thilak", password: "8008439762" },
+      { adminId: "Prince", password: "7033769997" }
+    ];
+  })();
 
   const handleLogin = (e) => {
     e.preventDefault();

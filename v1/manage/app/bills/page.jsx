@@ -161,7 +161,7 @@ export default function BillsHistoryPage() {
         <body>
           <div class="text-center pb-4 border-b-2 mb-4">
             <h2 style="font-size: 18px; font-weight: 800;">AESTHETX WAYS</h2>
-            <p style="font-size: 11px; margin-top: 2px;">Premium Sneakers Store</p>
+            <p style="font-size: 11px; margin-top: 2px;">Premium Clothing Store</p>
             <p style="font-size: 9px; color: #333;">Patna Branch, Bihar</p>
             <p style="font-size: 9px;">GSTIN: 10ABCDE1234F1Z5</p>
           </div>
@@ -584,7 +584,7 @@ export default function BillsHistoryPage() {
                         <div className="min-w-0 flex-1">
                           <p className="font-extrabold text-slate-800 truncate">{item.productName}</p>
                           <p className="text-[10px] text-slate-400 font-mono font-bold mt-0.5">
-                            SKU: {item.itemId} • Size: UK {item.size}
+                            SKU: {item.itemId} • Size: {item.size}
                           </p>
                         </div>
                         <div className="text-right shrink-0">

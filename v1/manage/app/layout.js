@@ -18,7 +18,7 @@ const inter = Inter({
 
 export const metadata = {
   title: "Inventory System | Aesthetx Ways",
-  description: "Inventory management system for Aesthetx Ways footwear store",
+  description: "Inventory Management system for Aesthetx Ways",
 };
 
 export default function RootLayout({ children }) {

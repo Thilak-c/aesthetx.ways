@@ -168,7 +168,7 @@ export default function ReturnsPage() {
                 <div className="bg-white rounded-2xl p-4 border border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-700 mb-3">Find Original Bill</h3>
                   <div className="flex gap-2">
-                    <input type="text" value={billNumber} onChange={(e) => setBillNumber(e.target.value.toUpperCase())} placeholder="Enter bill number (e.g., WD202412...)" className="flex-1 px-4 py-3 bg-gray-50 border-0 rounded-xl text-sm font-mono" />
+                    <input type="text" value={billNumber} onChange={(e) => setBillNumber(e.target.value.toUpperCase())} placeholder="Enter bill number (e.g., AW202412...)" className="flex-1 px-4 py-3 bg-gray-50 border-0 rounded-xl text-sm font-mono" />
                     <button onClick={handleBillSearch} className="px-4 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800">
                       <Search size={18} />
                     </button>

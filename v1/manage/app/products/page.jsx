@@ -22,10 +22,33 @@ import {
   TrendingDown,
   Activity,
   Sparkles,
-  Layers
+  Layers,
+  Eye
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+
+const MAIN_CATEGORIES = [
+  { value: "footwear", label: "Footwear" },
+  { value: "apparel", label: "Apparel / Clothing" },
+  { value: "headwear", label: "Headwear" },
+  { value: "eyewear", label: "Eyewear" }
+];
+
+const CATEGORY_MAP = {
+  footwear: ["Shoes", "boots", "sandals", "sneakers"],
+  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses"],
+  headwear: ["Hats", "caps", "beanies"],
+  eyewear: ["Glasses", "sunglasses"]
+};
+
+const DASHBOARD_CARDS = [
+  { id: "all", label: "All Products", icon: Layers, colorClasses: "bg-slate-50 border-slate-100 text-slate-500" },
+  { id: "footwear", label: "Footwear", icon: Activity, colorClasses: "bg-blue-50 border-blue-100 text-blue-600" },
+  { id: "apparel", label: "Apparel / Clothing", icon: Package, colorClasses: "bg-amber-50 border-amber-100 text-amber-600" },
+  { id: "headwear", label: "Headwear", icon: TrendingDown, colorClasses: "bg-emerald-50 border-emerald-100 text-emerald-600" },
+  { id: "eyewear", label: "Eyewear", icon: Eye, colorClasses: "bg-purple-50 border-purple-100 text-purple-600" }
+];
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -33,8 +56,8 @@ export default function ProductsPage() {
   
   const [search, setSearch] = useState("");
   const [stockFilter, setStockFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState("all"); // "all", "sneakers", "sports", "accessories"
-  const [activeSubTab, setActiveSubTab] = useState("all"); // "all", "watch", "belts", "lighter", "glasses", "perfume", "belt", etc.
+  const [activeTab, setActiveTab] = useState("all"); // "all", "footwear", "apparel", ...
+  const [activeSubTab, setActiveSubTab] = useState("all");
   const [sortBy, setSortBy] = useState("sku");
   const [visibleCount, setVisibleCount] = useState(15);
 
@@ -43,44 +66,33 @@ export default function ProductsPage() {
     setVisibleCount(15);
   }, [search, stockFilter, activeTab, activeSubTab, sortBy]);
 
-  const ACCESSORIES_LIST = ["watch", "belts", "lighter", "glasses", "perfume", "belt"];
-  
-  const isProductCategory = (p, catName) => {
-    const main = p.mainCategory?.toLowerCase() || "";
-    const sub = p.category?.toLowerCase() || "";
-    
-    if (catName === "sneakers") {
-      return sub === "sneakers";
-    }
-    if (catName === "sports") {
-      return sub === "sports";
-    }
-    if (catName === "accessories") {
-      return main === "accessories" || ACCESSORIES_LIST.includes(sub) || sub === "accessories";
-    }
-    return false;
-  };
-
   // Set category from URL on mount and when URL changes
   useEffect(() => {
     if (urlCategory) {
       const cat = urlCategory.toLowerCase();
-      if (cat === "sneakers") {
-        setActiveTab("sneakers");
+      const matchedMain = MAIN_CATEGORIES.find(m => m.value === cat);
+      if (matchedMain) {
+        setActiveTab(cat);
         setActiveSubTab("all");
-      } else if (cat === "sports") {
-        setActiveTab("sports");
-        setActiveSubTab("all");
-      } else if (ACCESSORIES_LIST.includes(cat) || cat === "accessories") {
-        setActiveTab("accessories");
-        if (ACCESSORIES_LIST.includes(cat)) {
-          setActiveSubTab(cat);
+      } else {
+        // Check if it's a subcategory
+        let foundMain = null;
+        let foundSub = null;
+        for (const [mainCat, subs] of Object.entries(CATEGORY_MAP)) {
+          const matchedSub = subs.find(s => s.toLowerCase() === cat);
+          if (matchedSub) {
+            foundMain = mainCat;
+            foundSub = cat;
+            break;
+          }
+        }
+        if (foundMain) {
+          setActiveTab(foundMain);
+          setActiveSubTab(foundSub);
         } else {
+          setActiveTab("all");
           setActiveSubTab("all");
         }
-      } else {
-        setActiveTab("all");
-        setActiveSubTab("all");
       }
     } else {
       setActiveTab("all");
@@ -120,18 +132,10 @@ export default function ProductsPage() {
       }
       
       // Main tab filter
-      if (activeTab === "sneakers" && !isProductCategory(p, "sneakers")) return false;
-      if (activeTab === "sports" && !isProductCategory(p, "sports")) return false;
-      if (activeTab === "accessories") {
-        if (!isProductCategory(p, "accessories")) return false;
-        // Subtab filter for accessories
+      if (activeTab !== "all") {
+        if (p.mainCategory?.toLowerCase() !== activeTab.toLowerCase()) return false;
         if (activeSubTab !== "all") {
-          const sub = p.category?.toLowerCase() || "";
-          if (activeSubTab === "belts") {
-            if (sub !== "belts" && sub !== "belt") return false;
-          } else if (sub !== activeSubTab) {
-            return false;
-          }
+          if (p.category?.toLowerCase() !== activeSubTab.toLowerCase()) return false;
         }
       }
 
@@ -190,9 +194,9 @@ export default function ProductsPage() {
 
   const isLoading = products === undefined;
   const pageTitle = activeTab !== "all" 
-    ? (activeTab === "accessories" && activeSubTab !== "all" 
-        ? `Accessories: ${activeSubTab.charAt(0).toUpperCase() + activeSubTab.slice(1)}` 
-        : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)) 
+    ? (activeSubTab !== "all" 
+        ? `${MAIN_CATEGORIES.find(m => m.value === activeTab)?.label}: ${activeSubTab.charAt(0).toUpperCase() + activeSubTab.slice(1)}` 
+        : MAIN_CATEGORIES.find(m => m.value === activeTab)?.label) 
     : "All Products";
 
   return (
@@ -211,7 +215,7 @@ export default function ProductsPage() {
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-poppins">{pageTitle}</h1>
               <p className="text-slate-500 text-xs sm:text-sm mt-0.5 sm:mt-1">
-                {filteredProducts?.length || 0} items registered {activeTab !== "all" ? `in ${activeTab}` : "in store inventory"}
+                {filteredProducts?.length || 0} items registered {activeTab !== "all" ? `in ${MAIN_CATEGORIES.find(m => m.value === activeTab)?.label}` : "in store inventory"}
               </p>
             </div>
             <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-3 w-full md:w-auto">
@@ -280,106 +284,41 @@ export default function ProductsPage() {
           {/* Category Dashboard */}
           <div className="mb-6 sm:mb-8">
             <h2 className="text-xs font-black uppercase text-slate-400 tracking-wider mb-3">Category Dashboard</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              {/* All Items Card */}
-              <button
-                type="button"
-                onClick={() => { setActiveTab("all"); setActiveSubTab("all"); }}
-                className={`text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
-                  activeTab === "all"
-                    ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10 scale-[1.02]"
-                    : "bg-white border-slate-200/60 hover:border-slate-350 text-slate-800"
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 shadow-xs border ${
-                  activeTab === "all" ? "bg-white/10 border-white/10 text-white" : "bg-slate-50 border-slate-100 text-slate-500"
-                }`}>
-                  <Layers size={14} />
-                </div>
-                <div>
-                  <p className={`text-lg sm:text-xl font-extrabold tracking-tight ${activeTab === "all" ? "text-white" : "text-slate-800"}`}>
-                    {products?.length || 0}
-                  </p>
-                  <p className={`text-[10px] font-bold uppercase tracking-wider block mt-1 ${activeTab === "all" ? "text-slate-300" : "text-slate-450"}`}>
-                    All Products
-                  </p>
-                </div>
-              </button>
-
-              {/* Sneakers Card */}
-              <button
-                type="button"
-                onClick={() => { setActiveTab("sneakers"); setActiveSubTab("all"); }}
-                className={`text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
-                  activeTab === "sneakers"
-                    ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10 scale-[1.02]"
-                    : "bg-white border-slate-200/60 hover:border-slate-350 text-slate-800"
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 shadow-xs border ${
-                  activeTab === "sneakers" ? "bg-white/10 border-white/10 text-white" : "bg-blue-50 border-blue-100 text-blue-600"
-                }`}>
-                  <Activity size={14} />
-                </div>
-                <div>
-                  <p className={`text-lg sm:text-xl font-extrabold tracking-tight ${activeTab === "sneakers" ? "text-white" : "text-slate-800"}`}>
-                    {products?.filter(p => isProductCategory(p, "sneakers")).length || 0}
-                  </p>
-                  <p className={`text-[10px] font-bold uppercase tracking-wider block mt-1 ${activeTab === "sneakers" ? "text-slate-300" : "text-slate-450"}`}>
-                    Sneakers
-                  </p>
-                </div>
-              </button>
-
-              {/* Sports Card */}
-              <button
-                type="button"
-                onClick={() => { setActiveTab("sports"); setActiveSubTab("all"); }}
-                className={`text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
-                  activeTab === "sports"
-                    ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10 scale-[1.02]"
-                    : "bg-white border-slate-200/60 hover:border-slate-350 text-slate-800"
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 shadow-xs border ${
-                  activeTab === "sports" ? "bg-white/10 border-white/10 text-white" : "bg-emerald-50 border-emerald-100 text-emerald-600"
-                }`}>
-                  <TrendingDown size={14} className="rotate-180" />
-                </div>
-                <div>
-                  <p className={`text-lg sm:text-xl font-extrabold tracking-tight ${activeTab === "sports" ? "text-white" : "text-slate-800"}`}>
-                    {products?.filter(p => isProductCategory(p, "sports")).length || 0}
-                  </p>
-                  <p className={`text-[10px] font-bold uppercase tracking-wider block mt-1 ${activeTab === "sports" ? "text-slate-300" : "text-slate-455"}`}>
-                    Sports
-                  </p>
-                </div>
-              </button>
-
-              {/* Accessories Card */}
-              <button
-                type="button"
-                onClick={() => { setActiveTab("accessories"); setActiveSubTab("all"); }}
-                className={`text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
-                  activeTab === "accessories"
-                    ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10 scale-[1.02]"
-                    : "bg-white border-slate-200/60 hover:border-slate-350 text-slate-800"
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 shadow-xs border ${
-                  activeTab === "accessories" ? "bg-white/10 border-white/10 text-white" : "bg-purple-50 border-purple-100 text-purple-600"
-                }`}>
-                  <Sparkles size={14} />
-                </div>
-                <div>
-                  <p className={`text-lg sm:text-xl font-extrabold tracking-tight ${activeTab === "accessories" ? "text-white" : "text-slate-800"}`}>
-                    {products?.filter(p => isProductCategory(p, "accessories")).length || 0}
-                  </p>
-                  <p className={`text-[10px] font-bold uppercase tracking-wider block mt-1 ${activeTab === "accessories" ? "text-slate-300" : "text-slate-455"}`}>
-                    Accessories
-                  </p>
-                </div>
-              </button>
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+              {DASHBOARD_CARDS.map((card) => {
+                const CardIcon = card.icon;
+                const count = card.id === "all" 
+                  ? products?.length || 0
+                  : products?.filter(p => p.mainCategory?.toLowerCase() === card.id).length || 0;
+                const isActive = activeTab === card.id;
+                
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => { setActiveTab(card.id); setActiveSubTab("all"); }}
+                    className={`text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
+                      isActive
+                        ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10 scale-[1.02]"
+                        : "bg-white border-slate-200/60 hover:border-slate-350 text-slate-800"
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 shadow-xs border ${
+                      isActive ? "bg-white/10 border-white/10 text-white" : `${card.colorClasses}`
+                    }`}>
+                      <CardIcon size={14} />
+                    </div>
+                    <div>
+                      <p className={`text-lg sm:text-xl font-extrabold tracking-tight ${isActive ? "text-white" : "text-slate-800"}`}>
+                        {count}
+                      </p>
+                      <p className={`text-[10px] font-bold uppercase tracking-wider block mt-1 ${isActive ? "text-slate-300" : "text-slate-455"}`}>
+                        {card.label}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -390,7 +329,7 @@ export default function ProductsPage() {
               <div className="flex items-center gap-2.5">
                 <div className="w-2 h-2 rounded-full bg-slate-900 animate-pulse shrink-0" />
                 <p className="text-xs font-semibold text-slate-600 font-poppins">
-                  💡 You have a total of <span className="font-extrabold text-slate-900">{filteredProducts.length} items</span> in the <span className="font-extrabold uppercase text-slate-900">{activeTab === "all" ? "All Categories" : activeTab === "accessories" && activeSubTab !== "all" ? `Accessories (${activeSubTab})` : activeTab}</span> category.
+                  💡 You have a total of <span className="font-extrabold text-slate-900">{filteredProducts.length} items</span> in the <span className="font-extrabold uppercase text-slate-900">{activeTab === "all" ? "All Categories" : activeSubTab !== "all" ? `${MAIN_CATEGORIES.find(m => m.value === activeTab)?.label} (${activeSubTab})` : MAIN_CATEGORIES.find(m => m.value === activeTab)?.label}</span> category.
                 </p>
               </div>
               <div className="hidden sm:block text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200/40">
@@ -398,17 +337,13 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Accessories Subtabs */}
-            {activeTab === "accessories" && (
+            {/* Category Subtabs */}
+            {activeTab !== "all" && CATEGORY_MAP[activeTab] && (
               <div className="bg-white rounded-2xl border border-slate-200/60 p-2.5 shadow-xs flex items-center gap-2 overflow-x-auto scrollbar-none animate-fadeIn">
-                <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider shrink-0 px-2">Filter sub:</span>
+                <span className="text-[10px] font-extrabold uppercase text-slate-450 tracking-wider shrink-0 px-2">Filter sub:</span>
                 {[
-                  { id: "all", label: "All Accessories" },
-                  { id: "watch", label: "Watch" },
-                  { id: "belts", label: "Belts / Belt" },
-                  { id: "lighter", label: "Lighter" },
-                  { id: "glasses", label: "Glasses" },
-                  { id: "perfume", label: "Perfume" },
+                  { id: "all", label: "All " + MAIN_CATEGORIES.find(m => m.value === activeTab)?.label },
+                  ...CATEGORY_MAP[activeTab].map(sub => ({ id: sub.toLowerCase(), label: sub }))
                 ].map((subItem) => {
                   const isActive = activeSubTab === subItem.id;
                   return (
@@ -561,7 +496,7 @@ function ProductTableSkeleton() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
-              <th className="px-6 py-4">Shoe Details</th>
+              <th className="px-6 py-4">Product Details</th>
               <th className="px-6 py-4">SKU / Code</th>
               <th className="px-6 py-4">Category</th>
               <th className="px-6 py-4 text-right">Price</th>
@@ -573,7 +508,7 @@ function ProductTableSkeleton() {
           <tbody className="divide-y divide-slate-100">
             {Array.from({ length: 5 }).map((_, index) => (
               <tr key={index} className="border-b border-slate-50 last:border-0">
-                {/* Shoe Details */}
+                {/* Product Details */}
                 <td className="px-6 py-4.5">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-slate-100 rounded-xl border border-slate-150 animate-pulse" />

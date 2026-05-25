@@ -1,6 +1,6 @@
 # Aesthetx Ways Inventory System
 
-Inventory management system for Aesthetx Ways footwear store.
+Inventory management system for Aesthetx Ways store.
 
 **Live URL:** https://insys.aesthetxways.com
 

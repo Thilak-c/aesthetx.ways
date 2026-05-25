@@ -26,17 +26,21 @@ import {
 import toast from "react-hot-toast";
 import Link from "next/link";
 
-const SIZES = ["41", "42", "43", "44", "45", "46"];
+const SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
 const COLORS = ["Black", "White", "Brown", "Navy", "Grey", "Red", "Blue", "Green", "Beige", "Tan", "Multi", "Orange", "Purple", "Silver", "Golden", "Rose Gold", "Copper"];
 
 const MAIN_CATEGORIES = [
   { value: "footwear", label: "Footwear" },
-  { value: "Accessories", label: "Accessories" }
+  { value: "apparel", label: "Apparel / Clothing" },
+  { value: "headwear", label: "Headwear" },
+  { value: "eyewear", label: "Eyewear" }
 ];
 
 const CATEGORY_MAP = {
-  footwear: ["Sneakers", "sports", "all"],
-  Accessories: ["watch", "belts", "lighter", "Glasses"]
+  footwear: ["Shoes", "boots", "sandals", "sneakers"],
+  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses"],
+  headwear: ["Hats", "caps", "beanies"],
+  eyewear: ["Glasses", "sunglasses"]
 };
 
 export default function WebsiteAddProduct() {
@@ -46,7 +50,7 @@ export default function WebsiteAddProduct() {
   const [form, setForm] = useState({
     sku: "",
     name: "",
-    mainCategory: "footwear",
+    mainCategory: "apparel",
     category: "",
     color: "",
     secondaryColor: "",
@@ -83,13 +87,13 @@ export default function WebsiteAddProduct() {
     if (!form.color) return toast.error("Please select a Primary Color.");
     if (!form.description.trim()) return toast.error("Please write a Product Description.");
     if (!form.mainImage) return toast.error("Please upload a Cover Picture.");
-    if (form.sizes.length === 0) return toast.error("Please select at least one available shoe size.");
+    if (form.sizes.length === 0) return toast.error("Please select at least one available size.");
     
     // Validate that all selected sizes have a valid stock count > 0
     for (const size of form.sizes) {
         const qty = form.sizeStock[size];
         if (qty === undefined || qty === null || isNaN(qty) || qty <= 0) {
-            return toast.error(`Please enter a valid stock quantity (> 0) for UK Size ${size}.`);
+            return toast.error(`Please enter a valid stock quantity (> 0) for Size ${size}.`);
         }
     }
     
@@ -225,7 +229,7 @@ export default function WebsiteAddProduct() {
               <div>
                 <p className="text-blue-500 tracking-widest text-[10px] font-bold uppercase mb-1">Website Store</p>
                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight font-poppins">Add New Product</h1>
-                <p className="text-slate-500 text-sm mt-1">Catalog new shoes, load digital images, configure pricing, and scale sizing grids.</p>
+                <p className="text-slate-500 text-sm mt-1">Catalog new products, load digital images, configure pricing, and scale sizing grids.</p>
               </div>
             </div>
           </div>
@@ -248,7 +252,7 @@ export default function WebsiteAddProduct() {
                       required
                       value={form.sku}
                       onChange={(e) => setForm({ ...form, sku: e.target.value.toUpperCase() })}
-                      placeholder="e.g. WD-SNEAK-01"
+                      placeholder="e.g. AW-SNEAK-01"
                       className="w-full px-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 focus:border-slate-800 rounded-xl text-xs font-mono font-bold focus:outline-none"
                     />
                   </div>
@@ -328,13 +332,13 @@ export default function WebsiteAddProduct() {
                     <Layers className="w-4.5 h-4.5 text-slate-400" /> Size Grid & Inventory Stock
                   </h3>
                   <span className="text-xs bg-slate-100 font-extrabold text-slate-700 px-3 py-1 rounded-xl shadow-sm border border-slate-200">
-                    {totalStock} Pair{totalStock !== 1 ? "s" : ""} Total
+                    {totalStock} Item{totalStock !== 1 ? "s" : ""} Total
                   </span>
                 </div>
 
                 <div className="space-y-4">
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Select shoe sizes to activate and enter exact stock quantities.
+                    Select sizes to activate and enter exact stock quantities.
                   </p>
 
                   <div className="flex flex-wrap gap-2.5">
@@ -360,10 +364,10 @@ export default function WebsiteAddProduct() {
                   {form.sizes.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 sm:gap-2.5 pt-2 animate-fadeIn">
                       {form.sizes
-                        .sort((a, b) => +a - +b)
+                        .sort((a, b) => SIZES.indexOf(a) - SIZES.indexOf(b))
                         .map((s) => (
                           <div key={s} className="bg-slate-50/70 border border-slate-100 rounded-2xl p-2.5 text-center">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">UK {s}</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{s}</label>
                             <input
                               type="number"
                               min="0"

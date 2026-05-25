@@ -168,7 +168,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
                   <h3 className="text-sm sm:text-base font-extrabold text-slate-800 tracking-tight font-poppins">Inventory by Category</h3>
-                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium">Top active categories and pairs breakdown</p>
+                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium">Top active categories and breakdown</p>
                 </div>
                 <div className="p-1.5 sm:p-2 bg-slate-50 border border-slate-100 rounded-xl text-slate-500">
                   <Layers size={14} className="sm:w-4 sm:h-4" />

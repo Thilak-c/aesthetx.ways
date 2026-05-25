@@ -30,6 +30,8 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
+const SIZE_ORDER = ["S", "M", "L", "XL", "XXL", "XXXL"];
+
 export default function BillingPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [cart, setCart] = useState([]); 
@@ -66,7 +68,7 @@ export default function BillingPage() {
     // Generate bill number
     useEffect(() => {
         const date = new Date();
-        const num = `WD${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}`;
+        const num = `AW${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}`;
         setBillNumber(num);
     }, []);
 
@@ -416,7 +418,7 @@ export default function BillingPage() {
         setShowPrintPreview(false);
 
         const date = new Date();
-        setBillNumber(`WD${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}`);
+        setBillNumber(`AW${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}`);
     };
 
     return (
@@ -514,7 +516,7 @@ export default function BillingPage() {
                                 {filteredProducts.length === 0 ? (
                                     <div className="py-10 text-center">
                                         <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                        <p className="text-slate-400 text-xs font-bold">No registered shoes match query criteria</p>
+                                        <p className="text-slate-400 text-xs font-bold">No registered products match query criteria</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-h-[380px] sm:max-h-[440px] overflow-y-auto pr-1">
@@ -766,7 +768,7 @@ export default function BillingPage() {
                             className="bg-white rounded-3xl shadow-2xl max-w-sm w-full border border-slate-100 overflow-hidden z-10 flex flex-col"
                         >
                             <div className="p-4 border-b border-slate-50 flex items-center justify-between shrink-0">
-                                <h3 className="font-extrabold text-slate-800 text-sm tracking-tight font-poppins">Select Shoe Size</h3>
+                                <h3 className="font-extrabold text-slate-800 text-sm tracking-tight font-poppins">Select Size</h3>
                                 <button
                                     onClick={() => setSelectedProduct(null)}
                                     className="p-1.5 hover:bg-slate-100 rounded-xl cursor-pointer"
@@ -794,7 +796,7 @@ export default function BillingPage() {
 
                                 {/* Sizes Grid Selection */}
                                 <div className="grid grid-cols-3 gap-2.5">
-                                    {(selectedProduct.availableSizes || []).map(size => {
+                                    {[...(selectedProduct.availableSizes || [])].sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b)).map(size => {
                                         const stock = getSizeStock(selectedProduct, size);
                                         const inCart = getCartQty(selectedProduct._id, size);
                                         const available = stock - inCart;
@@ -811,7 +813,7 @@ export default function BillingPage() {
                                                         : "bg-white border-slate-200 text-slate-700 hover:border-slate-850 hover:bg-slate-900 hover:text-white"
                                                 }`}
                                             >
-                                                <span>UK {size}</span>
+                                                <span>{size}</span>
                                                 <span className={`text-[8px] font-bold mt-0.5 block ${isDisabled ? "text-rose-300" : "text-slate-400 hover:text-white/80"}`}>
                                                     {available > 0 ? `${available} left` : "Out"}
                                                 </span>
@@ -861,7 +863,7 @@ export default function BillingPage() {
                                         <div className="flex justify-center mb-2.5">
                                             <img src={logoBase64 || "/logo.png"} alt="Aesthetx Ways" className="h-9 w-auto max-w-[120px] object-contain" />
                                         </div>
-                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Premium Shoes Store</p>
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Premium Clothing Store</p>
                                         <div className="mt-3 text-[10px] text-slate-500 space-y-0.5 font-mono">
                                             <p>Boring Road, Patna, Bihar - 800001</p>
                                             <p>Phone: +91 9122583392</p>
@@ -895,7 +897,7 @@ export default function BillingPage() {
                                         <table className="w-full text-xs font-mono">
                                             <thead>
                                                 <tr className="border-b-2 border-slate-900 text-slate-700">
-                                                    <th className="text-left py-2 font-bold">Shoe Description</th>
+                                                    <th className="text-left py-2 font-bold">Product Description</th>
                                                     <th className="text-center py-2 font-bold w-12">Qty</th>
                                                     <th className="text-right py-2 font-bold w-20">Amount</th>
                                                 </tr>

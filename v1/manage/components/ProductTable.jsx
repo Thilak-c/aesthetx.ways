@@ -28,17 +28,21 @@ import Dropdown from "@/components/Dropdown";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ALL_SIZES = ["41", "42", "43", "44", "45", "46"];
+const ALL_SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
 const COLORS = ["Black", "White", "Brown", "Navy", "Grey", "Red", "Blue", "Green", "Beige", "Tan", "Multi", "Orange", "Purple", "Silver", "Golden", "Rose Gold", "Copper"];
 
 const MAIN_CATEGORIES = [
   { value: "footwear", label: "Footwear" },
-  { value: "Accessories", label: "Accessories" }
+  { value: "apparel", label: "Apparel / Clothing" },
+  { value: "headwear", label: "Headwear" },
+  { value: "eyewear", label: "Eyewear" }
 ];
 
 const CATEGORY_MAP = {
-  footwear: ["Sneakers", "sports", "all"],
-  Accessories: ["watch", "belts", "lighter", "Glasses"]
+  footwear: ["Shoes", "boots", "sandals", "sneakers"],
+  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses"],
+  headwear: ["Hats", "caps", "beanies"],
+  eyewear: ["Glasses", "sunglasses"]
 };
 
 export default function ProductTable({ products }) {
@@ -233,7 +237,7 @@ export default function ProductTable({ products }) {
         <div className="w-14 h-14 bg-slate-50 border rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Package className="w-6 h-6 text-slate-400" />
         </div>
-        <h3 className="text-base font-bold text-slate-700">No Shoes Found</h3>
+        <h3 className="text-base font-bold text-slate-700">No Products Found</h3>
         <p className="text-slate-500 text-xs mt-1">Try adjusting your queries or filters.</p>
       </div>
     );
@@ -305,13 +309,13 @@ export default function ProductTable({ products }) {
                 {sizes.length > 0 && (
                   <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-2">
                     <div className="flex flex-wrap gap-1 items-center justify-between mb-1">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sizes UK</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sizes</span>
                       <span className={`text-[9px] font-bold ${isOutOfStock ? "text-rose-500" : isLowStock ? "text-amber-500" : "text-slate-500"}`}>
-                        Total: {stockVal} Pairs
+                        Total: {stockVal} Items
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {sizes.sort((a, b) => +a - +b).map((size) => (
+                      {sizes.sort((a, b) => ALL_SIZES.indexOf(a) - ALL_SIZES.indexOf(b)).map((size) => (
                         <span
                           key={size}
                           className={`text-[9px] px-1.5 py-0.5 rounded-lg border font-bold ${
@@ -376,7 +380,7 @@ export default function ProductTable({ products }) {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
-                <th className="px-6 py-4">Shoe Details</th>
+                <th className="px-6 py-4">Product Details</th>
                 <th className="px-6 py-4">SKU / Code</th>
                 <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4 text-right">Price</th>
@@ -460,7 +464,7 @@ export default function ProductTable({ products }) {
                       <div className="flex flex-col items-center">
                         <div className="flex flex-wrap gap-1 justify-center max-w-[200px]">
                           {sizes.length > 0 ? (
-                            sizes.sort((a, b) => +a - +b).map((size) => (
+                            sizes.sort((a, b) => ALL_SIZES.indexOf(a) - ALL_SIZES.indexOf(b)).map((size) => (
                               <span
                                 key={size}
                                 className={`text-[9px] px-2 py-0.5 rounded-lg border font-bold ${
@@ -477,7 +481,7 @@ export default function ProductTable({ products }) {
                           )}
                         </div>
                         <span className={`text-[10px] font-bold block mt-1.5 ${isOutOfStock ? "text-rose-500" : isLowStock ? "text-amber-500" : "text-slate-400"}`}>
-                          Total: {stockVal} Pairs
+                          Total: {stockVal} Items
                         </span>
                       </div>
                     </td>
@@ -501,8 +505,8 @@ export default function ProductTable({ products }) {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => startEditing(product)}
-                          className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-100 hover:border-slate-200 rounded-xl transition-all shadow-sm cursor-pointer"
-                          title="Edit Shoe Specs"
+                          className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-100 hover:border-slate-200 rounded-xl transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                          title="Edit Product Specs"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -573,7 +577,7 @@ export default function ProductTable({ products }) {
                     <div className="bg-slate-50/70 border border-slate-100 p-5 rounded-2xl shadow-sm space-y-4">
                       <div className="flex items-center gap-2 text-slate-800 font-bold text-sm mb-1">
                         <Package className="w-4.5 h-4.5 text-slate-500" />
-                        <h3>Shoe Specifications</h3>
+                        <h3>Product Specifications</h3>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -756,7 +760,7 @@ export default function ProductTable({ products }) {
                           <h3>Sizes & Quantities</h3>
                         </div>
                         <span className="text-xs bg-white font-extrabold text-slate-700 px-3 py-1 rounded-xl shadow-sm border border-slate-200">
-                          {calculateTotalStock()} Pairs Active
+                          {calculateTotalStock()} Items Active
                         </span>
                       </div>
 
@@ -784,10 +788,10 @@ export default function ProductTable({ products }) {
                         {editForm.sizes?.length > 0 && (
                           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1 animate-fadeIn">
                             {editForm.sizes
-                              .sort((a, b) => +a - +b)
+                              .sort((a, b) => ALL_SIZES.indexOf(a) - ALL_SIZES.indexOf(b))
                               .map((s) => (
                                 <div key={s} className="bg-white border rounded-xl p-2 text-center shadow-xs">
-                                  <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">UK {s}</label>
+                                  <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">{s}</label>
                                   <input
                                     type="number"
                                     min="0"

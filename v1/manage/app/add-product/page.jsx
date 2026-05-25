@@ -28,17 +28,21 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-const SIZES = ["41", "42", "43", "44", "45", "46"];
+const SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
 const COLORS = ["Black", "White", "Brown", "Navy", "Grey", "Red", "Blue", "Green", "Beige", "Tan", "Multi", "Orange", "Purple", "Silver", "Golden", "Rose Gold", "Copper"];
 
 const MAIN_CATEGORIES = [
   { value: "footwear", label: "Footwear" },
-  { value: "Accessories", label: "Accessories" }
+  { value: "apparel", label: "Apparel / Clothing" },
+  { value: "headwear", label: "Headwear" },
+  { value: "eyewear", label: "Eyewear" }
 ];
 
 const CATEGORY_MAP = {
-  footwear: ["Sneakers", "sports", "all"],
-  Accessories: ["watch", "belts", "lighter", "Glasses"]
+  footwear: ["Shoes", "boots", "sandals", "sneakers"],
+  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses"],
+  headwear: ["Hats", "caps", "beanies"],
+  eyewear: ["Glasses", "sunglasses"]
 };
 
 export default function OfflineAddProduct() {
@@ -49,7 +53,7 @@ export default function OfflineAddProduct() {
   const [form, setForm] = useState({
     sku: "",
     name: "",
-    mainCategory: "footwear",
+    mainCategory: "apparel",
     category: "",
     color: "",
     secondaryColor: "",
@@ -86,13 +90,13 @@ export default function OfflineAddProduct() {
     if (!form.color) return toast.error("Please select a Primary Color.");
     if (!form.description.trim()) return toast.error("Please write a Product Description.");
     if (!form.mainImage) return toast.error("Please upload a Cover Picture.");
-    if (form.sizes.length === 0) return toast.error("Please select at least one available shoe size.");
+    if (form.sizes.length === 0) return toast.error("Please select at least one available size.");
     
     // Validate that all selected sizes have a valid stock count > 0
     for (const size of form.sizes) {
         const qty = form.sizeStock[size];
         if (qty === undefined || qty === null || isNaN(qty) || qty <= 0) {
-            return toast.error(`Please enter a valid stock quantity (> 0) for UK Size ${size}.`);
+            return toast.error(`Please enter a valid stock quantity (> 0) for Size ${size}.`);
         }
     }
     
@@ -234,7 +238,7 @@ export default function OfflineAddProduct() {
                 <p className="text-emerald-600 text-[10px] font-extrabold uppercase tracking-widest">Offline Shop Operations</p>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-poppins">Add Inventory</h1>
-              <p className="text-slate-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Register new shoe products into the physical storefront stock.</p>
+              <p className="text-slate-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Register new products into the physical storefront stock.</p>
             </div>
           </div>
 
@@ -261,7 +265,7 @@ export default function OfflineAddProduct() {
                     type="text"
                     value={form.sku}
                     onChange={(e) => setForm({ ...form, sku: e.target.value.toUpperCase() })}
-                    placeholder="e.g., WD-SNK-029"
+                    placeholder="e.g., AW-SNK-029"
                     className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-slate-800 rounded-xl sm:rounded-2xl text-xs font-mono font-extrabold focus:outline-none transition-all"
                     required
                   />
@@ -270,7 +274,7 @@ export default function OfflineAddProduct() {
 
                 {/* Name */}
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Shoe Name *</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Product Name *</label>
                   <input
                     type="text"
                     value={form.name}
@@ -339,7 +343,7 @@ export default function OfflineAddProduct() {
                   <textarea
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    placeholder="Provide detailed material info, designer attributes, or shoe tech specifics..."
+                    placeholder="Provide detailed material info, designer attributes, or tech specifics..."
                     rows={3}
                     className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 hover:border-slate-300 focus:border-slate-800 rounded-xl sm:rounded-2xl text-xs focus:outline-none resize-none transition-all"
                   />
@@ -447,12 +451,12 @@ export default function OfflineAddProduct() {
                   </div>
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-800 tracking-tight">Sizing & Stock Allocations</h3>
-                    <p className="text-[10px] text-slate-400">Specify current in-stock quantities per active UK shoe size</p>
+                    <p className="text-[10px] text-slate-400">Specify current in-stock quantities per active size</p>
                   </div>
                 </div>
                 
                 <div className="w-fit px-3 py-1.5 bg-slate-900 border border-slate-850 rounded-xl text-white shadow-xs text-xs font-bold font-mono self-start sm:self-auto">
-                  {totalStock} Pairs Allocated
+                  {totalStock} Items Allocated
                 </div>
               </div>
 
@@ -473,7 +477,7 @@ export default function OfflineAddProduct() {
                               : "bg-white border-slate-200 text-slate-500 hover:border-slate-350 hover:bg-slate-50"
                           }`}
                         >
-                          UK {s}
+                          {s}
                         </button>
                       );
                     })}
@@ -482,9 +486,9 @@ export default function OfflineAddProduct() {
 
                 {form.sizes.length > 0 && (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 pt-1 animate-fadeIn">
-                    {form.sizes.sort((a,b)=>+a-+b).map(s => (
+                    {form.sizes.sort((a, b) => SIZES.indexOf(a) - SIZES.indexOf(b)).map(s => (
                       <div key={s} className="bg-slate-50/50 border border-slate-200/50 rounded-xl sm:rounded-2xl p-2 sm:p-3 shadow-xs text-center">
-                        <label className="text-[9px] font-extrabold text-slate-400 uppercase block mb-1">UK {s}</label>
+                        <label className="text-[9px] font-extrabold text-slate-400 uppercase block mb-1">{s}</label>
                         <input
                           type="number"
                           min="0"

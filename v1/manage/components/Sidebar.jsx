@@ -35,12 +35,7 @@ import {
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Footwear Categories
-const footwearCategories = [
-  { href: "/products?category=Sneakers", label: "Sneakers", icon: Package, description: "Casual sneakers" },
-  { href: "/products?category=Sports", label: "Sports", icon: Package, description: "Sports footwear" },
-  { href: "/products", label: "All Footwear", icon: Package, description: "View all products" },
-];
+
 
 // Offline Shop Navigation
 const offlineNavItems = [
@@ -49,11 +44,7 @@ const offlineNavItems = [
   { href: "/bills", label: "Bills History", icon: Receipt, description: "Search & view receipts" },
   { href: "/add-product", label: "Add Product", icon: PlusCircle, description: "New inventory item" },
   { href: "/products", label: "All Products", icon: Package, description: "Manage inventory" },
-  { href: "/import", label: "Import", icon: Upload, description: "Bulk import products" },
-  { href: "/alerts", label: "Low Stock", icon: AlertTriangle, description: "Items to restock" },
-  { href: "/dead-stock", label: "Dead Stock", icon: TrendingDown, description: "No sales products" },
   { href: "/history", label: "History", icon: History, description: "Stock movements" },
-  { href: "/trash", label: "Trash", icon: Trash2, description: "Deleted products" },
   { href: "/settings", label: "Settings", icon: Settings, description: "Preferences" },
 ];
 
@@ -64,11 +55,7 @@ const websiteNavItems = [
   { href: "/website/coupons", label: "Coupons", icon: Tag, description: "Discount codes" },
   { href: "/website/add-product", label: "Add Product", icon: PlusCircle, description: "Add to website" },
   { href: "/website/products", label: "All Products", icon: Package, description: "Website inventory" },
-  { href: "/website/import", label: "Import", icon: Upload, description: "Bulk import products" },
-  { href: "/website/alerts", label: "Low Stock", icon: AlertTriangle, description: "Items to restock" },
-  { href: "/website/dead-stock", label: "Dead Stock", icon: TrendingDown, description: "No sales products" },
   { href: "/website/history", label: "History", icon: History, description: "Stock movements" },
-  { href: "/website/trash", label: "Trash", icon: Trash2, description: "Deleted products" },
   { href: "/website/shiprocket", label: "Shiprocket", icon: Truck, description: "Logistics & packaging" },
   { href: "/website/settings", label: "Settings", icon: Settings, description: "Preferences" },
 ];
@@ -109,8 +96,8 @@ export default function Sidebar() {
     {
       id: 2,
       type: "order",
-      title: "Order #WD-2049 Received",
-      message: "Prepaid order verified & locked for UK 43 Sports Shoe.",
+      title: "Order #AW-2049 Received",
+      message: "Prepaid order verified & locked for L Sports Shoe.",
       time: "10m ago",
       unread: true
     },
@@ -118,7 +105,7 @@ export default function Sidebar() {
       id: 3,
       type: "stock",
       title: "Low Stock Warning",
-      message: "Sneakers in Black UK 44 are running low (2 units left).",
+      message: "Sneakers in Black XL are running low (2 units left).",
       time: "1h ago",
       unread: false
     }
