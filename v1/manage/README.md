@@ -31,7 +31,7 @@ npx convex dev
 npm run dev
 ```
 
-The app runs on port 3001 by default.
+The app runs on port 6001 by default.
 
 ## Deployment to Vercel
 
