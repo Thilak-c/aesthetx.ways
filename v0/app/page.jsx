@@ -1,9 +1,8 @@
 "use client";
 import { useQuery, useMutation, api } from "@/lib/convex-compat";
-import Navbar, { NavbarMobile } from "@/components/Navbar";
 import Footer from "@/components/footer";
 import { useState, useEffect } from "react";
-import ProductSlider from "@/components/ProductSlider";
+import HeroBar from "@/components/HeroBar";
 import CategoriesGrid from "@/components/CategoriesGrid";
 import NewArrivalsSlider from "@/components/NewArrivalsSlider";
 import TopPicksSlider from "@/components/TopPicksSlider";
@@ -140,23 +139,16 @@ export default function Home() {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br bg-[#fff] ${fontClasses.poppins}`}
+      className={`min-h-screen bg-linear-to-br bg-white ${fontClasses.poppins}`}
     >
-      <div className="xl:block hidden h-[80px] xl:h-[100px]"></div>
-      <div className="xl:hidden mb-14">
-        <NavbarMobile />
-      </div>
-      <div className=" hidden  xl:block">
-        <Navbar />
-      </div>
       <motion.section
         variants={sectionVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
-        className=""
+        className="w-full overflow-hidden"
       >
-        <ProductSlider />
+        <HeroBar />
       </motion.section>
       <div className="p-2">
 

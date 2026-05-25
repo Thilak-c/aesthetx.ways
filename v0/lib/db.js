@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/aesthetx-ways';
+const rawMongoUri = process.env.MONGODB_URI;
+const isAtlasPlaceholder = rawMongoUri?.includes('YOUR_CLUSTER') || rawMongoUri?.includes('YOUR_USER') || rawMongoUri?.includes('YOUR_PASS');
+const MONGODB_URI = !rawMongoUri || isAtlasPlaceholder
+  ? 'mongodb://localhost:27017/aesthetx-ways'
+  : rawMongoUri;
 
 let cached = global._mongooseCache;
 if (!cached) {

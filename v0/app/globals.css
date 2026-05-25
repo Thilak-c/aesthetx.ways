@@ -4,6 +4,18 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Font family utilities */
+@font-face {
+  font-family: 'Oi';
+  src: url('/front/home/Oi-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.font-oi {
+  font-family: 'Oi', system-ui, -apple-system, sans-serif;
+}
+
 .font-poppins {
   font-family: var(--font-poppins), system-ui, sans-serif;
 }
