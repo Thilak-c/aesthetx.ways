@@ -34,11 +34,11 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (Recursive)
-**/.env*.local
-.env*.local
-.env
-.env.*
-!.env.example
+# **/.env*.local
+# .env*.local
+# .env
+# .env.*
+# !.env.example
 
 # vercel (Recursive)
 **/.vercel/
