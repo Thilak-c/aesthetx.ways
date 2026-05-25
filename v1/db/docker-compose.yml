@@ -5,12 +5,12 @@ services:
     stop_signal: SIGINT
     ports:
       - "5001:3210"
-      - "4003:3211"
+      - "5003:3211"
     volumes:
       - aw_db:/convex/data
     environment:
       - CONVEX_CLOUD_ORIGIN=http://127.0.0.1:5001
-      - CONVEX_SITE_ORIGIN=http://127.0.0.1:4003
+      - CONVEX_SITE_ORIGIN=http://127.0.0.1:5003
       - DOCUMENT_RETENTION_DELAY=172800
       - RUST_LOG=info
     healthcheck:
