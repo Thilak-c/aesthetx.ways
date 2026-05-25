@@ -150,6 +150,7 @@ export default defineSchema({
     deletedBy: v.optional(v.id("users")),
     updatedAt: v.optional(v.string()),
     updatedBy: v.optional(v.string()),
+    sizeDisplayType: v.optional(v.string()),
   })
     .index("by_deleted", ["isDeleted"])
     .index("by_itemId", ["itemId"])
@@ -202,6 +203,7 @@ export default defineSchema({
     isDeleted: v.optional(v.boolean()),
     createdAt: v.string(),
     updatedAt: v.string(),
+    sizeDisplayType: v.optional(v.string()),
   })
     .index("by_itemId", ["itemId"])
     .index("by_category", ["category"])
@@ -228,6 +230,7 @@ export default defineSchema({
     isDeleted: v.optional(v.boolean()),
     createdAt: v.string(),
     updatedAt: v.string(),
+    sizeDisplayType: v.optional(v.string()),
   })
     .index("by_itemId", ["itemId"])
     .index("by_category", ["category"])
@@ -276,6 +279,7 @@ export default defineSchema({
       size: v.string(),
       price: v.float64(),
       quantity: v.number(),
+      sizeDisplayType: v.optional(v.string()),
     })),
     customerName: v.optional(v.string()),
     customerPhone: v.optional(v.string()),

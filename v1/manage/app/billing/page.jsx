@@ -31,6 +31,14 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SIZE_ORDER = ["S", "M", "L", "XL", "XXL", "XXXL"];
+const SIZE_MAP = {
+  S: "28",
+  M: "30",
+  L: "32",
+  XL: "34",
+  XXL: "36",
+  XXXL: "38"
+};
 
 export default function BillingPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -386,6 +394,7 @@ export default function BillingPage() {
                     size: item.size,
                     price: item.price,
                     quantity: item.quantity,
+                    sizeDisplayType: item.sizeDisplayType || "alpha",
                 })),
                 customerName: customerInfo.name || undefined,
                 customerPhone: customerInfo.phone || undefined,
@@ -681,7 +690,7 @@ export default function BillingPage() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-[10px] sm:text-[11px] font-bold text-slate-800 truncate leading-tight">{item.name}</p>
-                                                    <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5">Size {item.size} • ₹{item.price}</p>
+                                                    <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5">Size {item.sizeDisplayType === "numeric" ? (SIZE_MAP[item.size] || item.size) : item.size} • ₹{item.price}</p>
                                                 </div>
                                                 <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                                                     <button
@@ -813,7 +822,7 @@ export default function BillingPage() {
                                                         : "bg-white border-slate-200 text-slate-700 hover:border-slate-850 hover:bg-slate-900 hover:text-white"
                                                 }`}
                                             >
-                                                <span>{size}</span>
+                                                <span>{selectedProduct.sizeDisplayType === "numeric" ? (SIZE_MAP[size] || size) : size}</span>
                                                 <span className={`text-[8px] font-bold mt-0.5 block ${isDisabled ? "text-rose-300" : "text-slate-400 hover:text-white/80"}`}>
                                                     {available > 0 ? `${available} left` : "Out"}
                                                 </span>
@@ -907,7 +916,7 @@ export default function BillingPage() {
                                                     <tr key={idx} className={idx < cart.length - 1 ? "border-b border-slate-100" : ""}>
                                                         <td className="py-2.5 pr-2">
                                                             <p className="font-bold text-slate-800 truncate max-w-[150px]">{item.name}</p>
-                                                            <p className="text-[9px] text-slate-400 mt-0.5">Size {item.size} • ₹{item.price}</p>
+                                                            <p className="text-[9px] text-slate-400 mt-0.5">Size {item.sizeDisplayType === "numeric" ? (SIZE_MAP[item.size] || item.size) : item.size} • ₹{item.price}</p>
                                                         </td>
                                                         <td className="py-2.5 text-center text-slate-700">{item.quantity}</td>
                                                         <td className="py-2.5 text-right font-bold text-slate-800">₹{(item.price * item.quantity).toFixed(0)}</td>

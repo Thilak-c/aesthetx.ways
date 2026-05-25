@@ -8,7 +8,14 @@ import { BarcodeInput } from "@/components/Barcode";
 import {
   Search, RotateCcw, ArrowLeftRight, Package, X, Printer, User, Phone, AlertCircle
 } from "lucide-react";
-import toast from "react-hot-toast";
+const SIZE_MAP = {
+  S: "28",
+  M: "30",
+  L: "32",
+  XL: "34",
+  XXL: "36",
+  XXXL: "38"
+};
 
 export default function ReturnsPage() {
   const [activeTab, setActiveTab] = useState("new");
@@ -85,6 +92,7 @@ export default function ReturnsPage() {
         size,
         price: selectedExchangeProduct.price,
         quantity: 1,
+        sizeDisplayType: selectedExchangeProduct.sizeDisplayType || "alpha",
       }]);
     }
     setSelectedExchangeProduct(null);
@@ -203,7 +211,7 @@ export default function ReturnsPage() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-900 truncate">{item.productName}</p>
-                                <p className="text-xs text-gray-400">Size: {item.size} • Qty: {item.quantity} • ₹{item.price}</p>
+                                <p className="text-xs text-gray-400">Size: {item.sizeDisplayType === "numeric" ? (SIZE_MAP[item.size] || item.size) : item.size} • Qty: {item.quantity} • ₹{item.price}</p>
                               </div>
                               {isSelected && (
                                 <input type="number" value={isSelected.returnQty} onChange={(e) => { e.stopPropagation(); updateReturnQty(key, parseInt(e.target.value) || 1); }} onClick={(e) => e.stopPropagation()} min="1" max={item.quantity} className="w-16 px-2 py-1 text-center border rounded-lg text-sm" />
@@ -255,7 +263,7 @@ export default function ReturnsPage() {
                           <div key={idx} className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
                             <div className="flex-1">
                               <p className="text-xs font-medium">{item.productName}</p>
-                              <p className="text-xs text-gray-400">Size: {item.size} • Qty: {item.quantity} • ₹{item.price}</p>
+                              <p className="text-xs text-gray-400">Size: {item.sizeDisplayType === "numeric" ? (SIZE_MAP[item.size] || item.size) : item.size} • Qty: {item.quantity} • ₹{item.price}</p>
                             </div>
                             <button onClick={() => removeExchangeItem(item.itemId, item.size)} className="p-1 hover:bg-red-100 rounded text-red-500"><X size={14} /></button>
                           </div>
@@ -347,7 +355,7 @@ export default function ReturnsPage() {
                   const stock = selectedExchangeProduct.sizeStock?.[size] || 0;
                   return (
                     <button key={size} onClick={() => addExchangeItem(size)} disabled={stock <= 0} className={`p-3 rounded-xl text-sm font-medium transition-all ${stock > 0 ? "bg-gray-100 hover:bg-gray-900 hover:text-white" : "bg-gray-50 text-gray-300 cursor-not-allowed"}`}>
-                      {size}<span className="block text-[10px] opacity-60">{stock} left</span>
+                      {selectedExchangeProduct.sizeDisplayType === "numeric" ? (SIZE_MAP[size] || size) : size}<span className="block text-[10px] opacity-60">{stock} left</span>
                     </button>
                   );
                 })}

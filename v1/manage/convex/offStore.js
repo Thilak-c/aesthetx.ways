@@ -24,6 +24,7 @@ export const addProduct = mutation({
     totalAvailable: v.optional(v.float64()),
     inStock: v.optional(v.boolean()),
     createdAt: v.optional(v.string()),
+    sizeDisplayType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db.query("off_products")
@@ -47,6 +48,7 @@ export const addProduct = mutation({
       secondaryColor: args.secondaryColor || "",
       availableSizes: args.availableSizes,
       sizeStock: args.sizeStock,
+      sizeDisplayType: args.sizeDisplayType || "alpha",
       totalStock,
       inStock: args.inStock !== undefined ? args.inStock : (totalStock > 0),
       isHidden: false,
@@ -88,6 +90,7 @@ export const updateProduct = mutation({
     availableSizes: v.optional(v.array(v.string())),
     sizeStock: v.optional(v.any()),
     isHidden: v.optional(v.boolean()),
+    sizeDisplayType: v.optional(v.string()),
   },
   handler: async (ctx, { id, sizeStock, ...updates }) => {
     const product = await ctx.db.get(id);
@@ -224,6 +227,7 @@ export const restoreProduct = mutation({
       secondaryColor: rawData.secondaryColor,
       availableSizes: rawData.availableSizes,
       sizeStock: rawData.sizeStock,
+      sizeDisplayType: rawData.sizeDisplayType,
       totalStock: rawData.totalStock,
       inStock: rawData.inStock,
       isHidden: rawData.isHidden,
@@ -304,6 +308,7 @@ export const getProductsForList = query({
       totalStock: p.totalStock,
       availableSizes: p.availableSizes,
       sizeStock: p.sizeStock,
+      sizeDisplayType: p.sizeDisplayType || "alpha",
     }));
   },
 });
@@ -327,6 +332,7 @@ export const getProductsForBilling = query({
       price: p.price,
       availableSizes: p.availableSizes,
       sizeStock: p.sizeStock,
+      sizeDisplayType: p.sizeDisplayType || "alpha",
     }));
   },
 });
@@ -498,6 +504,7 @@ export const createBill = mutation({
       size: v.string(),
       price: v.float64(),
       quantity: v.number(),
+      sizeDisplayType: v.optional(v.string()),
     })),
     customerName: v.optional(v.string()),
     customerPhone: v.optional(v.string()),

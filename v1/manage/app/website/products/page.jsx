@@ -35,6 +35,14 @@ import Dropdown from "@/components/Dropdown";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
+const SIZE_MAP = {
+  S: "28",
+  M: "30",
+  L: "32",
+  XL: "34",
+  XXL: "36",
+  XXXL: "38"
+};
 const COLORS = ["Black", "White", "Brown", "Navy", "Grey", "Red", "Blue", "Green", "Beige", "Tan", "Multi", "Orange", "Purple", "Silver", "Golden", "Rose Gold", "Copper"];
 
 const MAIN_CATEGORIES = [
@@ -193,6 +201,7 @@ export default function WebsiteProducts() {
         secondaryColor: fullProduct.secondaryColor || "",
         sizes: fullProduct.availableSizes || [],
         sizeStock: fullProduct.sizeStock || {},
+        sizeDisplayType: fullProduct.sizeDisplayType || "alpha",
       });
     } catch (err) {
       toast.error("Error loading product.");
@@ -230,6 +239,7 @@ export default function WebsiteProducts() {
         secondaryColor: editForm.secondaryColor || undefined,
         availableSizes: editForm.sizes,
         sizeStock: editForm.sizeStock,
+        sizeDisplayType: editForm.sizeDisplayType,
       });
       toast.success("Product successfully updated!");
       setEditing(null);
@@ -909,6 +919,32 @@ export default function WebsiteProducts() {
                   </div>
 
                   <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5 font-poppins">Size Display System</label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="editSizeDisplayType"
+                            checked={editForm.sizeDisplayType === "alpha"}
+                            onChange={() => setEditForm({ ...editForm, sizeDisplayType: "alpha" })}
+                            className="accent-slate-900 cursor-pointer"
+                          />
+                          Alpha (S, M, L)
+                        </label>
+                        <label className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="editSizeDisplayType"
+                            checked={editForm.sizeDisplayType === "numeric"}
+                            onChange={() => setEditForm({ ...editForm, sizeDisplayType: "numeric" })}
+                            className="accent-slate-900 cursor-pointer"
+                          />
+                          Numeric (28, 30, 32)
+                        </label>
+                      </div>
+                    </div>
+
                     <div className="flex flex-wrap gap-2">
                       {SIZES.map((s) => {
                         const isActive = editForm.sizes?.includes(s);
@@ -920,10 +956,10 @@ export default function WebsiteProducts() {
                             className={`w-10 h-10 rounded-xl text-xs font-bold transition-all border flex items-center justify-center cursor-pointer ${
                               isActive
                                 ? "bg-slate-900 border-slate-900 text-white shadow-sm"
-                                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                                : "bg-white border-slate-200 text-slate-500 hover:border-slate-350 hover:bg-slate-50"
                             }`}
                           >
-                            {s}
+                            {editForm.sizeDisplayType === "numeric" ? (SIZE_MAP[s] || s) : s}
                           </button>
                         );
                       })}
@@ -935,7 +971,9 @@ export default function WebsiteProducts() {
                           .sort((a, b) => SIZES.indexOf(a) - SIZES.indexOf(b))
                           .map((s) => (
                             <div key={s} className="bg-white border rounded-xl p-2 text-center shadow-xs">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">{s}</label>
+                              <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">
+                                {editForm.sizeDisplayType === "numeric" ? (SIZE_MAP[s] || s) : s}
+                              </label>
                               <input
                                 type="number"
                                 min="0"

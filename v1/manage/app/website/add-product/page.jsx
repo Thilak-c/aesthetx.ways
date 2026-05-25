@@ -28,6 +28,14 @@ import Link from "next/link";
 
 const SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
 const COLORS = ["Black", "White", "Brown", "Navy", "Grey", "Red", "Blue", "Green", "Beige", "Tan", "Multi", "Orange", "Purple", "Silver", "Golden", "Rose Gold", "Copper"];
+const SIZE_MAP = {
+  S: "28",
+  M: "30",
+  L: "32",
+  XL: "34",
+  XXL: "36",
+  XXXL: "38"
+};
 
 const MAIN_CATEGORIES = [
   { value: "footwear", label: "Footwear" },
@@ -61,6 +69,7 @@ export default function WebsiteAddProduct() {
     description: "",
     mainImage: "",
     otherImages: [],
+    sizeDisplayType: "alpha",
   });
 
   const addProduct = useMutation(api.products.addProduct);
@@ -117,6 +126,7 @@ export default function WebsiteAddProduct() {
         otherImages: form.otherImages.length > 0 ? form.otherImages : undefined,
         availableSizes: form.sizes,
         sizeStock: form.sizeStock,
+        sizeDisplayType: form.sizeDisplayType,
         color: form.color || undefined,
         secondaryColor: form.secondaryColor || undefined,
       });
@@ -144,6 +154,7 @@ export default function WebsiteAddProduct() {
       description: "",
       mainImage: "",
       otherImages: [],
+      sizeDisplayType: "alpha",
     });
     setSuccess(false);
   };
@@ -337,10 +348,36 @@ export default function WebsiteAddProduct() {
                 </div>
 
                 <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Size Display System</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="sizeDisplayType"
+                          checked={form.sizeDisplayType === "alpha"}
+                          onChange={() => setForm({ ...form, sizeDisplayType: "alpha" })}
+                          className="accent-slate-900 cursor-pointer"
+                        />
+                        Alpha (S, M, L, XL)
+                      </label>
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="sizeDisplayType"
+                          checked={form.sizeDisplayType === "numeric"}
+                          onChange={() => setForm({ ...form, sizeDisplayType: "numeric" })}
+                          className="accent-slate-900 cursor-pointer"
+                        />
+                        Numeric (28, 30, 32, 34)
+                      </label>
+                    </div>
+                  </div>
+
                   <p className="text-xs text-slate-400 leading-relaxed">
                     Select sizes to activate and enter exact stock quantities.
                   </p>
-
+ 
                   <div className="flex flex-wrap gap-2.5">
                     {SIZES.map((s) => {
                       const isActive = form.sizes.includes(s);
@@ -355,19 +392,21 @@ export default function WebsiteAddProduct() {
                               : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
                           }`}
                         >
-                          {s}
+                          {form.sizeDisplayType === "numeric" ? (SIZE_MAP[s] || s) : s}
                         </button>
                       );
                     })}
                   </div>
-
+ 
                   {form.sizes.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 sm:gap-2.5 pt-2 animate-fadeIn">
                       {form.sizes
                         .sort((a, b) => SIZES.indexOf(a) - SIZES.indexOf(b))
                         .map((s) => (
                           <div key={s} className="bg-slate-50/70 border border-slate-100 rounded-2xl p-2.5 text-center">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{s}</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                              {form.sizeDisplayType === "numeric" ? (SIZE_MAP[s] || s) : s}
+                            </label>
                             <input
                               type="number"
                               min="0"

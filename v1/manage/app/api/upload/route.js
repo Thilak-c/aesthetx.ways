@@ -50,7 +50,7 @@ export async function POST(request) {
     await writeFile(filePath, buffer);
 
     // Return URL via API route (no rebuild needed)
-    const baseUrl = process.env.NEXT_PUBLIC_INSYS_URL || "https://insys.aesthetxways.com";
+    const baseUrl = process.env.NEXT_PUBLIC_INSYS_URL || "https://manage.aesthetxways.com";
     const url = `${baseUrl}/api/uploads/${filename}`;
 
     return NextResponse.json({
