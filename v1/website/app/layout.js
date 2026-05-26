@@ -1,5 +1,8 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Moirai_One, Oi } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+import SplashWrapper from "@/components/SplashWrapper";
+import StaggeredMenu from "@/components/StaggeredMenu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,21 +14,76 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const moiraiOne = Moirai_One({
+  weight: "400",
+  variable: "--font-moirai",
+  subsets: ["latin"],
+});
+
+const oi = Oi({
+  weight: "400",
+  variable: "--font-oi",
+  subsets: ["latin"],
+});
+
+const loveloBlack = localFont({
+  src: "../public/home/Lovelo Black.otf",
+  variable: "--font-lovelo-black",
+});
+
 export const metadata = {
-  title: "AESTHETX WAYS | Online Store",
+  title: "𝔸𝔼𝕊𝕋ℍ𝔼𝕋𝕏 𝕎𝔸𝕐𝕊 | ℍ𝕠𝕞𝕖 ℙ𝕒𝕘𝕖",
   description: "Sleek, minimalistic clothing, footwear, headwear, and eyewear.",
 };
+
+const menuItems = [
+  { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+  { label: 'Bag', ariaLabel: 'Go to cart page', link: '/cart' },
+  { label: 'Orders', ariaLabel: 'Go to orders page', link: '/orders' }
+];
+
+const socialItems = [
+  { label: 'Instagram', link: 'https://instagram.com' },
+  { label: 'Twitter', link: 'https://twitter.com' }
+];
 
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${moiraiOne.variable} ${oi.variable} ${loveloBlack.variable} overflow-x-hidden sm:h-full antialiased`}
     >
-      <body className="min-h-full bg-zinc-100 flex justify-center items-start text-zinc-950 font-sans">
-        {/* Minimal Mobile Container */}
-        <div id="mobile-frame" className="w-full max-w-[450px] min-h-screen bg-white flex flex-col relative shadow-xl border-x border-zinc-200">
-          {children}
+      <body className="min-h-screen bg-zinc-100 sm:bg-zinc-950 sm:flex sm:justify-center sm:items-center text-zinc-950 font-sans p-0 sm:p-6 overflow-x-hidden sm:overflow-hidden relative">
+        {/* Premium Luxury Tech Glow Backdrop - Visible on Desktop only */}
+        {/* <div className="hidden sm:block absolute inset-0  pointer-events-none z-0" /> */}
+        {/* <div className="hidden sm:block absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" /> */}
+
+        {/* Premium Mobile Phone Mock Frame Shell */}
+        <div
+          className="relative w-full max-w-[430px] broder h-auto sm:h-[880px] sm:max-h-[92vh] bg-white sm:rounded-[52px] flex flex-col overflow-x-hidden sm:overflow-hidden sm:transition-all sm:duration-500 z-10"
+        >
+
+
+          {/* Main Mobile App Container */}
+          <div id="mobile-frame" className="w-full flex-1 flex flex-col relative bg-white">
+            <SplashWrapper>
+              <StaggeredMenu
+                position="right"
+                items={menuItems}
+                socialItems={socialItems}
+                displaySocials={true}
+                displayItemNumbering={true}
+                menuButtonColor="#000"
+                openMenuButtonColor="#000"
+                changeMenuColorOnOpen={true}
+                colors={['#18181b', '#27272a']}
+                logoUrl="/logo_t.svg"
+                accentColor="#000"
+              />
+              {children}
+            </SplashWrapper>
+          </div>
+
         </div>
       </body>
     </html>

@@ -67,8 +67,8 @@ export default function OrdersPage() {
             <ClipboardList className="w-8 h-8 text-zinc-200 stroke-[1.5] mb-3" />
             <span className="text-[10px] tracking-widest uppercase text-zinc-400 font-bold">No orders found</span>
             <p className="text-[9px] text-zinc-400 mt-1 max-w-[200px]">You haven&apos;t placed any orders yet.</p>
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="mt-6 text-[9px] tracking-widest uppercase font-bold bg-black text-white px-5 py-2.5 rounded-[1px] hover:bg-zinc-900 transition-colors"
             >
               Start shopping
@@ -77,7 +77,7 @@ export default function OrdersPage() {
         ) : (
           <div className="flex flex-col gap-4">
             {orders.map((order, idx) => (
-              <div 
+              <div
                 key={`${order.orderNumber}-${idx}`}
                 className="border border-zinc-100 rounded-[2px] p-3 flex flex-col gap-2 bg-zinc-50"
               >
@@ -102,8 +102,11 @@ export default function OrdersPage() {
                 <div className="flex flex-col gap-2 py-1">
                   {order.items.map((item, itemIdx) => (
                     <div key={itemIdx} className="flex gap-2.5 items-center">
-                      <div className="w-8 h-10 bg-white border border-zinc-200 rounded-[1px] overflow-hidden flex-shrink-0">
+                      <div className="w-8 h-10 bg-white border border-zinc-200 rounded-[1px] overflow-hidden shrink-0 relative group">
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <div className="absolute top-1 left-1 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
+                          <img src="/logo_t.svg" alt="Watermark Logo" className="w-2.5 h-2.5 object-contain" />
+                        </div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <span className="text-[9.5px] font-bold text-black uppercase block truncate">

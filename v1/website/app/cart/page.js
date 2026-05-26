@@ -109,8 +109,11 @@ export default function CartPage() {
                 className="flex gap-3 py-3 border-b border-zinc-100 last:border-b-0"
               >
                 {/* Product Image */}
-                <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden flex-shrink-0">
+                <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 relative group">
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  <div className="absolute top-1.5 left-1.5 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
+                    <img src="/logo_t.svg" alt="Watermark Logo" className="w-3.5 h-3.5 object-contain" />
+                  </div>
                 </div>
                 
                 {/* Details */}
@@ -122,7 +125,7 @@ export default function CartPage() {
                       </h3>
                       <button 
                         onClick={() => removeItem(item.productId, item.size)}
-                        className="text-zinc-400 hover:text-red-500 transition-colors flex-shrink-0"
+                        className="text-zinc-400 hover:text-red-500 transition-colors shrink-0"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>

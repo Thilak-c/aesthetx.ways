@@ -1,26 +1,18 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Order from '@/models/Order';
-import Product from '@/models/Product';
+import { convexClient } from '@/lib/convex';
 
 export async function POST(request) {
   try {
-    await dbConnect();
     const body = await request.json();
-    
     const { items, customerDetails, paymentMethod, orderTotal } = body;
     
     if (!items || !items.length || !customerDetails || !orderTotal) {
       return NextResponse.json({ success: false, message: 'Missing order details' }, { status: 400 });
     }
     
-    // Generate a unique order number
-    const randomSuffix = Math.floor(10000 + Math.random() * 90000);
-    const orderNumber = `AW-ORD-${randomSuffix}`;
-    
-    // Validate stock and decrement it
+    // 1. Validate stock in Convex before placing order
     for (const item of items) {
-      const product = await Product.findOne({ itemId: item.productId });
+      const product = await convexClient.query('webStore:getProductByItemId', { itemId: item.productId });
       if (!product) {
         return NextResponse.json({ success: false, message: `Product ${item.name} not found` }, { status: 404 });
       }
@@ -34,39 +26,65 @@ export async function POST(request) {
           message: `Insufficient stock for ${item.name} (Size: ${item.size}). Only ${currentQty} left.` 
         }, { status: 400 });
       }
-      
-      // Decrement stock
-      sizeStock[item.size] = currentQty - item.quantity;
-      product.sizeStock = sizeStock;
-      product.markModified('sizeStock');
-      
-      // Re-calculate total available stock
-      const newTotalStock = Object.values(sizeStock).reduce((sum, qty) => sum + (qty || 0), 0);
-      product.currentStock = newTotalStock;
-      product.inStock = newTotalStock > 0;
-      
-      await product.save();
     }
     
-    // Create order record
-    const newOrder = await Order.create({
-      orderNumber,
-      items,
-      customerDetails,
-      paymentMethod: paymentMethod || 'COD',
-      paymentStatus: paymentMethod === 'COD' ? 'pending' : 'paid',
-      orderStatus: 'pending',
-      orderTotal,
+    // 2. Call the Convex mutation to insert the order and update product stock atomically
+    const result = await convexClient.mutation('orders:createOrder', {
+      userId: 'guest',
+      items: items.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        image: item.image || '',
+        quantity: Number(item.quantity),
+        size: item.size,
+      })),
+      shippingDetails: {
+        fullName: customerDetails.fullName,
+        email: customerDetails.email,
+        phone: customerDetails.phone,
+        flatNo: '',
+        area: '',
+        landmark: '',
+        address: customerDetails.address,
+        city: customerDetails.city,
+        state: customerDetails.state,
+        pincode: customerDetails.pincode,
+        country: 'India',
+      },
+      paymentDetails: {
+        amount: orderTotal,
+        currency: 'INR',
+        status: paymentMethod === 'COD' ? 'pending' : 'completed',
+        paymentMethod: paymentMethod || 'COD',
+        paidAt: Date.now(),
+        paidBy: customerDetails.fullName,
+      },
+      orderTotal: orderTotal,
+      status: 'pending', // Initialize as pending matching frontend expectations
     });
+    
+    if (!result || !result.success) {
+      return NextResponse.json({ success: false, message: result?.message || 'Failed to place order' }, { status: 400 });
+    }
     
     return NextResponse.json({ 
       success: true, 
       message: 'Order placed successfully!', 
-      orderNumber,
-      order: newOrder 
+      orderNumber: result.orderNumber,
+      order: {
+        orderNumber: result.orderNumber,
+        items,
+        customerDetails,
+        paymentMethod,
+        paymentStatus: paymentMethod === 'COD' ? 'pending' : 'paid',
+        orderStatus: 'pending',
+        orderTotal,
+        _id: result.orderId,
+      }
     });
   } catch (error) {
-    console.error('Failed to create order:', error);
+    console.error('Failed to create order in Convex:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

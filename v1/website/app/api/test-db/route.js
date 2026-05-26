@@ -1,66 +1,24 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import { convexClient } from '@/lib/convex';
 
 export async function GET() {
   try {
-    // 1. Establish DB Connection
-    await dbConnect();
-
-    // 2. Perform database operation (e.g. count users)
-    const count = await User.countDocuments();
-
-    // 3. Return successful connection status along with user count
-    return NextResponse.json({
-      success: true,
-      message: 'Successfully connected to MongoDB!',
-      databaseConnected: true,
-      totalUsers: count,
-    });
-  } catch (error) {
-    console.error('Database connection or query failed:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message,
-        message: 'Could not connect to MongoDB database.',
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request) {
-  try {
-    await dbConnect();
-    const body = await request.json();
+    // Try to query products from Convex to verify the connection
+    const products = await convexClient.query('webStore:getAllProducts', { limit: 1 });
     
-    if (!body.name || !body.email) {
-      return NextResponse.json(
-        { success: false, message: 'Name and email are required' },
-        { status: 400 }
-      );
-    }
-
-    // Try to create/insert a new user
-    const newUser = await User.create({
-      name: body.name,
-      email: body.email,
-      role: body.role || 'user',
-    });
-
     return NextResponse.json({
       success: true,
-      message: 'User created successfully!',
-      user: newUser,
+      message: 'Successfully connected to Convex!',
+      databaseConnected: true,
+      productsFound: products.length,
     });
   } catch (error) {
-    console.error('Failed to create user:', error);
+    console.error('Convex connection or query failed:', error);
     return NextResponse.json(
       {
         success: false,
         error: error.message,
-        message: 'Database operation failed.',
+        message: 'Could not connect to Convex database.',
       },
       { status: 500 }
     );

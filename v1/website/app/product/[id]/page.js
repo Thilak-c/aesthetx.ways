@@ -147,19 +147,15 @@ export default function ProductPage({ params }) {
           <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
         </button>
         <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-400">Product details</span>
-        <Link href="/cart" className="relative text-zinc-950 hover:text-black">
-          <ShoppingBag className="w-3.5 h-3.5 stroke-[2.5]" />
-          {cartCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-bold w-3 h-3 flex items-center justify-center rounded-full">
-              {cartCount}
-            </span>
-          )}
-        </Link>
+        <div className="w-14" />
       </header>
 
       {/* Main product Image */}
-      <div className="relative w-full aspect-[4/5] bg-zinc-50 border-b border-zinc-100">
+      <div className="relative w-full aspect-4/5 bg-zinc-50 border-b border-zinc-100 group">
         <img src={activeImage} alt={product.name} className="w-full h-full object-cover" />
+        <div className="absolute top-4 left-4 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
+          <img src="/logo_t.svg" alt="Watermark Logo" className="w-6 h-6 object-contain" />
+        </div>
       </div>
 
       {/* Other Images (Thumbnails) */}
@@ -284,7 +280,7 @@ export default function ProductPage({ params }) {
         >
           {addedToCart ? (
             <>
-              <Check className="w-3 h-3 stroke-[3]" />
+              <Check className="w-3 h-3 stroke-3" />
               Added
             </>
           ) : (

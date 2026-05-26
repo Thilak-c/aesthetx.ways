@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Search, ClipboardList, ChevronRight, X } from 'lucide-react';
+import { ShoppingBag, Search, ClipboardList, ChevronRight, ChevronDown, X } from 'lucide-react';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -58,25 +58,17 @@ export default function Home() {
     <div className="flex flex-col flex-1 bg-white">
       {/* Sleek Top Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="text-[10px] tracking-[0.25em] uppercase font-bold text-black hover:opacity-80 transition-opacity">
+        <Link href="/" className="text-[15px] tracking-wider uppercase font-lovelo-black text-black hover:opacity-80 transition-opacity">
           Aesthetx Ways
         </Link>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setSearchOpen(!searchOpen)} 
+        <div className="flex items-center gap-3 pr-24">
+          <button
+            onClick={() => setSearchOpen(!searchOpen)}
             className="text-zinc-900 hover:text-black transition-colors"
             aria-label="Search"
           >
             <Search className="w-3.5 h-3.5 stroke-[2.5]" />
           </button>
-          <Link href="/cart" className="relative text-zinc-900 hover:text-black transition-colors">
-            <ShoppingBag className="w-3.5 h-3.5 stroke-[2.5]" />
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-bold w-3 h-3 flex items-center justify-center rounded-full">
-                {cartCount}
-              </span>
-            )}
-          </Link>
         </div>
       </header>
 
@@ -105,9 +97,8 @@ export default function Home() {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`text-[9px] tracking-wider uppercase font-semibold whitespace-nowrap pb-1 transition-all relative ${
-              activeCategory === cat ? 'text-black' : 'text-zinc-400 hover:text-zinc-600'
-            }`}
+            className={`text-[9px] tracking-wider uppercase font-semibold whitespace-nowrap pb-1 transition-all relative ${activeCategory === cat ? 'text-black' : 'text-zinc-400 hover:text-zinc-600'
+              }`}
           >
             {cat === 'Apparel / Clothing' ? 'Apparel' : cat}
             {activeCategory === cat && (
@@ -119,23 +110,44 @@ export default function Home() {
 
       {/* Minimal Hero Section */}
       <div className="px-4 py-3">
-        <div className="relative h-44 w-full bg-zinc-100 overflow-hidden rounded-[2px] flex items-end p-4">
-          {/* Unsplash Minimalist Fashion Image */}
-          <img
-            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&auto=format&fit=crop&q=80"
-            alt="Season Header"
+        <div className="relative h-[65vh] w-full bg-zinc-100 overflow-hidden rounded-[2px] flex items-end">
+          {/* Looping Hero Video */}
+          <video
+            src="/hero_home.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
             className="absolute inset-0 w-full h-full object-cover filter brightness-[0.95]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-          <div className="relative z-10 text-white">
-            <span className="text-[8px] tracking-[0.2em] uppercase opacity-90 font-medium">Summer / Autumn 26</span>
-            <h2 className="text-sm font-bold tracking-wide uppercase mt-0.5">REFINED ESSENTIALS</h2>
+          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
+
+          {/* Watermark Logo */}
+          <div className="absolute top-4 left-4 z-20 pointer-events-none opacity-40">
+            <img src="/logo_t.svg" alt="Watermark Logo" className="w-8 h-8 object-contain" />
+          </div>
+
+          {/* Hero Content Row */}
+          <div className="relative z-10 w-full p-4 flex flex-col text-white">
+            <span className="text-[8px] tracking-[0.2em] uppercase opacity-90 font-medium">Our Last Winter</span>
+            <div className="flex items-center justify-between w-full mt-0.5">
+              <h2 className="text-[11px] font-bold tracking-wide uppercase">We Sold 300 pieces in 18 days</h2>
+
+              {/* Transparent Continue Scroll Button */}
+              <button
+                onClick={() => document.getElementById('shop-content')?.scrollIntoView({ behavior: 'smooth' })}
+                className="flex items-center gap-1 text-[8px] tracking-[0.2em] uppercase opacity-90 font-medium cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                Continue
+                <ChevronDown className="w-3 h-3 stroke-[2.5]" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 px-4 pb-20">
+      <main id="shop-content" className="flex-1 px-4 pb-20">
         <div className="flex items-center justify-between py-2 mb-2">
           <span className="text-[9px] tracking-widest uppercase font-bold text-zinc-400">
             {activeCategory === 'All' ? 'ALL PRODUCTS' : activeCategory.toUpperCase()}
@@ -159,13 +171,17 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-x-3 gap-y-6">
             {products.map((product) => (
               <Link key={product._id} href={`/product/${product.itemId}`} className="group flex flex-col">
-                <div className="relative w-full aspect-[4/5] bg-zinc-50 overflow-hidden rounded-[2px] border border-zinc-100">
+                <div className="relative w-full aspect-4/5 bg-zinc-50 overflow-hidden rounded-[2px] border border-zinc-100">
                   <img
                     src={product.mainImage}
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out"
                   />
-                  {!product.inStock && (
+                  {product.inStock ? (
+                    <div className="absolute top-2 left-2 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
+                      <img src="/logo_t.svg" alt="Watermark Logo" className="w-4 h-4 object-contain" />
+                    </div>
+                  ) : (
                     <div className="absolute top-2 left-2 bg-black text-white text-[7px] tracking-wider uppercase font-semibold px-1.5 py-0.5 rounded-[1px]">
                       Out of Stock
                     </div>
