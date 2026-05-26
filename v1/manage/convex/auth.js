@@ -720,3 +720,108 @@ export const verifyPhoneOTP = mutation({
 			}
 		},
 	});
+
+export const generateEmailOtp = mutation({
+	args: { email: v.string(), otp: v.string(), expiresAt: v.string() },
+	handler: async (ctx, { email, otp, expiresAt }) => {
+		const normalizedEmail = email.toLowerCase().trim();
+		
+		// Delete any existing OTP for this email
+		const existingOTPs = await ctx.db
+			.query("passwordResetOTPs")
+			.filter((q) => q.eq(q.field("email"), normalizedEmail))
+			.collect();
+
+		for (const existingOTP of existingOTPs) {
+			await ctx.db.delete(existingOTP._id);
+		}
+
+		// Store OTP in database
+		await ctx.db.insert("passwordResetOTPs", {
+			email: normalizedEmail,
+			otp,
+			expiresAt,
+			createdAt: nowIso(),
+			used: false,
+		});
+		
+		return { success: true };
+	}
+});
+
+export const verifyEmailOtpAndLogin = mutation({
+	args: { email: v.string(), otp: v.string() },
+	handler: async (ctx, { email, otp }) => {
+		const normalizedEmail = email.toLowerCase().trim();
+		const otpTrimmed = otp.trim();
+
+		// Find the OTP record
+		const otpRecord = await ctx.db
+			.query("passwordResetOTPs")
+			.filter((q) => 
+				q.and(
+					q.eq(q.field("email"), normalizedEmail),
+					q.eq(q.field("otp"), otpTrimmed),
+					q.eq(q.field("used"), false)
+				)
+			)
+			.first();
+
+		if (!otpRecord) {
+			return { success: false, message: "Invalid OTP code. Please try again." };
+		}
+
+		// Check expiration
+		if (new Date() > new Date(otpRecord.expiresAt)) {
+			await ctx.db.delete(otpRecord._id); // Clean up expired OTP
+			return { success: false, message: "OTP has expired. Please request a new one." };
+		}
+
+		// OTP verified! Delete OTP record
+		await ctx.db.delete(otpRecord._id);
+
+		// Find or create User
+		let user = await ctx.db
+			.query("users")
+			.withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+			.filter(q => q.eq(q.field("isDeleted"), undefined))
+			.unique();
+
+		if (!user) {
+			const emailPrefix = normalizedEmail.split('@')[0];
+			const name = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+			const userId = await ctx.db.insert("users", {
+				name: name,
+				email: normalizedEmail,
+				createdAt: nowIso(),
+				updatedAt: nowIso(),
+				role: "user",
+				isActive: true,
+				onboardingStep: 4,
+				onboardingCompleted: true,
+				interests: [],
+			});
+			user = await ctx.db.get(userId);
+		} else {
+			// Update last login
+			await ctx.db.patch(user._id, {
+				updatedAt: nowIso(),
+				isActive: true,
+			});
+		}
+
+		return {
+			success: true,
+			message: "OTP verified successfully",
+			user: {
+				id: user._id,
+				name: user.name,
+				email: user.email,
+				role: user.role || "user",
+			},
+		};
+	}
+});
+
+
+

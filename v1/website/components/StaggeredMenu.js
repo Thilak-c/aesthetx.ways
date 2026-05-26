@@ -23,6 +23,8 @@ export const StaggeredMenu = ({
   onMenuClose
 }) => {
   const [open, setOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [pulse, setPulse] = useState(false);
   const openRef = useRef(false);
   const panelRef = useRef(null);
   const preLayersRef = useRef(null);
@@ -352,6 +354,63 @@ export const StaggeredMenu = ({
     };
   }, [closeOnClickAway, open, closeMenu]);
 
+  // Lock scrolling when the staggered menu is open
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mobileFrame = document.getElementById('mobile-frame');
+      if (open) {
+        document.body.classList.add('overflow-hidden');
+        if (mobileFrame) {
+          mobileFrame.classList.add('overflow-hidden');
+          mobileFrame.style.overflowY = 'hidden';
+        }
+      } else {
+        document.body.classList.remove('overflow-hidden');
+        if (mobileFrame) {
+          mobileFrame.classList.remove('overflow-hidden');
+          mobileFrame.style.overflowY = '';
+        }
+      }
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        document.body.classList.remove('overflow-hidden');
+        const mobileFrame = document.getElementById('mobile-frame');
+        if (mobileFrame) {
+          mobileFrame.classList.remove('overflow-hidden');
+          mobileFrame.style.overflowY = '';
+        }
+      }
+    };
+  }, [open]);
+
+  // Load and listen to cart count dynamically
+  React.useEffect(() => {
+    function updateCount() {
+      if (typeof window !== 'undefined') {
+        const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+        const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+        setCartCount(count);
+      }
+    }
+    updateCount();
+    window.addEventListener('storage', updateCount);
+    window.addEventListener('cart-updated', updateCount);
+    return () => {
+      window.removeEventListener('storage', updateCount);
+      window.removeEventListener('cart-updated', updateCount);
+    };
+  }, []);
+
+  // Flash pulse state when cartCount changes to trigger bounce animation
+  React.useEffect(() => {
+    if (cartCount > 0) {
+      setPulse(true);
+      const timer = setTimeout(() => setPulse(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
+
   return (
     <div
       className={`absolute inset-0 w-full h-full staggered-menu-wrapper pointer-events-none ${className ? className + ' ' : ''}${isFixed ? 'fixed-wrapper' : ''}`}
@@ -383,13 +442,18 @@ export const StaggeredMenu = ({
         </div>
         <button
           ref={toggleBtnRef}
-          className="sm-toggle"
+          className={`sm-toggle relative ${pulse ? 'animate-bounce-subtle' : ''}`}
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
           aria-controls="staggered-menu-panel"
           onClick={toggleMenu}
           type="button"
         >
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -left-2 bg-black text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-bold animate-scale-in z-20 pointer-events-none">
+              {cartCount}
+            </span>
+          )}
           <span ref={textWrapRef} className="sm-toggle-textWrap" aria-hidden="true">
             <span ref={textInnerRef} className="sm-toggle-textInner">
               {textLines.map((l, i) => (
@@ -413,7 +477,17 @@ export const StaggeredMenu = ({
               items.map((it, idx) => (
                 <li className="sm-panel-itemWrap" key={it.label + idx}>
                   <a className="sm-panel-item" href={it.link} aria-label={it.ariaLabel} data-index={idx + 1}>
-                    <span className="sm-panel-itemLabel">{it.label}</span>
+                    <span className="sm-panel-itemLabel relative">
+                      {it.label}
+                      {it.label.toLowerCase() === 'bag' && cartCount > 0 && (
+                        <span 
+                          className="absolute top- -right-5 inline-flex items-center justify-center bg-black text-white text-[10px] font-bold rounded-full tracking-normal select-none animate-scale-in"
+                          style={{ width: '20px', height: '20px' }}
+                        >
+                          {cartCount}
+                        </span>
+                      )}
+                    </span>
                   </a>
                 </li>
               ))

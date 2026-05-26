@@ -1026,5 +1026,70 @@ export const cleanupDuplicates = mutation({
 	},
 });
 
+export const getProfileByEmail = query({
+	args: { email: v.string() },
+	handler: async (ctx, { email }) => {
+		const normalizedEmail = email.toLowerCase().trim();
+		return await ctx.db
+			.query("users")
+			.withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+			.filter(q => q.eq(q.field("isDeleted"), undefined))
+			.unique();
+	}
+});
+
+export const updateProfileByEmail = mutation({
+	args: {
+		email: v.string(),
+		updates: v.any(),
+	},
+	handler: async (ctx, { email, updates }) => {
+		const normalizedEmail = email.toLowerCase().trim();
+		const user = await ctx.db
+			.query("users")
+			.withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+			.filter(q => q.eq(q.field("isDeleted"), undefined))
+			.unique();
+
+		if (!user) {
+			throw new Error("User not found");
+		}
+
+		const patchData = { updatedAt: nowIso() };
+
+		if (updates.fullName !== undefined) {
+			patchData.name = updates.fullName;
+		}
+		if (updates.phone !== undefined) {
+			patchData.phoneNumber = updates.phone;
+		}
+
+		// Address updates
+		const hasAddressUpdates = 
+			updates.address !== undefined ||
+			updates.houseNo !== undefined ||
+			updates.area !== undefined ||
+			updates.city !== undefined ||
+			updates.state !== undefined ||
+			updates.pincode !== undefined;
+
+		if (hasAddressUpdates) {
+			const existingAddress = user.address || {};
+			patchData.address = {
+				flatNo: updates.houseNo !== undefined ? updates.houseNo : (existingAddress.flatNo || ""),
+				area: updates.area !== undefined ? updates.area : (existingAddress.area || ""),
+				state: updates.state !== undefined ? updates.state : (existingAddress.state || ""),
+				city: updates.city !== undefined ? updates.city : (existingAddress.city || ""),
+				pinCode: updates.pincode !== undefined ? updates.pincode : (existingAddress.pinCode || ""),
+				fullAddress: updates.address !== undefined ? updates.address : (existingAddress.fullAddress || ""),
+			};
+		}
+
+		await ctx.db.patch(user._id, patchData);
+		return { success: true };
+	}
+});
+
+
 
  

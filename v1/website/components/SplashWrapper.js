@@ -3,32 +3,40 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+import { usePathname } from 'next/navigation';
+
 // Odometer Number Component with faded top/bottom overlays to blend the digits
-function OdometerNumber({ value, className = "" }) {
+export function OdometerNumber({ value, className = "" }) {
   const digits = value.toString().split('');
 
   return (
-    <div className={`inline-flex relative h-5 overflow-hidden px-1 rounded-[3px] bg-white shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] ${className}`}>
-      {/* Subtle fade overlays at the top and bottom of the digit scroll to blend them into the page */}
-      <div className="absolute top-0 left-0 right-0 h-[4px] bg-linear-to-b from-white to-transparent pointer-events-none z-10" />
-      <div className="absolute bottom-0 left-0 right-0 h-[4px] bg-linear-to-t from-white to-transparent pointer-events-none z-10" />
-      
-      {digits.map((digit, idx) => (
-        <div key={idx} className="relative h-5 w-2.5 overflow-hidden select-none">
-          <div
-            className="flex flex-col transition-transform duration-500 ease-out"
-            style={{
-              transform: `translateY(-${parseInt(digit) * 20}px)`
-            }}
-          >
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-              <span key={num} className="h-5 leading-5 text-center block text-[10px] font-bold text-zinc-800">
-                {num}
-              </span>
-            ))}
+    <div className={`inline-flex relative h-5 overflow-hidden select-none bg-transparent ${className}`}>
+      {digits.map((digit, idx) => {
+        const isDigit = !isNaN(parseInt(digit));
+        if (!isDigit) {
+          return (
+            <span key={idx} className="h-5 leading-5 text-center block px-0.5 select-none font-bold">
+              {digit}
+            </span>
+          );
+        }
+        return (
+          <div key={idx} className="relative h-5 w-2 overflow-hidden">
+            <div
+              className="flex flex-col transition-transform duration-500 ease-out"
+              style={{
+                transform: `translateY(-${parseInt(digit) * 20}px)`
+              }}
+            >
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <span key={num} className="h-5 leading-5 text-center block font-bold">
+                  {num}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -38,27 +46,33 @@ export default function SplashWrapper({ children }) {
   const [fadeOut, setFadeOut] = useState(false);
   const [progress, setProgress] = useState(0);
   const [mounted, setMounted] = useState(false);
+  
+  const pathname = usePathname();
+  const isCartOrProduct = pathname ? (pathname.includes('/cart') || pathname.includes('/product')) : false;
+
+  const totalDuration = isCartOrProduct ? 1500 : 3000;
+  const fadeOutTime = isCartOrProduct ? 1100 : 2600;
 
   useEffect(() => {
     setMounted(true);
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const nextProgress = Math.min(100, (elapsed / 2600) * 100);
+      const nextProgress = Math.min(100, (elapsed / fadeOutTime) * 100);
       setProgress(nextProgress);
       
-      if (elapsed >= 2600) {
+      if (elapsed >= fadeOutTime) {
         setFadeOut(true);
       }
       
-      if (elapsed >= 3000) {
+      if (elapsed >= totalDuration) {
         clearInterval(interval);
         setShowSplash(false);
       }
     }, 30);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [totalDuration, fadeOutTime]);
 
   return (
     <>
@@ -116,7 +130,10 @@ export default function SplashWrapper({ children }) {
 
             {/* Odometer counter at the bottom-right corner */}
             <div className="absolute bottom-6 right-6 flex items-center gap-1">
-              <OdometerNumber value={Math.round(progress)} />
+              <OdometerNumber 
+                value={Math.round(progress)} 
+                className="bg-white shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] text-[10px] text-zinc-800 rounded-[3px] px-1"
+              />
             </div>
           </div>
         </div>

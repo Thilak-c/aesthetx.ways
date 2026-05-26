@@ -51,16 +51,16 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${moiraiOne.variable} ${oi.variable} ${loveloBlack.variable} overflow-x-hidden sm:h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${moiraiOne.variable} ${oi.variable} ${loveloBlack.variable} antialiased`}
     >
-      <body className="min-h-screen bg-zinc-100 sm:bg-zinc-950 sm:flex sm:justify-center sm:items-center text-zinc-950 font-sans p-0 sm:p-6 overflow-x-hidden sm:overflow-hidden relative">
+      <body className="bg-zinc-100 sm:bg-zinc-950 sm:flex sm:justify-center sm:items-center text-zinc-950 font-sans p-0 sm:p-6 sm:overflow-hidden relative">
         {/* Premium Luxury Tech Glow Backdrop - Visible on Desktop only */}
         {/* <div className="hidden sm:block absolute inset-0  pointer-events-none z-0" /> */}
         {/* <div className="hidden sm:block absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" /> */}
 
         {/* Premium Mobile Phone Mock Frame Shell */}
         <div
-          className="relative w-full max-w-[430px] broder h-auto sm:h-[880px] sm:max-h-[92vh] bg-white sm:rounded-[52px] flex flex-col overflow-x-hidden sm:overflow-hidden sm:transition-all sm:duration-500 z-10"
+          className="relative w-full max-w-[430px] min-h-screen sm:min-h-0 h-auto sm:h-[880px] sm:max-h-[92vh] bg-white sm:rounded-[52px] flex flex-col sm:overflow-hidden sm:transition-all sm:duration-500 z-10"
         >
 
 
@@ -72,13 +72,14 @@ export default function RootLayout({ children }) {
                 items={menuItems}
                 socialItems={socialItems}
                 displaySocials={true}
-                displayItemNumbering={true}
+                displayItemNumbering={false}
                 menuButtonColor="#000"
                 openMenuButtonColor="#000"
                 changeMenuColorOnOpen={true}
                 colors={['#18181b', '#27272a']}
                 logoUrl="/logo_t.svg"
                 accentColor="#000"
+                isFixed={true}
               />
               {children}
             </SplashWrapper>

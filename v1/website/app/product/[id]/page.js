@@ -1,9 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ShoppingBag, Plus, Minus, Check } from 'lucide-react';
+import { OdometerNumber } from '@/components/SplashWrapper';
+import { gsap } from 'gsap';
+import { getCachedImage } from '@/lib/mediaCache';
+import FallbackImage from '@/components/FallbackImage';
 
 const SIZE_MAP = {
   S: '28',
@@ -27,6 +32,88 @@ const getDisplaySize = (size, sizeDisplayType) => {
   return size;
 };
 
+// Standalone component to animate individual item on a stagger delay
+function FlyingItem({ image, coords, index, total, onComplete }) {
+  const ref = useRef(null);
+  
+  useEffect(() => {
+    if (ref.current) {
+      // Stagger delay based on index (160ms gap between each item)
+      const delay = index * 0.16;
+      
+      // Calculate side-by-side offset at start so they don't overlap on lift-off (spacing: 44px)
+      const offset = total > 1 ? (index - (total - 1) / 2) * 44 : 0;
+      const startLeft = coords.startLeft + offset;
+      
+      gsap.set(ref.current, {
+        top: coords.startTop,
+        left: startLeft,
+        scale: 0.1,
+        opacity: 0,
+        x: 0,
+        y: 0
+      });
+      
+      // Converge back to the menu button coordinates
+      const deltaX = coords.endLeft - startLeft;
+      const deltaY = coords.endTop - coords.startTop;
+      
+      const tl = gsap.timeline({
+        delay: delay,
+        onComplete: onComplete
+      });
+      
+      // Phase 1: Lift-off/reveal from behind the Add to Bag button
+      tl.to(ref.current, {
+        duration: 0.22,
+        scale: 1,
+        opacity: 1,
+        y: -30,
+        ease: 'back.out(1.5)',
+        onStart: () => {
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(30);
+          }
+        }
+      });
+      
+      // Phase 2: Runway speed vector accelerating directly to the menu button
+      tl.to(ref.current, {
+        duration: 0.48,
+        x: deltaX,
+        y: deltaY - 30, // account for phase 1 lift-off translate offset
+        scale: 0.1,
+        opacity: 0.2,
+        ease: 'power3.in',
+        onComplete: () => {
+          // Only trigger landing vibration feedback once (on the first arriving item)
+          if (index === 0 && typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(40);
+          }
+          // Dispatch event to increment menu count locally
+          window.dispatchEvent(new Event('cart-updated'));
+        }
+      });
+    }
+  }, [coords, index, total, onComplete]);
+
+  return (
+    <FallbackImage 
+      ref={ref}
+      src={image} 
+      alt="Flying Product" 
+      className="absolute z-35 object-cover rounded-full border border-white/20 shadow-[0_0_16px_5px_rgba(255,255,255,0.8),0_6px_12px_rgba(0,0,0,0.12)] pointer-events-none"
+      style={{
+        width: '56px',
+        height: '56px',
+        position: 'absolute'
+      }}
+      hideText={true}
+      logoSize="w-5 h-5"
+    />
+  );
+}
+
 export default function ProductPage({ params }) {
   const router = useRouter();
   
@@ -38,9 +125,32 @@ export default function ProductPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState('');
+  const [activeImage, setActiveImage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(`aw_img_cache_${id}`) || '';
+    }
+    return '';
+  });
   const [addedToCart, setAddedToCart] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [sizeError, setSizeError] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [flyingItems, setFlyingItems] = useState([]);
+  const [coords, setCoords] = useState({ startTop: 0, startLeft: 0, endTop: 0, endLeft: 0 });
+  const sizeSectionRef = useRef(null);
+
+  const handleFlyComplete = useCallback((itemId, index) => {
+    setFlyingItems(prev => {
+      const remaining = prev.filter(item => item.id !== itemId);
+      // When the very last item finishes, show success toast and trigger resets
+      if (index === quantity - 1) {
+        setShowToast(true);
+        setTimeout(() => setAddedToCart(false), 2000);
+        setTimeout(() => setShowToast(false), 3000);
+      }
+      return remaining;
+    });
+  }, [quantity]);
 
   // Fetch product data
   useEffect(() => {
@@ -54,7 +164,15 @@ export default function ProductPage({ params }) {
           const found = data.products.find(p => p.itemId === id);
           if (found) {
             setProduct(found);
-            setActiveImage(found.mainImage);
+            const cachedUrl = getCachedImage(found.itemId, found.mainImage);
+            setActiveImage(cachedUrl);
+
+            // Pre-cache other images in the background
+            if (found.otherImages) {
+              found.otherImages.forEach((img, idx) => {
+                getCachedImage(`${found.itemId}-other-${idx}`, img);
+              });
+            }
           }
         }
       } catch (err) {
@@ -86,7 +204,13 @@ export default function ProductPage({ params }) {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert('Please select a size');
+      setSizeError(true);
+      // Double pulse vibration for warning feedback
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([80, 50, 80]);
+      }
+      sizeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => setSizeError(false), 800);
       return;
     }
 
@@ -112,18 +236,113 @@ export default function ProductPage({ params }) {
 
       localStorage.setItem('aw_cart', JSON.stringify(cart));
       
-      // Dispatch custom event to notify components
-      window.dispatchEvent(new Event('cart-updated'));
+      // Calculate coordinates dynamically relative to the mobile mockup container to keep it perfect and local
+      const btnEl = document.getElementById('add-to-bag-btn');
+      const menuEl = document.querySelector('.sm-toggle');
+      const frameEl = document.getElementById('mobile-frame');
+      
+      if (btnEl && menuEl) {
+        const btnRect = btnEl.getBoundingClientRect();
+        const menuRect = menuEl.getBoundingClientRect();
+        const frameRect = frameEl ? frameEl.getBoundingClientRect() : { top: 0, left: 0 };
+        
+        // Centering calculation relative to the mockup frame container (image size: 56x56)
+        const startTop = btnRect.top - frameRect.top + btnRect.height / 2 - 28;
+        const startLeft = btnRect.left - frameRect.left + btnRect.width / 2 - 28;
+        const endTop = menuRect.top - frameRect.top + menuRect.height / 2 - 28;
+        const endLeft = menuRect.left - frameRect.left + menuRect.width / 2 - 28;
+
+        setCoords({ startTop, startLeft, endTop, endLeft });
+      } else {
+        // Fallback defaults relative to viewport
+        setCoords({
+          startTop: window.innerHeight - 60 - 28,
+          startLeft: window.innerWidth - 130 - 28,
+          endTop: 12 - 28,
+          endLeft: window.innerWidth - 48 - 28
+        });
+      }
       
       setAddedToCart(true);
-      setTimeout(() => setAddedToCart(false), 2000);
+      
+      // Spawn staggered items based on selected quantity
+      const newItems = [];
+      for (let i = 0; i < quantity; i++) {
+        newItems.push({
+          id: `${Date.now()}-${i}-${Math.random()}`,
+          image: product.mainImage,
+          index: i
+        });
+      }
+      setFlyingItems(newItems);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col bg-white justify-center items-center py-32">
-        <span className="text-[10px] tracking-widest uppercase text-zinc-400 animate-pulse">Loading product...</span>
+      <div className="flex flex-col flex-1 bg-white relative pb-28">
+        {/* Sleek Top Header */}
+        <header className="sticky top-0 z-40 bg-white border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
+          <button onClick={() => router.back()} className="text-zinc-950 hover:text-black">
+            <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+          </button>
+          <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-400">Product details</span>
+          <div className="w-14" />
+        </header>
+
+        {/* Main Product Image Skeleton */}
+        <div className="relative w-full aspect-4/5 bg-zinc-100 animate-pulse animate-shimmer border-b border-zinc-100/50" />
+
+        {/* Thumbnails Skeleton */}
+        <div className="flex gap-2 px-4 py-3">
+          {[1, 2, 3].map((i) => (
+            <div 
+              key={i} 
+              className="w-12 h-15 rounded-[1px] bg-zinc-100 animate-pulse animate-shimmer border border-zinc-100/50"
+            />
+          ))}
+        </div>
+
+        {/* Info details Skeleton */}
+        <div className="px-4 py-4 flex flex-col gap-2.5">
+          {/* Category */}
+          <div className="h-2 bg-zinc-50 animate-pulse animate-shimmer rounded-[1px] w-1/6" />
+          {/* Name */}
+          <div className="h-4 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px] w-1/2 mt-1" />
+          {/* Price */}
+          <div className="h-3.5 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px] w-1/8 mt-1" />
+
+          {/* Color Separator */}
+          <div className="mt-4 border-t border-zinc-100 pt-3 flex flex-col gap-1.5">
+            <div className="h-2 bg-zinc-50 animate-pulse animate-shimmer rounded-[1px] w-1/12" />
+            <div className="h-3 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px] w-1/5" />
+          </div>
+
+          {/* Size Selector Separator */}
+          <div className="mt-4 border-t border-zinc-100 pt-3 flex flex-col gap-2">
+            <div className="h-2 bg-zinc-50 animate-pulse animate-shimmer rounded-[1px] w-1/6" />
+            <div className="flex gap-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="w-8 h-8 rounded-[1px] bg-zinc-100 animate-pulse animate-shimmer border border-zinc-100/50" />
+              ))}
+            </div>
+          </div>
+
+          {/* Quantity Select Separator */}
+          <div className="mt-4 border-t border-zinc-100 pt-3 flex flex-col gap-1.5">
+            <div className="h-2 bg-zinc-50 animate-pulse animate-shimmer rounded-[1px] w-1/8" />
+            <div className="w-24 h-7 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px]" />
+          </div>
+        </div>
+
+        {/* Sticky Bottom Actions Bar Skeleton */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[450px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex flex-col gap-1.5">
+            <div className="h-2 bg-zinc-50 animate-pulse animate-shimmer rounded-[1px] w-12" />
+            <div className="h-3 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px] w-16" />
+          </div>
+          <div className="w-32 h-10 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px]" />
+        </div>
       </div>
     );
   }
@@ -140,7 +359,7 @@ export default function ProductPage({ params }) {
   }
 
   return (
-    <div className="flex flex-col flex-1 bg-white relative pb-28">
+    <div className="flex flex-col flex-1 bg-white relative pb-28 animate-slide-up-fade">
       {/* Sleek Top Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-zinc-950 hover:text-black">
@@ -150,9 +369,48 @@ export default function ProductPage({ params }) {
         <div className="w-14" />
       </header>
 
+      {/* Premium Minimalist Toast Notification */}
+      <div 
+        className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-32px)] max-w-[418px] bg-zinc-950 text-white px-4 py-3 flex items-center justify-between shadow-xl rounded-[2px] transition-all duration-500 ease-out ${
+          showToast ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          {/* <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" /> */}
+          <span className="text-[9px] tracking-[0.2em] uppercase font-bold">Added to Bag</span>
+        </div>
+        <Link href="/cart" className="text-[9px] tracking-[0.2em] uppercase font-bold text-white border-b border-white pb-0.5 hover:opacity-85 transition-opacity">
+          View Bag &rarr;
+        </Link>
+      </div>
+
+      {/* Invisible blocker to prevent routing/clicks while flying */}
+      {flyingItems.length > 0 && typeof document !== 'undefined' && createPortal(
+        <div className="absolute inset-0 z-99 cursor-default pointer-events-auto bg-transparent" />,
+        document.getElementById('mobile-frame') || document.body
+      )}
+
+      {/* Flying Product Images (Portaled to mobile-frame, popping up one-by-one and flying to cart) */}
+      {flyingItems.map((item) => typeof document !== 'undefined' && createPortal(
+        <FlyingItem
+          key={item.id}
+          image={item.image}
+          coords={coords}
+          index={item.index}
+          total={flyingItems.length}
+          onComplete={() => handleFlyComplete(item.id, item.index)}
+        />,
+        document.getElementById('mobile-frame') || document.body
+      ))}
+
       {/* Main product Image */}
       <div className="relative w-full aspect-4/5 bg-zinc-50 border-b border-zinc-100 group">
-        <img src={activeImage} alt={product.name} className="w-full h-full object-cover" />
+        <FallbackImage 
+          src={activeImage} 
+          alt={product.name} 
+          className="w-full h-full object-cover" 
+          logoSize="w-8 h-8"
+        />
         <div className="absolute top-4 left-4 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
           <img src="/logo_t.svg" alt="Watermark Logo" className="w-6 h-6 object-contain" />
         </div>
@@ -162,20 +420,33 @@ export default function ProductPage({ params }) {
       {product.otherImages && product.otherImages.length > 0 && (
         <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">
           <button 
-            onClick={() => setActiveImage(product.mainImage)}
-            className={`w-12 h-15 rounded-[1px] overflow-hidden border ${activeImage === product.mainImage ? 'border-black' : 'border-zinc-200'}`}
+            onClick={() => setActiveImage(getCachedImage(product.itemId, product.mainImage))}
+            className={`relative w-12 h-15 rounded-[1px] overflow-hidden border ${activeImage === getCachedImage(product.itemId, product.mainImage) ? 'border-black' : 'border-zinc-200'}`}
           >
-            <img src={product.mainImage} className="w-full h-full object-cover" />
+            <FallbackImage 
+              src={getCachedImage(product.itemId, product.mainImage)} 
+              className="w-full h-full object-cover" 
+              hideText={true}
+              logoSize="w-4 h-4"
+            />
           </button>
-          {product.otherImages.map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveImage(img)}
-              className={`w-12 h-15 rounded-[1px] overflow-hidden border ${activeImage === img ? 'border-black' : 'border-zinc-200'}`}
-            >
-              <img src={img} className="w-full h-full object-cover" />
-            </button>
-          ))}
+          {product.otherImages.map((img, i) => {
+            const cachedOther = getCachedImage(`${product.itemId}-other-${i}`, img);
+            return (
+              <button
+                key={i}
+                onClick={() => setActiveImage(cachedOther)}
+                className={`relative w-12 h-15 rounded-[1px] overflow-hidden border ${activeImage === cachedOther ? 'border-black' : 'border-zinc-200'}`}
+              >
+                <FallbackImage 
+                  src={cachedOther} 
+                  className="w-full h-full object-cover" 
+                  hideText={true}
+                  logoSize="w-4 h-4"
+                />
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -197,9 +468,11 @@ export default function ProductPage({ params }) {
         </div>
 
         {/* Size Selection */}
-        <div className="mt-4 border-t border-zinc-100 pt-3">
+        <div ref={sizeSectionRef} className={`mt-4 border-t border-zinc-100 pt-3 transition-all duration-300 ${sizeError ? 'animate-shake' : ''}`}>
           <div className="flex items-center justify-between">
-            <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-medium">Select Size</span>
+            <span className={`text-[8px] tracking-wider uppercase font-medium transition-colors duration-300 ${sizeError ? 'text-red-500 font-bold animate-pulse' : 'text-zinc-400'}`}>
+              {sizeError ? 'Please Select a Size' : 'Select Size'}
+            </span>
             {selectedSize && (
               <span className="text-[9px] text-zinc-400 uppercase font-bold">
                 Selected: {getDisplaySize(selectedSize, product.sizeDisplayType)}
@@ -214,12 +487,17 @@ export default function ProductPage({ params }) {
                 <button
                   key={size}
                   disabled={!hasStock}
-                  onClick={() => setSelectedSize(size)}
+                  onClick={() => {
+                    setSelectedSize(size);
+                    setSizeError(false);
+                  }}
                   className={`w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-[1px] border transition-all ${
                     !hasStock
                       ? 'border-zinc-100 text-zinc-300 relative line-through cursor-not-allowed'
                       : selectedSize === size
                       ? 'border-black bg-black text-white'
+                      : sizeError
+                      ? 'border-red-400 text-red-500 hover:border-red-500 animate-pulse'
                       : 'border-zinc-200 text-black hover:border-zinc-400'
                   }`}
                 >
@@ -263,11 +541,15 @@ export default function ProductPage({ params }) {
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[450px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
         <div className="flex flex-col">
           <span className="text-[8px] uppercase text-zinc-400 font-medium tracking-wider">Total Price</span>
-          <span className="text-xs font-bold text-black">
-            ₹{(product.price * quantity).toLocaleString('en-IN')}
-          </span>
+          <div className="flex items-center mt-0.5">
+            <OdometerNumber 
+              value={`₹${(product.price * quantity).toLocaleString('en-IN')}`} 
+              className="text-xs font-bold text-black" 
+            />
+          </div>
         </div>
         <button
+          id="add-to-bag-btn"
           onClick={handleAddToCart}
           disabled={!product.inStock}
           className={`flex items-center justify-center gap-1.5 text-[9px] tracking-[0.2em] uppercase font-bold py-3 px-8 rounded-[1px] transition-colors ${

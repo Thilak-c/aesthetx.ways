@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Search, ClipboardList, ChevronRight, ChevronDown, X } from 'lucide-react';
+import { getCachedVideo, getCachedImage } from '@/lib/mediaCache';
+import FallbackImage from '@/components/FallbackImage';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -11,8 +13,19 @@ export default function Home() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [cartCount, setCartCount] = useState(0);
+  const [videoSrc, setVideoSrc] = useState('/hero_home.mp4');
+  const searchInputRef = useRef(null);
 
   const categories = ['All', 'Apparel / Clothing', 'Footwear', 'Headwear', 'Eyewear'];
+
+  // Load cached hero video on mount
+  useEffect(() => {
+    async function loadVideo() {
+      const src = await getCachedVideo('/hero_home.mp4');
+      setVideoSrc(src);
+    }
+    loadVideo();
+  }, []);
 
   // Fetch products
   useEffect(() => {
@@ -54,6 +67,17 @@ export default function Home() {
     };
   }, []);
 
+  // Handle programmatic focus on search toggle
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    } else if (!searchOpen && searchInputRef.current) {
+      searchInputRef.current?.blur();
+    }
+  }, [searchOpen]);
+
   return (
     <div className="flex flex-col flex-1 bg-white">
       {/* Sleek Top Header */}
@@ -72,24 +96,28 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Conditionally Render Search Bar */}
-      {searchOpen && (
-        <div className="px-4 py-2 border-b border-zinc-100 flex items-center gap-2 bg-zinc-50 transition-all duration-300">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search products..."
-            className="w-full text-xs bg-transparent border-none outline-none py-1 text-black placeholder-zinc-400"
-            autoFocus
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="text-zinc-400 hover:text-black">
-              <X className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-      )}
+      {/* Conditionally Render Search Bar with Smooth Slide/Fade Animation */}
+      <div 
+        className={`px-4 flex items-center gap-2 bg-zinc-50 transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+          searchOpen 
+            ? 'h-[37px] opacity-100 py-2 border-b border-zinc-100 scale-y-100' 
+            : 'h-0 opacity-0 py-0 border-b-0 border-transparent scale-y-0 pointer-events-none'
+        }`}
+      >
+        <input
+          ref={searchInputRef}
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search products..."
+          className="w-full text-xs bg-transparent border-none outline-none py-1 text-black placeholder-zinc-400"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} className="text-zinc-400 hover:text-black">
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
 
       {/* Horizontal Category Scroll */}
       <nav className="flex overflow-x-auto scrollbar-hide px-4 py-3 gap-5 border-b border-zinc-100 bg-white">
@@ -113,7 +141,7 @@ export default function Home() {
         <div className="relative h-[65vh] w-full bg-zinc-100 overflow-hidden rounded-[2px] flex items-end">
           {/* Looping Hero Video */}
           <video
-            src="/hero_home.mp4"
+            src={videoSrc}
             autoPlay
             loop
             muted
@@ -157,23 +185,42 @@ export default function Home() {
           </span>
         </div>
 
-        {/* Loading Spinner */}
+        {/* Loading Skeleton */}
         {loading ? (
-          <div className="flex justify-center items-center py-16">
-            <span className="text-[10px] tracking-widest uppercase text-zinc-400 animate-pulse">Loading...</span>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex flex-col">
+                <div className="relative w-full aspect-4/5 bg-zinc-100 animate-pulse animate-shimmer rounded-[2px] border border-zinc-100/50" />
+                <div className="mt-2 flex flex-col gap-1.5">
+                  <div className="h-3 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px] w-2/3" />
+                  <div className="h-2 bg-zinc-50 animate-pulse animate-shimmer rounded-[1px] w-1/3" />
+                  <div className="h-2.5 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px] w-1/4 mt-1" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : products.length === 0 ? (
           <div className="flex flex-col justify-center items-center py-16 text-center">
+            <div className="w-20 h-20 mb-5 overflow-hidden rounded-full border border-zinc-100 bg-zinc-50 flex items-center justify-center select-none">
+              <video 
+                src="/n0-data.mp4" 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                className="w-full h-full object-cover filter grayscale opacity-90"
+              />
+            </div>
             <span className="text-[10px] tracking-widest uppercase text-zinc-400">No products found</span>
           </div>
         ) : (
           /* Products Grid: 2 columns, ultra-sleek, minimalistic */
-          <div className="grid grid-cols-2 gap-x-3 gap-y-6">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-6 animate-slide-up-fade">
             {products.map((product) => (
               <Link key={product._id} href={`/product/${product.itemId}`} className="group flex flex-col">
                 <div className="relative w-full aspect-4/5 bg-zinc-50 overflow-hidden rounded-[2px] border border-zinc-100">
-                  <img
-                    src={product.mainImage}
+                  <FallbackImage
+                    src={getCachedImage(product.itemId, product.mainImage)}
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out"
                   />

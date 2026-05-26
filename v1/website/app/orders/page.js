@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ShoppingBag, ClipboardList, CheckCircle2 } from 'lucide-react';
+import FallbackImage from '@/components/FallbackImage';
 
 const SIZE_MAP = {
   S: '28',
@@ -61,10 +62,19 @@ export default function OrdersPage() {
       </header>
 
       {/* Orders List */}
-      <main className="flex-1 px-4 py-4">
+      <main className={`flex-1 px-4 py-4 ${orders.length === 0 ? 'flex flex-col justify-center items-center pb-20' : ''}`}>
         {orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <ClipboardList className="w-8 h-8 text-zinc-200 stroke-[1.5] mb-3" />
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="w-20 h-20 mb-5 overflow-hidden rounded-full border border-zinc-100 bg-zinc-50 flex items-center justify-center select-none">
+              <video 
+                src="/n0-data.mp4" 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                className="w-full h-full object-cover filter grayscale opacity-90"
+              />
+            </div>
             <span className="text-[10px] tracking-widest uppercase text-zinc-400 font-bold">No orders found</span>
             <p className="text-[9px] text-zinc-400 mt-1 max-w-[200px]">You haven&apos;t placed any orders yet.</p>
             <Link
@@ -103,7 +113,13 @@ export default function OrdersPage() {
                   {order.items.map((item, itemIdx) => (
                     <div key={itemIdx} className="flex gap-2.5 items-center">
                       <div className="w-8 h-10 bg-white border border-zinc-200 rounded-[1px] overflow-hidden shrink-0 relative group">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <FallbackImage 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover" 
+                          hideText={true}
+                          logoSize="w-3.5 h-3.5"
+                        />
                         <div className="absolute top-1 left-1 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
                           <img src="/logo_t.svg" alt="Watermark Logo" className="w-2.5 h-2.5 object-contain" />
                         </div>

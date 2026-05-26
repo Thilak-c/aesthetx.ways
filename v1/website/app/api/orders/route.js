@@ -1,16 +1,44 @@
 import { NextResponse } from 'next/server';
 import { convexClient } from '@/lib/convex';
+import crypto from 'crypto';
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { items, customerDetails, paymentMethod, orderTotal } = body;
+    const { 
+      items, 
+      customerDetails, 
+      paymentMethod, 
+      orderTotal,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature 
+    } = body;
     
     if (!items || !items.length || !customerDetails || !orderTotal) {
       return NextResponse.json({ success: false, message: 'Missing order details' }, { status: 400 });
     }
+
+    // 1. Verify Razorpay payment signature
+    if (razorpayOrderId && razorpayPaymentId && razorpaySignature) {
+      const secret = process.env.RAZORPAY_KEY_SECRET;
+      if (!secret) {
+        return NextResponse.json({ success: false, message: 'Razorpay key secret not configured on server' }, { status: 500 });
+      }
+
+      const generatedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(razorpayOrderId + '|' + razorpayPaymentId)
+        .digest('hex');
+
+      if (generatedSignature !== razorpaySignature) {
+        return NextResponse.json({ success: false, message: 'Payment verification failed: invalid signature' }, { status: 400 });
+      }
+    } else {
+      return NextResponse.json({ success: false, message: 'Payment verification failed: missing payment identifiers' }, { status: 400 });
+    }
     
-    // 1. Validate stock in Convex before placing order
+    // 2. Validate stock in Convex before placing order
     for (const item of items) {
       const product = await convexClient.query('webStore:getProductByItemId', { itemId: item.productId });
       if (!product) {
@@ -28,7 +56,7 @@ export async function POST(request) {
       }
     }
     
-    // 2. Call the Convex mutation to insert the order and update product stock atomically
+    // 3. Call the Convex mutation to insert the order and update product stock atomically
     const result = await convexClient.mutation('orders:createOrder', {
       userId: 'guest',
       items: items.map(item => ({
@@ -53,12 +81,16 @@ export async function POST(request) {
         country: 'India',
       },
       paymentDetails: {
+        razorpayOrderId,
+        razorpayPaymentId,
         amount: orderTotal,
         currency: 'INR',
         status: paymentMethod === 'COD' ? 'pending' : 'completed',
         paymentMethod: paymentMethod || 'COD',
         paidAt: Date.now(),
         paidBy: customerDetails.fullName,
+        codCharge: paymentMethod === 'COD' ? 100 : undefined,
+        remainingCOD: paymentMethod === 'COD' ? (orderTotal - 100) : undefined,
       },
       orderTotal: orderTotal,
       status: 'pending', // Initialize as pending matching frontend expectations
