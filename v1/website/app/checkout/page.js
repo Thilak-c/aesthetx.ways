@@ -417,7 +417,7 @@ export default function CheckoutPage() {
         </section>
 
         {/* 2. Shipping details form */}
-        <form onSubmit={handlePlaceOrder} className="flex flex-col gap-3">
+        <form onSubmit={handlePlaceOrder} className="flex flex-col gap-3" autoComplete="off">
           <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-bold block mb-1">Shipping Details</span>
           
           {/* Group 1: Name, Phone, Email */}
@@ -434,6 +434,7 @@ export default function CheckoutPage() {
                   onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                   placeholder="e.g. John Doe"
                   className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                  autoComplete="nope"
                 />
               </div>
               <div className="flex flex-col gap-0.5">
@@ -448,6 +449,7 @@ export default function CheckoutPage() {
                   onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                   placeholder="10-digit mobile"
                   className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                  autoComplete="nope"
                 />
               </div>
             </div>
@@ -462,6 +464,7 @@ export default function CheckoutPage() {
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="name@example.com"
                 className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                autoComplete="nope"
               />
             </div>
           </div>
@@ -478,6 +481,7 @@ export default function CheckoutPage() {
               onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
               placeholder="Flat/House No, Building, Street Address"
               className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+              autoComplete="nope"
             />
           </div>
 
@@ -494,6 +498,7 @@ export default function CheckoutPage() {
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="e.g. Flat 402"
                 className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                autoComplete="nope"
               />
             </div>
             <div className="flex flex-col gap-0.5">
@@ -507,6 +512,7 @@ export default function CheckoutPage() {
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="e.g. Sector 5, Colony"
                 className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                autoComplete="nope"
               />
             </div>
           </div>
@@ -524,6 +530,7 @@ export default function CheckoutPage() {
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="e.g. Mumbai"
                 className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                autoComplete="nope"
               />
             </div>
             <div className="flex flex-col gap-0.5 col-span-1">
@@ -537,6 +544,7 @@ export default function CheckoutPage() {
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="e.g. MH"
                 className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                autoComplete="nope"
               />
             </div>
             <div className="flex flex-col gap-0.5 col-span-1">
@@ -551,6 +559,7 @@ export default function CheckoutPage() {
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="6-digit"
                 className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                autoComplete="nope"
               />
             </div>
           </div>
