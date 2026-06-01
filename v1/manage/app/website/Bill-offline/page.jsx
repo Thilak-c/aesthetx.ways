@@ -30,7 +30,12 @@ import {
     Clock,
     UserCheck,
     Cpu,
-    BadgeCheck
+    BadgeCheck,
+    History,
+    ShoppingCart,
+    Share2,
+    FileDown,
+    FileText
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -58,14 +63,30 @@ export default function BillingPage() {
     const [discount, setDiscount] = useState(0);
     const [selectedProduct, setSelectedProduct] = useState(null); 
     const [mobileCartOpen, setMobileCartOpen] = useState(false); // Bottom Drawer on Mobile
-    const [scanPulse, setScanPulse] = useState(false); // Active Laser Pulse feedback
+    const [scanPulse, setScanPulse] = useState(false);
     const [currentTime, setCurrentTime] = useState("");
+
+    // Tabs & Billing History states
+    const [activeTab, setActiveTab] = useState("billing"); // "billing" or "history"
+    const [historySearchQuery, setHistorySearchQuery] = useState("");
+    const [selectedBill, setSelectedBill] = useState(null);
 
     const printRef = useRef(null);
 
     // Convex queries and mutations
     const products = useQuery(api.inventory.getWebsiteProductsForBilling, {});
     const createBill = useMutation(api.inventory.createWebsitePOSBill);
+    const billsHistory = useQuery(api.inventory.getBillingHistory, { limit: 100 }) || [];
+
+    // Filter billing history
+    const filteredBills = billsHistory.filter((bill) => {
+        const query = historySearchQuery.toLowerCase();
+        return (
+            bill.billNumber?.toLowerCase().includes(query) ||
+            bill.customerName?.toLowerCase().includes(query) ||
+            bill.customerPhone?.toLowerCase().includes(query)
+        );
+    });
 
     // Sync current clock
     useEffect(() => {
@@ -94,10 +115,9 @@ export default function BillingPage() {
         loadLogo();
     }, []);
 
-    // Generate bill number
+    // Generate bill number (simple 6-digit number)
     useEffect(() => {
-        const date = new Date();
-        const num = `AW${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}`;
+        const num = Math.floor(100000 + Math.random() * 900000).toString();
         setBillNumber(num);
     }, []);
 
@@ -161,19 +181,19 @@ export default function BillingPage() {
                                 font-weight: 900;
                                 font-style: normal;
                             }
-                            body {
+                             body {
                                 font-family: 'Courier New', monospace;
                                 width: calc(3in - 0.25in);
                                 padding: 0.1in;
-                                font-size: 15px;
+                                font-size: 10px;
                                 color: #000;
                                 background: white;
-                                line-height: 1.4;
+                                line-height: 1.3;
                             }
                             .font-lovelo {
                                 font-family: 'Lovelo Black', 'Arial Black', sans-serif !important;
                                 font-weight: 900 !important;
-                                letter-spacing: 0.15em !important;
+                                letter-spacing: 0.12em !important;
                             }
                             table {
                                 width: 100%;
@@ -185,7 +205,7 @@ export default function BillingPage() {
                             .size-pill {
                                 font-family: 'Courier New', monospace !important;
                                 font-weight: bold !important;
-                                font-size: 14px !important;
+                                font-size: 9px !important;
                                 color: #111 !important;
                             }
                             .text-center { text-align: center; }
@@ -193,44 +213,48 @@ export default function BillingPage() {
                             .font-bold { font-weight: bold; }
                             .font-black { font-weight: 900; }
                             .font-mono { font-family: 'Courier New', monospace; }
-                            .text-sm { font-size: 16px; }
-                            .text-xs { font-size: 14px; }
-                            .text-slate-400 { color: #555 !important; }
+                            .text-sm { font-size: 11px; }
+                            .text-xs { font-size: 9px; }
+                            .text-\[14px\] { font-size: 13px !important; }
+                            .text-\[11px\] { font-size: 11px !important; }
+                            .text-\[10px\] { font-size: 10px !important; }
+                            .text-\[9px\] { font-size: 9px !important; }
+                            .text-slate-400 { color: #888 !important; }
                             .text-slate-500 { color: #666 !important; }
-                            .text-slate-600 { color: #222 !important; }
-                            .text-slate-700 { color: #111 !important; }
+                            .text-slate-600 { color: #444 !important; }
+                            .text-slate-700 { color: #222 !important; }
                             .text-slate-800 { color: #000 !important; }
                             .text-slate-900 { color: #000 !important; }
-                            .mb-6 { margin-bottom: 32px !important; }
-                            .mb-5 { margin-bottom: 24px !important; }
-                            .mb-4 { margin-bottom: 18px !important; }
-                            .mb-2 { margin-bottom: 8px !important; }
-                            .mb-1 { margin-bottom: 4px !important; }
-                            .mt-1 { margin-top: 4px !important; }
-                            .mt-2 { margin-top: 8px !important; }
-                            .mt-3 { margin-top: 14px !important; }
-                            .mt-3.5 { margin-top: 16px !important; }
-                            .mt-5 { margin-top: 24px !important; }
-                            .mt-6 { margin-top: 32px !important; }
-                            .mt-8 { margin-top: 40px !important; }
-                            .py-2.5 { padding-top: 12px !important; padding-bottom: 12px !important; }
-                            .py-3 { padding-top: 15px !important; padding-bottom: 15px !important; }
-                            .px-3 { padding-left: 12px !important; padding-right: 12px !important; }
-                            .pr-2 { padding-right: 10px !important; }
-                            .w-12 { width: 48px !important; min-width: 48px !important; }
-                            .w-20 { width: 80px !important; min-width: 80px !important; }
+                            .mb-6 { margin-bottom: 24px !important; }
+                            .mb-5 { margin-bottom: 18px !important; }
+                            .mb-4 { margin-bottom: 14px !important; }
+                            .mb-2 { margin-bottom: 6px !important; }
+                            .mb-1 { margin-bottom: 3px !important; }
+                            .mt-1 { margin-top: 3px !important; }
+                            .mt-2 { margin-top: 6px !important; }
+                            .mt-3 { margin-top: 10px !important; }
+                            .mt-3.5 { margin-top: 12px !important; }
+                            .mt-5 { margin-top: 18px !important; }
+                            .mt-6 { margin-top: 24px !important; }
+                            .mt-8 { margin-top: 30px !important; }
+                            .py-2.5 { padding-top: 8px !important; padding-bottom: 8px !important; }
+                            .py-3 { padding-top: 10px !important; padding-bottom: 10px !important; }
+                            .px-3 { padding-left: 8px !important; padding-right: 8px !important; }
+                            .pr-2 { padding-right: 6px !important; }
+                            .w-12 { width: 36px !important; min-width: 36px !important; }
+                            .w-20 { width: 64px !important; min-width: 64px !important; }
                             .mx-auto { margin-left: auto; margin-right: auto; }
                             .w-auto { width: auto; }
-                            .h-16 { height: 64px !important; }
-                            .max-w-\[180px\] { max-width: 180px !important; }
-                            img { display: block; margin: 0 auto 8px auto; max-height: 64px; width: auto; }
+                            .h-16 { height: 48px !important; }
+                            .max-w-\[180px\] { max-width: 140px !important; }
+                            img { display: block; margin: 0 auto 6px auto; max-height: 48px; width: auto; }
                             .bg-slate-50 { background: #fafafa !important; }
                             .bg-slate-100 { background: #e5e7eb !important; }
-                            .ml-1\.5 { margin-left: 6px !important; }
-                            .px-1\.5 { padding-left: 4px !important; padding-right: 4px !important; }
+                            .ml-1\.5 { margin-left: 4px !important; }
+                            .px-1\.5 { padding-left: 3px !important; padding-right: 3px !important; }
                             .py-0\.5 { padding-top: 1px !important; padding-bottom: 1px !important; }
                             .rounded { border-radius: 2px !important; }
-                            .rounded-lg { border-radius: 6px !important; }
+                            .rounded-lg { border-radius: 4px !important; }
                         </style>
                     </head>
                     <body>
@@ -433,7 +457,8 @@ export default function BillingPage() {
         if (!currentCustomerInfo?.phone) return;
 
         try {
-            const message = `Thanks you for ordering with AesthetXways! here's your E-bill:manage.aesthetxways.com/${outBillNumber}
+            const message = `Thanks you for ordering with AesthetXways! here's your E-bill:
+manage.aesthetxways.com/${outBillNumber}
 
 Grab exclusive deals on AW website
 Aesthetxways.com`;
@@ -677,8 +702,8 @@ Aesthetxways.com`;
         setDiscount(0);
         setMobileCartOpen(false);
 
-        const date = new Date();
-        setBillNumber(`AW${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}`);
+        const num = Math.floor(100000 + Math.random() * 900000).toString();
+        setBillNumber(num);
     };
 
     return (
@@ -710,24 +735,36 @@ Aesthetxways.com`;
                             </div>
                             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-poppins">Point of Sale</h1>
                         </div>
-
-                        {/* Top Desk Info Badges */}
-                        <div className="flex flex-wrap items-center gap-3 sm:self-center">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/50 bg-white shadow-sm text-xs font-bold text-slate-700">
-                                <UserCheck size={14} className="text-slate-400" />
-                                <span>Cashier: Admin</span>
-                            </div>
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/50 bg-white shadow-sm text-xs font-mono font-bold text-slate-700">
-                                <Clock size={14} className="text-slate-400 animate-spin-slow" />
-                                <span>{currentTime || "12:00 PM"}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/50 bg-emerald-50 text-emerald-700 shadow-sm text-[10px] font-extrabold uppercase tracking-wider">
-                                <Cpu size={12} className="text-emerald-500" />
-                                <span>CONVEX SYNCED</span>
-                            </div>
+                        {/* Dynamic boutique sliding tab switcher */}
+                        <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/40 shadow-inner max-w-xs w-full sm:w-auto self-end">
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab("billing")}
+                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                                    activeTab === "billing" 
+                                        ? "bg-slate-950 text-white shadow-md shadow-slate-950/15" 
+                                        : "text-slate-500 hover:text-slate-800"
+                                }`}
+                            >
+                                <ShoppingCart size={13} />
+                                <span>Billing Desk</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab("history")}
+                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                                    activeTab === "history" 
+                                        ? "bg-slate-950 text-white shadow-md shadow-slate-950/15" 
+                                        : "text-slate-500 hover:text-slate-800"
+                                }`}
+                            >
+                                <History size={13} />
+                                <span>History</span>
+                            </button>
                         </div>
                     </div>
-
+                     
+                    {activeTab === "billing" ? (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                         {/* LEFT COLUMN: Search gateway + Catalog (Grid/Table switchable) */}
                         <div className="lg:col-span-2 space-y-6">
@@ -963,6 +1000,260 @@ Aesthetxways.com`;
                             />
                         </div>
                     </div>
+                    ) : (
+                        <div className="bg-white rounded-3xl border border-slate-200/60 p-6 shadow-sm space-y-6 animate-fadeIn">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                                <div>
+                                    <h2 className="text-lg font-extrabold text-slate-900 tracking-tight font-poppins">Saved Invoice Catalog</h2>
+                                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">Search, reprint, or resend digital bills directly to guests</p>
+                                </div>
+                                
+                                {/* Search Invoice Gateway */}
+                                <div className="relative max-w-sm w-full">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search Bill #, Name, Phone..."
+                                        value={historySearchQuery}
+                                        onChange={(e) => setHistorySearchQuery(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 bg-slate-50 hover:bg-slate-100/50 border border-slate-200/70 rounded-2xl text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all font-mono"
+                                    />
+                                </div>
+                            </div>
+
+                            {filteredBills.length === 0 ? (
+                                <div className="p-16 text-center border border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+                                    <History className="w-10 h-10 mx-auto text-slate-300 mb-3 animate-pulse" />
+                                    <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-widest">No Saved Invoices Found</h3>
+                                    <p className="text-[10px] text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
+                                        Check that your spelling or the 6-digit receipt number is correct, or register new sales inside the POS Desk.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* Scrollable Bills List */}
+                                    <div className="lg:col-span-1 space-y-3 max-h-[640px] overflow-y-auto pr-1">
+                                        {filteredBills.map((billItem) => {
+                                            const isSelected = selectedBill?._id === billItem._id;
+                                            const dateStr = billItem.createdAt ? new Date(billItem.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "";
+                                            const timeStr = billItem.createdAt ? new Date(billItem.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "";
+                                            return (
+                                                <button
+                                                    key={billItem._id}
+                                                    type="button"
+                                                    onClick={() => setSelectedBill(billItem)}
+                                                    className={`w-full text-left p-4 border rounded-2xl transition-all cursor-pointer flex flex-col gap-2.5 ${
+                                                        isSelected 
+                                                            ? "bg-slate-950 border-slate-950 text-white shadow-md shadow-slate-900/10" 
+                                                            : "bg-white border-slate-200 hover:border-slate-400 text-slate-800 hover:bg-slate-50/30"
+                                                    }`}
+                                                >
+                                                    <div className="flex justify-between items-center w-full">
+                                                        <span className={`text-xs font-mono font-extrabold ${isSelected ? "text-white" : "text-slate-900"}`}>
+                                                            #{billItem.billNumber}
+                                                        </span>
+                                                        <span className={`text-[9px] font-mono ${isSelected ? "text-slate-400" : "text-slate-400"}`}>
+                                                            {dateStr} · {timeStr}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <div className={`text-xs font-extrabold truncate ${isSelected ? "text-white" : "text-slate-800"}`}>
+                                                            {billItem.customerName ? billItem.customerName.toUpperCase() : "GUEST CLIENT"}
+                                                        </div>
+                                                        {billItem.customerPhone && (
+                                                            <div className={`text-[9px] font-mono ${isSelected ? "text-slate-400" : "text-slate-450"}`}>
+                                                                +91 {billItem.customerPhone}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    <div className="flex justify-between items-center w-full pt-1.5 border-t border-slate-100/10 mt-0.5">
+                                                        <span className={`text-[9px] font-mono font-bold uppercase tracking-wider ${
+                                                            billItem.paymentMethod === "cash" 
+                                                                ? isSelected ? "text-slate-300" : "text-emerald-700 bg-emerald-50 border border-emerald-100/50 px-1.5 py-0.5"
+                                                                : isSelected ? "text-slate-300" : "text-blue-700 bg-blue-50 border border-blue-100/50 px-1.5 py-0.5"
+                                                        }`}>
+                                                            {billItem.paymentMethod}
+                                                        </span>
+                                                        <span className={`text-xs font-extrabold font-poppins ${isSelected ? "text-white" : "text-slate-955"}`}>
+                                                            ₹{billItem.total.toLocaleString("en-IN")}
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Selected Bill Detail view */}
+                                    <div className="lg:col-span-2 bg-slate-50/50 rounded-2xl border border-slate-200/40 p-5 space-y-5">
+                                        {selectedBill ? (
+                                            <div className="space-y-5">
+                                                {/* Header Details */}
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 pb-4">
+                                                    <div>
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Selected Invoice</span>
+                                                        <h3 className="text-sm font-extrabold text-slate-955 font-mono mt-0.5">#{selectedBill.billNumber}</h3>
+                                                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                                            Processed on {new Date(selectedBill.createdAt).toLocaleString("en-IN")}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    {/* Action Buttons row */}
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => window.open(`/${selectedBill.billNumber}`, "_blank")}
+                                                            className="px-3 py-2 bg-white border border-slate-200 hover:border-slate-800 text-slate-700 hover:text-slate-900 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                                                            title="View Guest Web receipt"
+                                                        >
+                                                            <BadgeCheck size={12} />
+                                                            <span>Web Bill</span>
+                                                        </button>
+                                                        
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => window.open(`/uploads/bills/${selectedBill.billNumber}.pdf`, "_blank")}
+                                                            className="px-3 py-2 bg-white border border-slate-200 hover:border-slate-800 text-slate-700 hover:text-slate-900 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                                                            title="Download PDF Invoice"
+                                                        >
+                                                            <FileDown size={12} />
+                                                            <span>PDF</span>
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                if (!selectedBill.customerPhone) {
+                                                                    toast.error("No customer phone number saved for this bill.");
+                                                                    return;
+                                                                }
+                                                                toast.loading("Sending e-bill via WhatsApp...", { id: "resend-wa" });
+                                                                try {
+                                                                    await sendWhatsAppNotification(
+                                                                        selectedBill.billNumber,
+                                                                        selectedBill.items.map(item => ({
+                                                                            productName: item.productName,
+                                                                            size: item.size,
+                                                                            price: item.price,
+                                                                            quantity: item.quantity,
+                                                                            sizeDisplayType: item.sizeDisplayType || "alpha"
+                                                                        })),
+                                                                        { name: selectedBill.customerName, phone: selectedBill.customerPhone },
+                                                                        selectedBill.subtotal,
+                                                                        selectedBill.discountAmount,
+                                                                        selectedBill.total,
+                                                                        selectedBill.paymentMethod,
+                                                                        selectedBill.discount
+                                                                    );
+                                                                    toast.success("E-bill resent successfully!", { id: "resend-wa" });
+                                                                } catch (e) {
+                                                                    toast.error("Failed to resend: " + e.message, { id: "resend-wa" });
+                                                                }
+                                                            }}
+                                                            className="px-3.5 py-2 bg-slate-950 hover:bg-slate-900 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                                                            title="Resend WhatsApp Receipt"
+                                                        >
+                                                            <Share2 size={12} />
+                                                            <span>Resend</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Customer Info Box */}
+                                                <div className="bg-white border border-slate-200/50 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
+                                                    <div>
+                                                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block">Customer Name</span>
+                                                        <span className="font-extrabold text-slate-900 uppercase font-poppins mt-0.5 block">
+                                                            {selectedBill.customerName ? selectedBill.customerName : "WALK-IN VALUED GUEST"}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block">Customer Contact</span>
+                                                        <span className="font-mono font-extrabold text-slate-900 mt-0.5 block">
+                                                            {selectedBill.customerPhone ? `+91 ${selectedBill.customerPhone}` : "NO CONTACT PROVIDED"}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block">Payment Method</span>
+                                                        <span className="font-extrabold text-slate-900 uppercase mt-0.5 block">
+                                                            {selectedBill.paymentMethod}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Purchased Items List */}
+                                                <div className="bg-white border border-slate-200/50 rounded-xl overflow-hidden">
+                                                    <div className="bg-slate-50 border-b border-slate-100 px-4 py-2.5 flex items-center justify-between">
+                                                        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider font-poppins">Purchased Items</span>
+                                                        <span className="text-[8px] font-mono font-bold text-slate-400 uppercase bg-white border px-1.5 py-0.5">
+                                                            {selectedBill.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) ?? 0} Units
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div className="divide-y divide-slate-100 px-4 max-h-[220px] overflow-y-auto">
+                                                        {selectedBill.items?.map((item, idx) => (
+                                                            <div key={idx} className="flex items-center justify-between py-3 gap-3">
+                                                                <div className="flex items-center gap-3 min-w-0">
+                                                                    <div className="w-10 h-10 bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center shrink-0">
+                                                                        {item.productImage ? (
+                                                                            <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            <ShoppingBag className="text-slate-300" size={14} />
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-[11px] font-bold text-slate-955 truncate leading-snug">{item.productName}</p>
+                                                                        <span className="text-[8px] font-mono text-slate-450 uppercase mt-1 inline-block border bg-slate-50 px-1.5 py-0.5 rounded-lg">
+                                                                            Size {item.size}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-right shrink-0">
+                                                                    <span className="text-[11px] font-extrabold text-slate-900 block">
+                                                                        ₹{(item.price * item.quantity).toLocaleString("en-IN")}
+                                                                    </span>
+                                                                    <span className="text-[8px] font-mono text-slate-400 block mt-0.5">
+                                                                        ₹{item.price.toLocaleString("en-IN")} x {item.quantity}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Transaction Receipt Cost Summary */}
+                                                <div className="bg-white border border-slate-200/50 rounded-xl p-4 space-y-2 text-[11px] font-bold text-slate-700">
+                                                    <div className="flex justify-between font-medium text-slate-450">
+                                                        <span>Subtotal</span>
+                                                        <span>₹{selectedBill.subtotal?.toLocaleString("en-IN")}</span>
+                                                    </div>
+                                                    {selectedBill.discountAmount > 0 && (
+                                                        <div className="flex justify-between text-emerald-600">
+                                                            <span>Discount ({selectedBill.discount}%)</span>
+                                                            <span>-₹{selectedBill.discountAmount?.toLocaleString("en-IN")}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-between text-slate-950 text-sm font-extrabold pt-2 border-t border-slate-100 uppercase font-poppins">
+                                                        <span>Net Paid Total</span>
+                                                        <span>₹{selectedBill.total?.toLocaleString("en-IN")}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center p-8">
+                                                <FileText className="w-12 h-12 text-slate-300 mb-2.5 animate-bounce-slow" />
+                                                <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest">Select an Invoice to Audit</h3>
+                                                <p className="text-[10px] text-slate-500 max-w-xs leading-relaxed mt-1">
+                                                    Choose any saved transaction receipt from the left sidebar to audit inventory details, reprint high-resolution PDF invoices, or resend e-bills.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </main>
 
@@ -1192,6 +1483,10 @@ Aesthetxways.com`;
                                 </tr>
                             </thead>
                             <tbody>
+                                {/* Elegant gap between header line and first item row */}
+                                <tr>
+                                    <td colSpan="3" style={{ height: '8px', padding: 0 }}></td>
+                                </tr>
                                 {cart.map((item, idx) => (
                                     <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
                                         <td className="pr-2" style={{ padding: '6px 0' }}>

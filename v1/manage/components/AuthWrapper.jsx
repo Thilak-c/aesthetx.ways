@@ -11,8 +11,15 @@ export default function AuthWrapper({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    const isPublicReceipt = pathname && 
+      pathname !== "/" && 
+      pathname !== "/login" && 
+      !pathname.startsWith("/website") && 
+      !pathname.startsWith("/barcode") && 
+      !pathname.startsWith("/api");
+
     // Skip auth check on login page and public E-bill paths
-    if (pathname === "/login" || (pathname && pathname.toUpperCase().startsWith("/AW"))) {
+    if (pathname === "/login" || isPublicReceipt) {
       setIsChecking(false);
       return;
     }
@@ -39,7 +46,14 @@ export default function AuthWrapper({ children }) {
   }, [pathname, router]);
 
   // Show loading while checking auth
-  if (isChecking && pathname !== "/login" && !(pathname && pathname.toUpperCase().startsWith("/AW"))) {
+  const isPublicReceipt = pathname && 
+    pathname !== "/" && 
+    pathname !== "/login" && 
+    !pathname.startsWith("/website") && 
+    !pathname.startsWith("/barcode") && 
+    !pathname.startsWith("/api");
+
+  if (isChecking && pathname !== "/login" && !isPublicReceipt) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -53,7 +67,7 @@ export default function AuthWrapper({ children }) {
   }
 
   // On login page or public E-bill paths, just render children
-  if (pathname === "/login" || (pathname && pathname.toUpperCase().startsWith("/AW"))) {
+  if (pathname === "/login" || isPublicReceipt) {
     return children;
   }
 

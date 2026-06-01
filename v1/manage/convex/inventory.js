@@ -548,8 +548,7 @@ export const createWebsitePOSBill = mutation({
     createdBy: v.string(),
   },
   handler: async (ctx, args) => {
-    const date = new Date();
-    const generatedBillNumber = `AWP${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}${String(date.getSeconds()).padStart(2, "0")}`;
+    const generatedBillNumber = Math.floor(100000 + Math.random() * 900000).toString();
     const billNumber = args.billNumber || generatedBillNumber;
 
     // Deduct stock for each item from website "products" table
