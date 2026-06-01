@@ -9,6 +9,7 @@ import { OdometerNumber } from '@/components/SplashWrapper';
 import { gsap } from 'gsap';
 import { getCachedImage } from '@/lib/mediaCache';
 import FallbackImage from '@/components/FallbackImage';
+import Footer from '@/components/Footer';
 
 const SIZE_MAP = {
   S: '28',
@@ -133,6 +134,7 @@ export default function ProductPage({ params }) {
   });
   const [addedToCart, setAddedToCart] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [pulse, setPulse] = useState(false);
   const [sizeError, setSizeError] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [flyingItems, setFlyingItems] = useState([]);
@@ -202,6 +204,15 @@ export default function ProductPage({ params }) {
     };
   }, []);
 
+  // Flash pulse state when cartCount changes to trigger bounce animation
+  useEffect(() => {
+    if (cartCount > 0) {
+      setPulse(true);
+      const timer = setTimeout(() => setPulse(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
+
   const handleAddToCart = () => {
     if (!selectedSize) {
       setSizeError(true);
@@ -238,7 +249,7 @@ export default function ProductPage({ params }) {
       
       // Calculate coordinates dynamically relative to the mobile mockup container to keep it perfect and local
       const btnEl = document.getElementById('add-to-bag-btn');
-      const menuEl = document.querySelector('.sm-toggle');
+      const menuEl = document.getElementById('nav-bag-btn');
       const frameEl = document.getElementById('mobile-frame');
       
       if (btnEl && menuEl) {
@@ -286,7 +297,7 @@ export default function ProductPage({ params }) {
           <button onClick={() => router.back()} className="text-zinc-950 hover:text-black">
             <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
           </button>
-          <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-400">Product details</span>
+          {/* <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-400">Product details</span> */}
           <div className="w-14" />
         </header>
 
@@ -359,14 +370,27 @@ export default function ProductPage({ params }) {
   }
 
   return (
-    <div className="flex flex-col flex-1 bg-white relative pb-28 animate-slide-up-fade">
+    <>
+      <div className="flex flex-col flex-1 bg-white relative pb-28 animate-slide-up-fade">
       {/* Sleek Top Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
-        <button onClick={() => router.back()} className="text-zinc-950 hover:text-black">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-100 px-4 py-3 flex items-center justify-center">
+        <button onClick={() => router.back()} className="absolute left-4 text-zinc-950 hover:text-black">
           <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
         </button>
-        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-400">Product details</span>
-        <div className="w-14" />
+        {/* <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-400">Product details</span> */}
+        <div className="absolute right-20 top-1/2 -translate-y-1/2 flex items-center">
+          <Link href="/cart" className="flex items-center gap- text-zinc-950 hover:text-black hover:opacity-80 transition-opacity">
+            {/* <span className="text-[9px] tracking-[0.2em] uppercase font-bold">Bag</span> */}
+            <div id="nav-bag-btn" className={`relative ${pulse ? 'animate-bounce-subtle' : ''}`}>
+              <img src="/icons/bag_t.png" alt="Bag" className="w-10 h-10 object-contain" />
+              {cartCount > 0 && (
+                <span className="absolute top-[1px] -right-[1px] bg-black text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-bold">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+          </Link>
+        </div>
       </header>
 
       {/* Premium Minimalist Toast Notification */}
@@ -411,9 +435,7 @@ export default function ProductPage({ params }) {
           className="w-full h-full object-cover" 
           logoSize="w-8 h-8"
         />
-        <div className="absolute top-4 left-4 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
-          <img src="/logo_t.svg" alt="Watermark Logo" className="w-6 h-6 object-contain" />
-        </div>
+      
       </div>
 
       {/* Other Images (Thumbnails) */}
@@ -536,9 +558,11 @@ export default function ProductPage({ params }) {
           </p>
         </div>
       </div>
+      <Footer />
+      </div>
 
       {/* Sticky Bottom Actions Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[450px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[430px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
         <div className="flex flex-col">
           <span className="text-[8px] uppercase text-zinc-400 font-medium tracking-wider">Total Price</span>
           <div className="flex items-center mt-0.5">
@@ -570,6 +594,6 @@ export default function ProductPage({ params }) {
           )}
         </button>
       </div>
-    </div>
+    </>
   );
 }

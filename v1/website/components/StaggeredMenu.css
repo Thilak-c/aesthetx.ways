@@ -124,6 +124,10 @@
   will-change: transform;
 }
 
+.sm-icon-line-v {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
 .sm-line {
   display: none !important;
 }

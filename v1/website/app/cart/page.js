@@ -7,6 +7,7 @@ import { ArrowLeft, ShoppingBag, Plus, Minus, Trash2, ChevronDown, ChevronRight 
 import { getCachedImage } from '@/lib/mediaCache';
 import FallbackImage from '@/components/FallbackImage';
 import { OdometerNumber } from '@/components/SplashWrapper';
+import Footer from '@/components/Footer';
 
 const SIZE_MAP = {
   S: '28',
@@ -524,6 +525,7 @@ export default function CartPage() {
             </div>
           </div>
         )}
+        <Footer />
       </main>
 
       {/* Sticky Bottom Actions Bar */}

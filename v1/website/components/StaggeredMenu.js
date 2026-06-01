@@ -24,13 +24,10 @@ export const StaggeredMenu = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [pulse, setPulse] = useState(false);
   const openRef = useRef(false);
   const panelRef = useRef(null);
   const preLayersRef = useRef(null);
   const preLayerElsRef = useRef([]);
-  const plusHRef = useRef(null);
-  const plusVRef = useRef(null);
   const iconRef = useRef(null);
   const textInnerRef = useRef(null);
   const textWrapRef = useRef(null);
@@ -49,11 +46,9 @@ export const StaggeredMenu = ({
     const ctx = gsap.context(() => {
       const panel = panelRef.current;
       const preContainer = preLayersRef.current;
-      const plusH = plusHRef.current;
-      const plusV = plusVRef.current;
       const icon = iconRef.current;
       const textInner = textInnerRef.current;
-      if (!panel || !plusH || !plusV || !icon || !textInner) return;
+      if (!panel || !icon || !textInner) return;
 
       let preLayers = [];
       if (preContainer) {
@@ -66,8 +61,6 @@ export const StaggeredMenu = ({
       if (preContainer) {
         gsap.set(preContainer, { xPercent: 0, opacity: 1 });
       }
-      gsap.set(plusH, { transformOrigin: '50% 50%', rotate: 0 });
-      gsap.set(plusV, { transformOrigin: '50% 50%', rotate: 90 });
       gsap.set(icon, { rotate: 0, transformOrigin: '50% 50%' });
       gsap.set(textInner, { yPercent: 0 });
       if (toggleBtnRef.current) gsap.set(toggleBtnRef.current, { color: menuButtonColor });
@@ -402,14 +395,7 @@ export const StaggeredMenu = ({
     };
   }, []);
 
-  // Flash pulse state when cartCount changes to trigger bounce animation
-  React.useEffect(() => {
-    if (cartCount > 0) {
-      setPulse(true);
-      const timer = setTimeout(() => setPulse(false), 400);
-      return () => clearTimeout(timer);
-    }
-  }, [cartCount]);
+
 
   return (
     <div
@@ -442,18 +428,13 @@ export const StaggeredMenu = ({
         </div>
         <button
           ref={toggleBtnRef}
-          className={`sm-toggle relative ${pulse ? 'animate-bounce-subtle' : ''}`}
+          className="sm-toggle relative"
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
           aria-controls="staggered-menu-panel"
           onClick={toggleMenu}
           type="button"
         >
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -left-2 bg-black text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-bold animate-scale-in z-20 pointer-events-none">
-              {cartCount}
-            </span>
-          )}
           <span ref={textWrapRef} className="sm-toggle-textWrap" aria-hidden="true">
             <span ref={textInnerRef} className="sm-toggle-textInner">
               {textLines.map((l, i) => (
@@ -464,8 +445,8 @@ export const StaggeredMenu = ({
             </span>
           </span>
           <span ref={iconRef} className="sm-icon" aria-hidden="true">
-            <span ref={plusHRef} className="sm-icon-line" />
-            <span ref={plusVRef} className="sm-icon-line sm-icon-line-v" />
+            <span className="sm-icon-line" />
+            <span className="sm-icon-line sm-icon-line-v" />
           </span>
         </button>
       </header>
@@ -479,14 +460,6 @@ export const StaggeredMenu = ({
                   <a className="sm-panel-item" href={it.link} aria-label={it.ariaLabel} data-index={idx + 1}>
                     <span className="sm-panel-itemLabel relative">
                       {it.label}
-                      {it.label.toLowerCase() === 'bag' && cartCount > 0 && (
-                        <span 
-                          className="absolute top- -right-5 inline-flex items-center justify-center bg-black text-white text-[10px] font-bold rounded-full tracking-normal select-none animate-scale-in"
-                          style={{ width: '20px', height: '20px' }}
-                        >
-                          {cartCount}
-                        </span>
-                      )}
                     </span>
                   </a>
                 </li>

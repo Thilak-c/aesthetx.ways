@@ -33,6 +33,7 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import Dropdown from "@/components/Dropdown";
 import { motion, AnimatePresence } from "framer-motion";
+import { processImageForUpload } from "@/lib/imageHelper";
 
 const SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
 const SIZE_MAP = {
@@ -260,13 +261,17 @@ export default function WebsiteProducts() {
   };
 
   const uploadImage = async (file, isMain = true) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    
     if (isMain) setUploadingState(prev => ({ ...prev, main: true }));
     else setUploadingState(prev => ({ ...prev, secondary: true }));
 
     try {
+      // Compress and process client-side (HEIC conversion + Canvas compression)
+      const processedFile = await processImageForUpload(file);
+      if (!processedFile) return;
+
+      const fd = new FormData();
+      fd.append("file", processedFile);
+
       toast.loading("Uploading photo content...", { id: "upload" });
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();
@@ -639,7 +644,7 @@ export default function WebsiteProducts() {
                   const isLowStock = stockVal > 0 && stockVal <= 10;
                   return (
                     <div key={p._id} className="p-3.5 flex items-start gap-3">
-                      <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden border flex-shrink-0 flex items-center justify-center">
+                      <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden border shrink-0 flex items-center justify-center">
                         {p.mainImage ? (
                           <img src={p.mainImage} className="w-full h-full object-cover" />
                         ) : (

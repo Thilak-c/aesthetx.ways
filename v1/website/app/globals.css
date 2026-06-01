@@ -38,6 +38,10 @@ body {
 
 /* Configure the mobile frame as a scroll container on desktop screens only, so sticky headers work reliably, while letting it scroll natively on mobile devices */
 @media (min-width: 640px) {
+  #phone-mock-shell {
+    transform: translate(0, 0);
+  }
+
   #mobile-frame {
     height: 100%;
     overflow-y: auto;

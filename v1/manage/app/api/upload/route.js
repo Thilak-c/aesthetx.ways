@@ -21,14 +21,7 @@ export async function POST(request) {
       );
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "File too large. Maximum size is 5MB." },
-        { status: 400 }
-      );
-    }
+
 
     // Get file extension
     const ext = path.extname(file.name || ".png").toLowerCase() || ".png";

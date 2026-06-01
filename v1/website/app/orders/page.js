@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ShoppingBag, ClipboardList, CheckCircle2 } from 'lucide-react';
 import FallbackImage from '@/components/FallbackImage';
+import Footer from '@/components/Footer';
 
 const SIZE_MAP = {
   S: '28',
@@ -148,10 +149,11 @@ export default function OrdersPage() {
             ))}
           </div>
         )}
+        <Footer />
       </main>
 
       {/* Sticky Bottom Nav Bar */}
-      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 max-w-[450px] mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 max-w-[450px] mx-auto">
         <div className="flex items-center justify-around py-3">
           <Link href="/" className="flex flex-col items-center gap-0.5 text-zinc-400 hover:text-black">
             <span className="text-[9px] tracking-widest uppercase font-bold">Shop</span>
@@ -166,7 +168,7 @@ export default function OrdersPage() {
             <span className="w-1 h-1 bg-black rounded-full"></span>
           </Link>
         </div>
-      </footer>
+      </nav>
     </div>
   );
 }

@@ -5,6 +5,13 @@ import Link from 'next/link';
 import { ShoppingBag, Search, ClipboardList, ChevronRight, ChevronDown, X } from 'lucide-react';
 import { getCachedVideo, getCachedImage } from '@/lib/mediaCache';
 import FallbackImage from '@/components/FallbackImage';
+import Footer from '@/components/Footer';
+
+const heroImages = [
+  '/home/IMG_6026.JPG.jpeg',
+  '/home/IMG_6027.JPG.jpeg',
+  '/home/IMG_6028.JPG.jpeg'
+];
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -14,6 +21,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [cartCount, setCartCount] = useState(0);
   const [videoSrc, setVideoSrc] = useState('/hero_home.mp4');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const searchInputRef = useRef(null);
 
   const categories = ['All', 'Apparel / Clothing', 'Footwear', 'Headwear', 'Eyewear'];
@@ -67,6 +75,17 @@ export default function Home() {
     };
   }, []);
 
+  // Revoke previous object URLs to avoid memory leaks and handle non-blob URLs safely
+  const videoUrlRef = useRef(null);
+  useEffect(() => {
+    if (videoUrlRef.current && videoUrlRef.current !== videoSrc && videoUrlRef.current.startsWith('blob:')) {
+      URL.revokeObjectURL(videoUrlRef.current);
+    }
+    if (videoSrc && videoSrc.startsWith('blob:')) {
+      videoUrlRef.current = videoSrc;
+    }
+  }, [videoSrc]);
+
   // Handle programmatic focus on search toggle
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
@@ -78,11 +97,19 @@ export default function Home() {
     }
   }, [searchOpen]);
 
+  // Auto-scroll hero images every 4 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="flex flex-col flex-1 bg-white">
       {/* Sleek Top Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="text-[15px] tracking-wider uppercase font-lovelo-black text-black hover:opacity-80 transition-opacity">
+        <Link href="/" className="text-[16px] tracking-wider uppercase font-lovelo-black text-black hover:opacity-80 transition-opacity">
           Aesthetx Ways
         </Link>
         <div className="flex items-center gap-3 pr-24">
@@ -139,15 +166,34 @@ export default function Home() {
       {/* Minimal Hero Section */}
       <div className="px-4 py-3">
         <div className="relative h-[65vh] w-full bg-zinc-100 overflow-hidden rounded-[2px] flex items-end">
-          {/* Looping Hero Video */}
-          <video
-            src={videoSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover filter brightness-[0.95]"
-          />
+            {/* Looping Hero Video - Commented out per user request */}
+            {/* 
+            <video
+              key={videoSrc}
+              src={videoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover filter brightness-[0.95]"
+              onError={(e) => {
+                console.error('Video load error, falling back to original:', e);
+                setVideoSrc('/hero_home.mp4');
+              }}
+            />
+            */}
+
+            {/* Auto-scrolling Hero Images with crossfade transition */}
+            {heroImages.map((src, index) => (
+              <img
+                key={src}
+                src={src}
+                alt={`Hero image ${index + 1}`}
+                className={`absolute inset-0 w-full h-full object-cover filter brightness-[0.95] transition-opacity duration-1000 ease-in-out ${
+                  index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            ))}
           <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
 
           {/* Watermark Logo */}
@@ -226,7 +272,7 @@ export default function Home() {
                   />
                   {product.inStock ? (
                     <div className="absolute top-2 left-2 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
-                      <img src="/logo_t.svg" alt="Watermark Logo" className="w-4 h-4 object-contain" />
+                   
                     </div>
                   ) : (
                     <div className="absolute top-2 left-2 bg-black text-white text-[7px] tracking-wider uppercase font-semibold px-1.5 py-0.5 rounded-[1px]">
@@ -249,10 +295,11 @@ export default function Home() {
             ))}
           </div>
         )}
+        <Footer />
       </main>
 
       {/* Sticky Bottom Nav Bar */}
-      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 max-w-[450px] mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 max-w-[450px] mx-auto">
         <div className="flex items-center justify-around py-3">
           <Link href="/" className="flex flex-col items-center gap-0.5 text-black">
             <span className="text-[9px] tracking-widest uppercase font-bold">Shop</span>
@@ -267,7 +314,7 @@ export default function Home() {
             <span className="w-1 h-1 bg-transparent rounded-full"></span>
           </Link>
         </div>
-      </footer>
+      </nav>
     </div>
   );
 }

@@ -524,6 +524,109 @@ export const createBill = mutation({
   },
 });
 
+export const createWebsitePOSBill = mutation({
+  args: {
+    billNumber: v.optional(v.string()),
+    items: v.array(v.object({
+      productId: v.string(),
+      productName: v.string(),
+      productImage: v.optional(v.string()),
+      itemId: v.string(),
+      size: v.string(),
+      price: v.float64(),
+      quantity: v.number(),
+      sizeDisplayType: v.optional(v.string()),
+    })),
+    customerName: v.optional(v.string()),
+    customerPhone: v.optional(v.string()),
+    subtotal: v.float64(),
+    discount: v.optional(v.number()),
+    discountAmount: v.optional(v.float64()),
+    tax: v.float64(),
+    total: v.float64(),
+    paymentMethod: v.string(),
+    createdBy: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const date = new Date();
+    const generatedBillNumber = `AWP${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}${String(date.getSeconds()).padStart(2, "0")}`;
+    const billNumber = args.billNumber || generatedBillNumber;
+
+    // Deduct stock for each item from website "products" table
+    for (const item of args.items) {
+      let product = null;
+      try {
+        product = await ctx.db.get(ctx.db.normalizeId("products", item.productId));
+      } catch (e) {
+        // Invalid ID format or not found
+      }
+      
+      if (!product) {
+        product = await ctx.db.query("products")
+          .withIndex("by_itemId", q => q.eq("itemId", item.itemId))
+          .first();
+      }
+
+      if (product) {
+        const sizeStock = { ...product.sizeStock };
+        sizeStock[item.size] = Math.max(0, (sizeStock[item.size] || 0) - item.quantity);
+        const newTotal = Object.values(sizeStock).reduce((sum, qty) => sum + (qty || 0), 0);
+
+        await ctx.db.patch(product._id, {
+          sizeStock,
+          currentStock: newTotal,
+          totalAvailable: newTotal,
+          inStock: newTotal > 0,
+          updatedAt: nowIso(),
+        });
+
+        // Log movement in website "inventoryMovements"
+        await ctx.db.insert("inventoryMovements", {
+          productId: item.itemId,
+          productName: item.productName,
+          productImage: item.productImage || product.mainImage || null,
+          type: "stock_out",
+          quantity: item.quantity,
+          previousStock: product.currentStock ?? product.totalAvailable ?? 0,
+          newStock: newTotal,
+          reason: `Sale (POS Walk-in) - ${billNumber}`,
+          sizeDetails: sizeStock,
+          createdAt: nowIso(),
+          createdBy: args.createdBy || "billing",
+        });
+      }
+    }
+
+    // Insert bill record in website "bills" table
+    const cleanItems = args.items.map(item => ({
+      productId: item.productId,
+      productName: item.productName,
+      productImage: item.productImage || undefined,
+      itemId: item.itemId,
+      size: item.size,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+
+    const billId = await ctx.db.insert("bills", {
+      billNumber,
+      items: cleanItems,
+      customerName: args.customerName,
+      customerPhone: args.customerPhone,
+      subtotal: args.subtotal,
+      discount: args.discount || 0,
+      discountAmount: args.discountAmount || 0,
+      tax: args.tax,
+      total: args.total,
+      paymentMethod: args.paymentMethod,
+      createdAt: nowIso(),
+      createdBy: args.createdBy,
+    });
+
+    return { success: true, billId, billNumber };
+  },
+});
+
 // Get billing history
 export const getBillingHistory = query({
   args: {
@@ -671,3 +774,28 @@ export const getDeadStock = query({
       .slice(0, limit);
   },
 });
+
+// Get website products optimized for POS billing
+export const getWebsiteProductsForBilling = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const baseQuery = ctx.db.query("products")
+      .filter(q => q.neq(q.field("isDeleted"), true))
+      .order("desc");
+    const products = args.limit !== undefined ? await baseQuery.take(args.limit) : await baseQuery.collect();
+    
+    return products.map(p => ({
+      _id: p._id,
+      itemId: p.itemId,
+      name: p.name,
+      mainImage: p.mainImage,
+      price: p.price,
+      availableSizes: p.availableSizes || [],
+      sizeStock: p.sizeStock || {},
+      sizeDisplayType: p.sizeDisplayType || "alpha",
+    }));
+  },
+});
+

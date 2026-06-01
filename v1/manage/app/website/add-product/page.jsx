@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { processImageForUpload } from "@/lib/imageHelper";
 
 const SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
 const COLORS = ["Black", "White", "Brown", "Navy", "Grey", "Red", "Blue", "Green", "Beige", "Tan", "Multi", "Orange", "Purple", "Silver", "Golden", "Rose Gold", "Copper"];
@@ -160,14 +161,17 @@ export default function WebsiteAddProduct() {
   };
 
   const uploadImage = async (file, isMain = true) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    
-    // Set upload state loading
     if (isMain) setUploadingState(prev => ({ ...prev, main: true }));
     else setUploadingState(prev => ({ ...prev, secondary: true }));
     
     try {
+      // Compress and process client-side (HEIC conversion + Canvas compression)
+      const processedFile = await processImageForUpload(file);
+      if (!processedFile) return;
+
+      const fd = new FormData();
+      fd.append("file", processedFile);
+
       toast.loading("Uploading photo content...", { id: "upload" });
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();

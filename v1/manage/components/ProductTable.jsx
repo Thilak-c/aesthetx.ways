@@ -27,6 +27,7 @@ import Barcode from "@/components/Barcode";
 import Dropdown from "@/components/Dropdown";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { processImageForUpload } from "@/lib/imageHelper";
 
 const ALL_SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"];
 const COLORS = ["Black", "White", "Brown", "Navy", "Grey", "Red", "Blue", "Green", "Beige", "Tan", "Multi", "Orange", "Purple", "Silver", "Golden", "Rose Gold", "Copper"];
@@ -199,13 +200,17 @@ export default function ProductTable({ products }) {
   };
 
   const uploadImage = async (file, isMain = true) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    
     if (isMain) setUploadingState(prev => ({ ...prev, main: true }));
     else setUploadingState(prev => ({ ...prev, secondary: true }));
 
     try {
+      // Compress and process client-side (HEIC conversion + Canvas compression)
+      const processedFile = await processImageForUpload(file);
+      if (!processedFile) return;
+
+      const fd = new FormData();
+      fd.append("file", processedFile);
+
       toast.loading("Uploading photo content...", { id: "upload" });
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();
