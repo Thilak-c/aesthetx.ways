@@ -137,6 +137,11 @@ export default function BillingPage() {
             if (!html2canvas) throw new Error('html2canvas not available');
             if (!jsPDF) throw new Error('jsPDF not available');
 
+            // Ensure custom fonts are fully loaded in the parent window before snapshotting
+            if (typeof window !== "undefined" && window.document?.fonts?.ready) {
+                await window.document.fonts.ready;
+            }
+
             // Create a clean isolated iframe to sandbox html2canvas and prevent oklch/lab color parsing crashes
             const iframe = document.createElement('iframe');
             iframe.style.position = 'absolute';
@@ -156,32 +161,46 @@ export default function BillingPage() {
                                 font-weight: 900;
                                 font-style: normal;
                             }
+                            body {
+                                font-family: 'Courier New', monospace;
+                                width: calc(3in - 0.25in);
+                                padding: 0.1in;
+                                font-size: 15px;
+                                color: #000;
+                                background: white;
+                                line-height: 1.4;
+                            }
                             .font-lovelo {
                                 font-family: 'Lovelo Black', 'Arial Black', sans-serif !important;
                                 font-weight: 900 !important;
                                 letter-spacing: 0.15em !important;
                             }
-                            body {
-                                font-family: 'Courier New', monospace;
-                                width: calc(3in - 0.2in);
-                                padding: 0.1in;
-                                font-size: 15px;
-                                color: #000;
-                                background: white;
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            th, td {
+                                vertical-align: top;
+                            }
+                            .size-pill {
+                                font-family: 'Courier New', monospace !important;
+                                font-weight: bold !important;
+                                font-size: 14px !important;
+                                color: #111 !important;
                             }
                             .text-center { text-align: center; }
                             .text-right { text-align: right; }
                             .font-bold { font-weight: bold; }
                             .font-black { font-weight: 900; }
-                            .font-mono { font-family: monospace; }
-                            .text-sm { font-size: 18px; }
+                            .font-mono { font-family: 'Courier New', monospace; }
+                            .text-sm { font-size: 16px; }
                             .text-xs { font-size: 14px; }
-                            .border-b { border-bottom: 1px solid #000 !important; }
-                            .border-t { border-top: 1px solid #000 !important; }
-                            .border-b-2 { border-bottom: 2px solid #000 !important; }
-                            .border-t-2 { border-top: 2px solid #000 !important; }
-                            .border-double { border-bottom-style: double !important; border-top-style: double !important; border-bottom-width: 3px !important; border-top-width: 3px !important; border-left: none !important; border-right: none !important; }
-                            .border-dashed { border-bottom-style: dashed !important; border-top-style: dashed !important; border-left: none !important; border-right: none !important; }
+                            .text-slate-400 { color: #555 !important; }
+                            .text-slate-500 { color: #666 !important; }
+                            .text-slate-600 { color: #222 !important; }
+                            .text-slate-700 { color: #111 !important; }
+                            .text-slate-800 { color: #000 !important; }
+                            .text-slate-900 { color: #000 !important; }
                             .mb-6 { margin-bottom: 32px !important; }
                             .mb-5 { margin-bottom: 24px !important; }
                             .mb-4 { margin-bottom: 18px !important; }
@@ -198,9 +217,6 @@ export default function BillingPage() {
                             .py-3 { padding-top: 15px !important; padding-bottom: 15px !important; }
                             .px-3 { padding-left: 12px !important; padding-right: 12px !important; }
                             .pr-2 { padding-right: 10px !important; }
-                            .flex { display: flex; }
-                            .justify-center { justify-content: center; }
-                            .justify-between { justify-content: space-between; }
                             .w-12 { width: 48px !important; min-width: 48px !important; }
                             .w-20 { width: 80px !important; min-width: 80px !important; }
                             .mx-auto { margin-left: auto; margin-right: auto; }
@@ -218,7 +234,7 @@ export default function BillingPage() {
                         </style>
                     </head>
                     <body>
-                        <div>
+                        <div style="width: 100%;">
                             ${element.innerHTML}
                         </div>
                     </body>
@@ -227,7 +243,12 @@ export default function BillingPage() {
             iframeDoc.close();
 
             // Give resources/images a small moment to load in the hidden iframe
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            
+            // Strict check: Ensure iframe custom fonts are fully loaded
+            if (iframe.contentWindow?.document?.fonts?.ready) {
+                await iframe.contentWindow.document.fonts.ready;
+            }
 
             const canvas = await html2canvas(iframeDoc.body, { scale: 2 });
             document.body.removeChild(iframe);
@@ -399,75 +420,45 @@ export default function BillingPage() {
     const tax = afterDiscount - baseAmount;
     const total = afterDiscount;
 
-//     const sendWhatsAppNotification = async (
-//         outBillNumber, 
-//         currentCart, 
-//         currentCustomerInfo, 
-//         currentSubtotal, 
-//         currentDiscountAmount, 
-//         currentTotal, 
-//         currentPaymentMethod, 
-//         currentDiscount
-//     ) => {
-//         if (!currentCustomerInfo?.phone) return;
+    const sendWhatsAppNotification = async (
+        outBillNumber, 
+        currentCart, 
+        currentCustomerInfo, 
+        currentSubtotal, 
+        currentDiscountAmount, 
+        currentTotal, 
+        currentPaymentMethod, 
+        currentDiscount
+    ) => {
+        if (!currentCustomerInfo?.phone) return;
 
-//         try {
-//             const itemsText = currentCart.map((item, idx) => {
-//                 const sizeLabel = item.sizeDisplayType === "numeric" ? (SIZE_MAP[item.size] || item.size) : item.size;
-//                 return `${idx + 1}. *${item.name}* (Size: ${sizeLabel})\n   Qty: ${item.quantity} | ₹${item.price.toFixed(0)}`;
-//             }).join("\n");
+        try {
+            const message = `Thanks you for ordering with AesthetXways! here's your E-bill:manage.aesthetxways.com/${outBillNumber}
 
-//             const customerHeader = currentCustomerInfo.name 
-//                 ? `*Customer:* ${currentCustomerInfo.name.toUpperCase()}\n` 
-//                 : "";
+Grab exclusive deals on AW website
+Aesthetxways.com`;
 
-//             const formattedDate = new Date().toLocaleDateString('en-IN', { 
-//                 day: '2-digit', 
-//                 month: 'short', 
-//                 year: 'numeric' 
-//             });
-//             const formattedTime = new Date().toLocaleTimeString('en-IN', { 
-//                 hour: '2-digit', 
-//                 minute: '2-digit' 
-//             });
+            const res = await fetch("/api/whatsapp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    phone: currentCustomerInfo.phone,
+                    message: message,
+                    clientId: "8008439762"
+                })
+            });
 
-//             const message = `🎉 *AESTHETX WAYS*
-// *INVOICE CONFIRMED*
-
-// *Bill No:* ${outBillNumber}
-// *Date:* ${formattedDate} | ${formattedTime}
-// ${customerHeader}
-// *Items:*
-// ${itemsText}
-
-// *Subtotal:* ₹${currentSubtotal.toFixed(0)}
-// ${currentDiscount > 0 ? `*Discount (${currentDiscount}%):* -₹${currentDiscountAmount.toFixed(0)}\n` : ""}*Total Paid:* ₹${currentTotal.toFixed(0)} via ${currentPaymentMethod.toUpperCase()}
-
-// Thank you for shopping with us!
-// We hope to see you again soon.
-// ✨ *aesthetxways.com*`;
-
-//             const res = await fetch("/api/whatsapp", {
-//                 method: "POST",
-//                 headers: { "Content-Type": "application/json" },
-//                 body: JSON.stringify({
-//                     phone: currentCustomerInfo.phone,
-//                     message: message,
-//                     clientId: "8008439762"
-//                 })
-//             });
-
-//             const data = await res.json();
-//             if (data.success) {
-//                 toast.success("WhatsApp receipt sent!");
-//             } else {
-//                 console.warn("WhatsApp notification error:", data.error);
-//                 toast.error("WhatsApp alert failed.");
-//             }
-//         } catch (err) {
-//             console.error("Failed to trigger WhatsApp notify:", err);
-//         }
-//     };
+            const data = await res.json();
+            if (data.success) {
+                toast.success("WhatsApp receipt sent!");
+            } else {
+                console.warn("WhatsApp notification error:", data.error);
+                toast.error("WhatsApp alert failed.");
+            }
+        } catch (err) {
+            console.error("Failed to trigger WhatsApp notify:", err);
+        }
+    };
 
     const handlePrint = () => {
         if (cart.length === 0) {
@@ -490,6 +481,12 @@ export default function BillingPage() {
     const executePrint = async () => {
         const printContent = printRef.current;
         const printWindow = window.open("", "", "width=450,height=800");
+        
+        // Ensure parent document fonts are ready
+        if (typeof window !== "undefined" && window.document?.fonts?.ready) {
+            await window.document.fonts.ready;
+        }
+
         printWindow.document.write(`
             <html>
                 <head>
@@ -501,43 +498,52 @@ export default function BillingPage() {
                             font-weight: 900;
                             font-style: normal;
                         }
+                        @page { size: 3in auto; margin: 0.1in; }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body {
+                            font-family: 'Courier New', monospace;
+                            width: calc(3in - 0.25in);
+                            padding: 0.1in;
+                            font-size: 15px; /* Increased from 12px for clear readability */
+                            color: #000;
+                            background: white;
+                            line-height: 1.4;
+                        }
                         .font-lovelo {
                             font-family: 'Lovelo Black', 'Arial Black', sans-serif !important;
                             font-weight: 900 !important;
                             letter-spacing: 0.15em !important;
                         }
-                        @page { size: 3in auto; margin: 0.1in; }
-                        * { margin: 0; padding: 0; box-sizing: border-box; }
-                        body {
-                            font-family: 'Courier New', monospace;
-                            width: calc(3in - 0.2in);
-                            padding: 0.1in;
-                            font-size: 15px; /* Increased from 12px for clear readability */
-                            color: #000;
-                            background: white;
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        th, td {
+                            vertical-align: top;
+                            border: none !important;
+                        }
+                        .size-pill {
+                            font-family: 'Courier New', monospace !important;
+                            font-weight: bold !important;
+                            font-size: 14px !important;
+                            color: #111 !important;
                         }
                         .text-center { text-align: center; }
                         .text-right { text-align: right; }
                         .font-bold { font-weight: bold; }
                         .font-black { font-weight: 900; }
-                        .font-mono { font-family: monospace; }
-                        .text-sm { font-size: 18px; } /* Increased brand/header text sizes */
-                        .text-xs { font-size: 14px; } /* Increased item table fonts */
+                        .font-mono { font-family: 'Courier New', monospace; }
+                        .text-sm { font-size: 16px; }
+                        .text-xs { font-size: 14px; }
                         .text-slate-900, .text-slate-800 { color: #000 !important; }
                         .text-slate-700 { color: #111 !important; }
-                        .text-slate-600 { color: #222 !important; }
-                        .text-slate-500 { color: #333 !important; }
-                        .text-slate-400 { color: #444 !important; }
+                        .text-slate-655, .text-slate-600 { color: #222 !important; }
+                        .text-slate-500 { color: #555 !important; }
+                        .text-slate-400 { color: #666 !important; }
                         .text-emerald-600 { color: #059669 !important; font-weight: bold; }
                         .text-white { color: #fff !important; }
                         .bg-slate-950 { background: #000 !important; color: #fff !important; }
                         .bg-white { background: #fff !important; }
-                        .border-b { border-bottom: 1px solid #000 !important; }
-                        .border-t { border-top: 1px solid #000 !important; }
-                        .border-b-2 { border-bottom: 2px solid #000 !important; }
-                        .border-t-2 { border-top: 2px solid #000 !important; }
-                        .border-double { border-bottom-style: double !important; border-top-style: double !important; border-bottom-width: 3px !important; border-top-width: 3px !important; border-left: none !important; border-right: none !important; }
-                        .border-dashed { border-bottom-style: dashed !important; border-top-style: dashed !important; border-left: none !important; border-right: none !important; }
                         .border-slate-900 { border-color: #000 !important; }
                         .border-slate-200 { border-color: #ccc !important; }
                         .border-slate-100 { border-color: #eee !important; }
@@ -566,10 +572,6 @@ export default function BillingPage() {
                         .px-3 { padding-left: 12px !important; padding-right: 12px !important; }
                         .pr-2 { padding-right: 10px !important; }
                         .p-6 { padding: 0 !important; border: none !important; box-shadow: none !important; }
-                        .flex { display: flex; }
-                        .justify-center { justify-content: center; }
-                        .justify-between { justify-content: space-between; }
-                        .tracking-\[0\.25em\] { letter-spacing: 0.25em; }
                         .uppercase { text-transform: uppercase; }
                         .max-w-\[180px\] { max-width: 180px !important; }
                         .max-w-\[200px\] { max-width: 200px; }
@@ -578,7 +580,6 @@ export default function BillingPage() {
                         .mx-auto { margin-left: auto; margin-right: auto; }
                         .w-auto { width: auto; }
                         .h-16 { height: 64px !important; }
-                        th, td { border: none !important; }
                         .bg-slate-50 { background: #fafafa !important; }
                         .bg-slate-100 { background: #e5e7eb !important; }
                         .ml-1\.5 { margin-left: 6px !important; }
@@ -599,13 +600,19 @@ export default function BillingPage() {
                     </style>
                 </head>
                 <body>
-                    <div>
+                    <div style="width: 100%;">
                         ${printContent.innerHTML}
                     </div>
                 </body>
             </html>
         `);
         printWindow.document.close();
+
+        // Let the fonts inside the print window load fully
+        if (printWindow.document?.fonts?.ready) {
+            await printWindow.document.fonts.ready;
+        }
+
         setTimeout(() => {
             printWindow.focus();
             printWindow.print();
@@ -1119,64 +1126,81 @@ export default function BillingPage() {
 
             {/* Hidden Printed Receipt Node (Always mounted offscreen for immediate printing) */}
             <div style={{ position: "absolute", left: "-9999px", top: "-9999px", width: "3in" }}>
-                <div ref={printRef} className="p-6 bg-white border border-slate-200 rounded-2xl shadow-xs">
+                <div ref={printRef} style={{ width: "100%", background: "#fff", color: "#000" }}>
                     {/* Super clean elegant header with logo */}
-                    <div className="text-center pb-4 mb-4 border-b border-slate-900">
-                        <div className="flex justify-center mb-2.5">
-                            <img src={logoBase64 || "/logo.png"} alt="Aesthetx Ways" className="h-16 w-auto max-w-[180px] object-contain" />
+                    <div className="text-center" style={{ display: 'block', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                            <img src={logoBase64 || "/logo.png"} alt="Aesthetx Ways" className="h-16 w-auto max-w-[180px] object-contain" style={{ display: 'block', margin: '0 auto' }} />
                         </div>
-                        <h2 className="text-[13px] font-lovelo uppercase text-slate-900 mt-1 mb-0.5">AESTHETX WAYS</h2>
-                        <p className="text-[8px] font-mono text-slate-400 mb-1 max-w-[200px] mx-auto leading-normal">
-                            Kankarbagh Colony More, Kankarbagh, Ghrounda, Patna, Bihar 800001
+                        <h2 className="text-[14px] font-lovelo uppercase text-slate-900 mt-1" style={{ marginBottom: '4px' }}>AESTHETX WAYS</h2>
+                        <p className="text-[9px] font-mono text-slate-500" style={{ maxWidth: '220px', margin: '0 auto 6px auto', lineHeight: '1.3' }}>
+                            Kankarbagh Colony More, Kankarbagh,<br />Ghrounda, Patna, Bihar 800001
                         </p>
-                        <div className="border-t border-dashed border-slate-200 pt-1.5 mt-1.5 flex justify-between text-[9px] font-mono text-slate-400 px-1 w-full uppercase">
-                            <span>DATE: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                            <span>TIME: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                        
+                        <div className="font-mono text-slate-400 text-[10px]" style={{ margin: '4px 0', textAlign: 'center', userSelect: 'none' }}>
+                            ----------------------------------------
+                        </div>
+                        
+                        <table className="w-full text-[9px] font-mono text-slate-500 uppercase" style={{ borderCollapse: 'collapse' }}>
+                            <tbody>
+                                <tr>
+                                    <td className="text-left" style={{ padding: '2px 0' }}>DATE: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                    <td className="text-right" style={{ padding: '2px 0' }}>TIME: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div className="font-mono text-slate-400 text-[10px]" style={{ margin: '4px 0', textAlign: 'center', userSelect: 'none' }}>
+                            ----------------------------------------
                         </div>
                     </div>
 
                     {/* Customer profile (rendered conditionally only if present) */}
                     {(customerInfo.name || customerInfo.phone) && (
-                        <div className="mb-4 pb-3 border-b border-dashed border-slate-200 text-[10px] font-mono text-left space-y-0.5">
-                            <p className="font-bold text-slate-400 uppercase tracking-widest text-[8px] mb-1">Customer Profile</p>
-                            {customerInfo.name && (
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500 uppercase">Name:</span>
-                                    <span className="font-bold text-slate-800 uppercase">{customerInfo.name}</span>
-                                </div>
-                            )}
-                            {customerInfo.phone && (
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500 uppercase">Contact:</span>
-                                    <span className="font-bold text-slate-850">{customerInfo.phone}</span>
-                                </div>
-                            )}
+                        <div className="text-[10px] font-mono text-left" style={{ display: 'block', marginBottom: '8px' }}>
+                            <p className="font-bold text-slate-500 uppercase tracking-widest text-[8px]" style={{ marginBottom: '4px' }}>Customer Profile</p>
+                            <table className="w-full text-[10px] font-mono text-slate-800" style={{ borderCollapse: 'collapse' }}>
+                                <tbody>
+                                    {customerInfo.name && (
+                                        <tr>
+                                            <td className="text-left text-slate-500 uppercase" style={{ padding: '2px 0' }}>Name:</td>
+                                            <td className="text-right font-bold text-slate-900 uppercase" style={{ padding: '2px 0' }}>{customerInfo.name}</td>
+                                        </tr>
+                                    )}
+                                    {customerInfo.phone && (
+                                        <tr>
+                                            <td className="text-left text-slate-500 uppercase" style={{ padding: '2px 0' }}>Contact:</td>
+                                            <td className="text-right font-bold text-slate-900" style={{ padding: '2px 0' }}>{customerInfo.phone}</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                            <div className="font-mono text-slate-400 text-[10px]" style={{ margin: '4px 0', textAlign: 'center', userSelect: 'none' }}>
+                                ----------------------------------------
+                            </div>
                         </div>
                     )}
 
                     {/* Items Table */}
-                    <div className="mb-4">
-                        <table className="w-full text-xs font-mono">
+                    <div style={{ marginBottom: '8px' }}>
+                        <table className="w-full text-[10px] font-mono text-slate-800" style={{ borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr className="border-b border-slate-900 text-slate-600">
-                                    <th className="text-left py-2 font-bold uppercase tracking-wider">Item</th>
-                                    <th className="text-center py-2 font-bold w-12 uppercase tracking-wider">Qty</th>
-                                    <th className="text-right py-2 font-bold w-20 uppercase tracking-wider">Price</th>
+                                <tr>
+                                    <th className="text-left font-bold uppercase tracking-wider text-slate-500" style={{ padding: '4px 0', borderBottom: '1px solid #000' }}>Item</th>
+                                    <th className="text-center font-bold w-12 uppercase tracking-wider text-slate-500" style={{ padding: '4px 0', borderBottom: '1px solid #000' }}>Qty</th>
+                                    <th className="text-right font-bold w-20 uppercase tracking-wider text-slate-500" style={{ padding: '4px 0', borderBottom: '1px solid #000' }}>Price</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {cart.map((item, idx) => (
-                                    <tr key={idx} className="border-b border-slate-100">
-                                        <td className="py-2.5 pr-2">
-                                            <p className="font-bold text-slate-900 leading-snug">
-                                                {item.name}
-                                                <span className="ml-1.5 px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[8px] font-bold uppercase tracking-wider">
-                                                    {item.sizeDisplayType === "numeric" ? (SIZE_MAP[item.size] || item.size) : item.size}
-                                                </span>
+                                    <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
+                                        <td className="pr-2" style={{ padding: '6px 0' }}>
+                                            <p className="font-bold text-slate-900" style={{ margin: 0, lineHeight: '1.3' }}>
+                                                {item.name} <span className="size-pill">({item.sizeDisplayType === "numeric" ? (SIZE_MAP[item.size] || item.size) : item.size})</span>
                                             </p>
                                         </td>
-                                        <td className="py-2.5 text-center text-slate-700">{item.quantity}</td>
-                                        <td className="py-2.5 text-right font-bold text-slate-900">₹{(item.price * item.quantity).toFixed(0)}</td>
+                                        <td className="text-center text-slate-700" style={{ padding: '6px 0' }}>{item.quantity}</td>
+                                        <td className="text-right font-bold text-slate-900" style={{ padding: '6px 0' }}>₹{(item.price * item.quantity).toFixed(0)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -1184,32 +1208,56 @@ export default function BillingPage() {
                     </div>
 
                     {/* Calculations Breakdown (No GST) */}
-                    <div className="border-t border-slate-900 pt-3 space-y-1.5 text-[10px] font-mono">
-                        <div className="flex justify-between text-slate-500">
-                            <span>Subtotal</span>
-                            <span>₹{subtotal.toFixed(0)}</span>
-                        </div>
-                        {discount > 0 && (
-                            <div className="flex justify-between text-emerald-600 font-bold">
-                                <span>Discount ({discount}%)</span>
-                                <span>-₹{discountAmount.toFixed(0)}</span>
-                            </div>
-                        )}
-                        <div className="border-t-2 border-b-2 border-double border-slate-900 py-2.5 mt-3 flex justify-between text-xs font-black text-slate-900 uppercase tracking-widest">
-                            <span>TOTAL AMOUNT</span>
-                            <span>₹{total.toFixed(0)}</span>
-                        </div>
+                    <div style={{ marginTop: '8px' }}>
+                        <table className="w-full text-[10px] font-mono text-slate-800" style={{ borderCollapse: 'collapse' }}>
+                            <tbody>
+                                <tr>
+                                    <td className="text-left text-slate-550" style={{ padding: '3px 0' }}>Subtotal</td>
+                                    <td className="text-right font-bold text-slate-900" style={{ padding: '3px 0' }}>₹{subtotal.toFixed(0)}</td>
+                                </tr>
+                                {discount > 0 && (
+                                    <tr>
+                                        <td className="text-left text-emerald-600 font-bold" style={{ padding: '3px 0' }}>Discount ({discount}%)</td>
+                                        <td className="text-right text-emerald-600 font-bold" style={{ padding: '3px 0' }}>-₹{discountAmount.toFixed(0)}</td>
+                                    </tr>
+                                )}
+                                <tr>
+                                    <td colSpan="3" style={{ padding: '2px 0' }}>
+                                        <div className="font-mono text-slate-400 text-[10px]" style={{ margin: '4px 0', textAlign: 'center', userSelect: 'none' }}>
+                                            ========================================
+                                        </div>
+                                        <table className="w-full text-xs font-black text-slate-900 uppercase tracking-widest" style={{ borderCollapse: 'collapse' }}>
+                                            <tbody>
+                                                <tr>
+                                                    <td className="text-left font-black" style={{ padding: '2px 0' }}>TOTAL AMOUNT</td>
+                                                    <td className="text-right font-black" style={{ padding: '2px 0' }}>₹{total.toFixed(0)}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div className="font-mono text-slate-400 text-[10px]" style={{ margin: '4px 0', textAlign: 'center', userSelect: 'none' }}>
+                                            ========================================
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
 
                     {/* Payment Method */}
-                    <div className="mt-3.5 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-center text-[9px] font-mono text-slate-600 uppercase tracking-widest">
-                        <span>Paid via: {paymentMethod.toUpperCase()}</span>
+                    <div style={{ marginTop: '8px', padding: '6px', backgroundColor: '#fafafa', border: '1px solid #eee', borderRadius: '4px', textAlign: 'center', fontSize: '9px', fontFamily: 'monospace', color: '#555', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                        Paid via: {paymentMethod.toUpperCase()}
                     </div>
 
                     {/* Footer */}
-                    <div className="mt-5 pt-4 border-t border-dashed border-slate-200 text-center font-mono">
-                        <p className="text-[10px] font-bold text-slate-800">Thank you for shopping with us!</p>
-                        <p className="text-[11px] text-black font-bold mt-1 tracking-wider">AesthetXways.com</p>
+                    <div style={{ marginTop: '16px', textAlign: 'center', fontFamily: 'monospace' }}>
+                        <div className="font-mono text-slate-400 text-[10px]" style={{ margin: '6px 0', textAlign: 'center', userSelect: 'none' }}>
+                            ----------------------------------------
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-800" style={{ margin: 0 }}>Thank you for shopping with us!</p>
+                        <p className="text-[11px] text-black font-bold mt-1 tracking-wider" style={{ margin: '4px 0 0 0' }}>AesthetXways.com</p>
+                        <div className="font-mono text-slate-400 text-[10px]" style={{ margin: '6px 0', textAlign: 'center', userSelect: 'none' }}>
+                            ----------------------------------------
+                        </div>
                     </div>
                 </div>
             </div>
