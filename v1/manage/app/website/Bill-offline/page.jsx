@@ -35,11 +35,14 @@ import {
     ShoppingCart,
     Share2,
     FileDown,
-    FileText
+    FileText,
+    Smartphone,
+    MessageCircle
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import WhatsAppRecoveryModal from "@/components/WhatsAppRecoveryModal";
 
 const SIZE_ORDER = ["S", "M", "L", "XL", "XXL", "XXXL"];
 const SIZE_MAP = {
@@ -64,6 +67,8 @@ export default function BillingPage() {
     const [selectedProduct, setSelectedProduct] = useState(null); 
     const [mobileCartOpen, setMobileCartOpen] = useState(false); // Bottom Drawer on Mobile
     const [scanPulse, setScanPulse] = useState(false);
+    const [recoveryModalData, setRecoveryModalData] = useState(null);
+    const [senderClientId, setSenderClientId] = useState("8008439762");
     const [currentTime, setCurrentTime] = useState("");
 
     // Tabs & Billing History states
@@ -475,7 +480,15 @@ Aesthetxways.com`;
 
             const data = await res.json();
             if (data.success) {
-                toast.success("WhatsApp receipt sent!");
+                if (data.status === 'HOLD') {
+                    toast.error("WhatsApp session offline! Scan to resume POS stream.", { id: "wa-hold-toast", duration: 4000 });
+                    setRecoveryModalData({
+                        clientId: data.clientId || "8008439762",
+                        qrCode: data.qrBase64
+                    });
+                } else {
+                    toast.success("WhatsApp receipt sent!");
+                }
             } else {
                 console.warn("WhatsApp notification error:", data.error);
                 toast.error("WhatsApp alert failed.");
@@ -1775,6 +1788,18 @@ function CheckoutCard({
                 <Printer size={15} />
                 <span>PROCESS & PRINT THERMAL INVOICE</span>
             </button>
+
+            {recoveryModalData && (
+                <WhatsAppRecoveryModal
+                    clientId={recoveryModalData.clientId}
+                    initialQr={recoveryModalData.qrCode}
+                    onClose={() => setRecoveryModalData(null)}
+                    onConnected={() => {
+                        toast.success("WhatsApp linked successfully! POS stream resumed.");
+                        setRecoveryModalData(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

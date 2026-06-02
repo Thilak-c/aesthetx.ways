@@ -17,7 +17,8 @@ import {
   ShoppingCart,
   Tag,
   Truck,
-  Receipt
+  Receipt,
+  MessageCircle
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/website/orders", label: "Orders", icon: ShoppingCart, description: "Customer orders" },
   { href: "/website/coupons", label: "Coupons", icon: Tag, description: "Discount codes" },
   { href: "/website/Bill-offline", label: "Bill Offline", icon: Receipt, description: "Walk-in offline billing" },
+  { href: "/website/whatsapp", label: "WhatsApp Console", icon: MessageCircle, description: "Gateway session link" },
   { href: "/website/add-product", label: "Add Product", icon: Package, description: "Add to website" },
   { href: "/website/products", label: "All Products", icon: Package, description: "Website inventory" },
   { href: "/website/history", label: "History", icon: History, description: "Stock movements" },

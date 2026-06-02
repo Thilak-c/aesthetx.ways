@@ -43,7 +43,16 @@ export async function POST(request) {
       );
     }
 
-    return NextResponse.json({ success: true, messageId: data.data?.messageId || data.messageId });
+    return NextResponse.json({
+      success: true,
+      status: data.status || 'SENT', // 'SENT' or 'HOLD'
+      message: data.message,
+      state: data.state,
+      qrCodeAvailable: data.qrCodeAvailable || false,
+      qrBase64: data.qrBase64 || null,
+      clientId: data.clientId,
+      messageId: data.data?.messageId || data.messageId
+    });
 
   } catch (error) {
     console.error('WhatsApp Proxy Route Error:', error);
