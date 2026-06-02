@@ -11,8 +11,8 @@ services:
     volumes:
       - aw_db:/convex/data
     environment:
-      - CONVEX_CLOUD_ORIGIN=http://127.0.0.1:5001
-      - CONVEX_SITE_ORIGIN=http://127.0.0.1:5003
+      - CONVEX_CLOUD_ORIGIN=https://db.aesthetxways.com
+      - CONVEX_SITE_ORIGIN=http://0.0.0.0:3211
       - DOCUMENT_RETENTION_DELAY=172800
       - RUST_LOG=info
     healthcheck:
@@ -22,7 +22,6 @@ services:
       retries: 10
       start_period: 60s
 
-
   dashboard:
     image: ghcr.io/get-convex/convex-dashboard:latest
     stop_grace_period: 10s
@@ -30,7 +29,7 @@ services:
     ports:
       - "5002:6791"
     environment:
-      - NEXT_PUBLIC_DEPLOYMENT_URL=http://127.0.0.1:5001
+      - NEXT_PUBLIC_DEPLOYMENT_URL=https://db.aesthetxways.com
     depends_on:
       backend:
         condition: service_healthy

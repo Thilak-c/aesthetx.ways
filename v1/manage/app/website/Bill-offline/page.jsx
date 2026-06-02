@@ -1569,6 +1569,18 @@ Aesthetxways.com`;
                     </div>
                 </div>
             </div>
+
+            {recoveryModalData && (
+                <WhatsAppRecoveryModal
+                    clientId={recoveryModalData.clientId}
+                    initialQr={recoveryModalData.qrCode}
+                    onClose={() => setRecoveryModalData(null)}
+                    onConnected={() => {
+                        toast.success("WhatsApp linked successfully! POS stream resumed.");
+                        setRecoveryModalData(null);
+                    }}
+                />
+            )}
         </div>
     );
 }
@@ -1788,18 +1800,6 @@ function CheckoutCard({
                 <Printer size={15} />
                 <span>PROCESS & PRINT THERMAL INVOICE</span>
             </button>
-
-            {recoveryModalData && (
-                <WhatsAppRecoveryModal
-                    clientId={recoveryModalData.clientId}
-                    initialQr={recoveryModalData.qrCode}
-                    onClose={() => setRecoveryModalData(null)}
-                    onConnected={() => {
-                        toast.success("WhatsApp linked successfully! POS stream resumed.");
-                        setRecoveryModalData(null);
-                    }}
-                />
-            )}
         </div>
     );
 }
