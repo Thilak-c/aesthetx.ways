@@ -429,6 +429,47 @@ export default function CartClient() {
             );
           })}
 
+            {/* Aesthetx Ways Bag Upsell */}
+            {(() => {
+              const bagInCart = cartItems.some(item => item.productId === 'aw-carry-bag');
+              return (
+                <div className="mt-2 py-3 border-b border-zinc-100 flex items-center gap-3">
+                  <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 flex items-center justify-center p-2">
+                    <img src="/icons/bag_t.png" alt="Aesthetx Ways Bag" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <h3 className="text-[10px] font-bold tracking-wide uppercase text-black">Aesthetx Ways Bag</h3>
+                    <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-medium mt-0.5">Premium Carry Bag</span>
+                    <span className="text-[9px] font-semibold text-black mt-1 font-mono">₹20</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (bagInCart) return;
+                      const newItem = {
+                        productId: 'aw-carry-bag',
+                        name: 'Aesthetx Ways Bag',
+                        price: 20,
+                        quantity: 1,
+                        size: 'One Size',
+                        image: '/icons/bag.png',
+                        color: 'Default',
+                      };
+                      const updated = [...cartItems, newItem];
+                      saveCart(updated);
+                    }}
+                    disabled={bagInCart}
+                    className={`text-[8px] tracking-widest uppercase font-bold px-3 py-1.5 rounded-[1px] transition-colors shrink-0 ${
+                      bagInCart
+                        ? 'bg-zinc-100 text-zinc-400 cursor-default'
+                        : 'bg-black text-white hover:bg-zinc-900'
+                    }`}
+                  >
+                    {bagInCart ? 'Added' : 'Add'}
+                  </button>
+                </div>
+              );
+            })()}
+
             {/* Price Calculations */}
             <div className="mt-6 border-t border-zinc-100 pt-5 flex flex-col gap-3">
               {/* Item subtotal */}

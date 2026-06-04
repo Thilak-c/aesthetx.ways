@@ -57,35 +57,39 @@ export default function BottomNav() {
     };
   }, [isTransitioning]);
 
-  // 1. Slide-up animation when transition starts
+  // 1. Reveal-up animation when transition starts (using clipPath so content stays centered)
   useEffect(() => {
     if (isTransitioning && targetPath) {
+      // Calculate the clip start: show only bottom 49px of viewport
+      const viewportHeight = window.innerHeight;
+      const clipTop = ((viewportHeight - 49) / viewportHeight) * 100;
+
       // Reset values
       gsap.set(progressBarRef.current, { width: '0%' });
       gsap.set(loaderRef.current, { opacity: 0, scale: 0.95 });
-      gsap.set(overlayRef.current, { top: 'calc(100% - 49px)', bottom: 0, height: 'auto' }); // start at bottom nav height
+      // Overlay stays at inset-0, only clip changes — content is always centered
+      gsap.set(overlayRef.current, { clipPath: `inset(${clipTop}% 0 0 0)` });
 
       const tl = gsap.timeline({
         onComplete: () => {
-          // Slide up and progress completed, trigger Next.js page change
           router.push(targetPath);
         }
       });
 
-      // Expand to full mobile frame height by moving top to 0
+      // Reveal upward by removing the clip
       tl.to(overlayRef.current, {
-        top: 0,
+        clipPath: 'inset(0% 0 0 0)',
         duration: 0.45,
         ease: 'power3.inOut'
       });
 
-      // Fade in loader content
+      // Fade in loader content (logo + progress bar + text)
       tl.to(loaderRef.current, {
         opacity: 1,
         scale: 1,
-        duration: 0.25,
+        duration: 0.3,
         ease: 'back.out(1.2)'
-      }, '-=0.15');
+      }, '-=0.3');
 
       // Animate progress line to 100%
       tl.to(progressBarRef.current, {
@@ -114,9 +118,9 @@ export default function BottomNav() {
         ease: 'power2.in'
       });
 
-      // Slide back down by moving top to 100%
+      // Clip away downward
       tl.to(overlayRef.current, {
-        top: '100%',
+        clipPath: 'inset(0 0 100% 0)',
         duration: 0.4,
         ease: 'power3.inOut'
       });
@@ -170,18 +174,18 @@ export default function BottomNav() {
         </div>
       </nav>
 
-      {/* Transition Overlay portal rendering inside #mobile-frame */}
+      {/* Transition Overlay — stays at inset-0, uses clipPath to reveal */}
       {mounted && isTransitioning && createPortal(
         <div 
           ref={overlayRef}
-          className="absolute left-0 right-0 z-50 bg-white overflow-hidden flex flex-col items-center justify-center select-none"
-          style={{ top: 'calc(100% - 49px)', bottom: 0 }}
+          className="fixed inset-0 z-50 bg-white overflow-hidden flex flex-col items-center justify-center select-none max-w-[430px] mx-auto"
+          style={{ clipPath: 'inset(100% 0 0 0)' }}
         >
           <div 
             ref={loaderRef}
             className="flex flex-col items-center gap-4 opacity-0 scale-95"
           >
-            {/* Minimalist Watermark Logo */}
+            {/* Minimalist Watermark Logo — centered */}
             <img 
               src="/logo_t.svg" 
               alt="Logo" 

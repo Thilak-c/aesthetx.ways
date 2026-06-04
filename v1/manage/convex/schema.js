@@ -1118,4 +1118,13 @@ export default defineSchema({
     weight: v.number(),
     updatedAt: v.number(),
   }),
+
+  // Site Settings table for controlling site status (open/closed/maintenance)
+  siteSettings: defineTable({
+    key: v.string(), // e.g. "siteStatus"
+    value: v.string(), // "open", "closed", "maintenance"
+    message: v.optional(v.string()), // Custom message to display
+    updatedAt: v.string(),
+  })
+    .index("by_key", ["key"]),
 });

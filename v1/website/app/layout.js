@@ -5,6 +5,7 @@ import SplashWrapper from "@/components/SplashWrapper";
 import StaggeredMenu from "@/components/StaggeredMenu";
 import BottomNav from "@/components/BottomNav";
 import AgentationWrapper from "@/components/AgentationWrapper";
+import SiteStatusGate from "@/components/SiteStatusGate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -70,28 +71,30 @@ export default function RootLayout({ children }) {
 
           {/* Main Mobile App Container */}
           <div id="mobile-frame" className="w-full flex-1 flex flex-col relative bg-white pb-12">
-            <SplashWrapper>
-              <StaggeredMenu
-                position="right"
-                items={menuItems}
-                socialItems={socialItems}
-                displaySocials={true}
-                displayItemNumbering={false}
-                menuButtonColor="#000"
-                openMenuButtonColor="#000"
-                changeMenuColorOnOpen={true}
-                colors={['#18181b', '#27272a']}
-                logoUrl="/logo_t.svg"
-                accentColor="#000"
-                isFixed={true}
-              />
-              {children}
-              <BottomNav />
-            </SplashWrapper>
+            <SiteStatusGate>
+              <SplashWrapper>
+                <StaggeredMenu
+                  position="right"
+                  items={menuItems}
+                  socialItems={socialItems}
+                  displaySocials={true}
+                  displayItemNumbering={false}
+                  menuButtonColor="#000"
+                  openMenuButtonColor="#000"
+                  changeMenuColorOnOpen={true}
+                  colors={['#18181b', '#27272a']}
+                  logoUrl="/logo_t.svg"
+                  accentColor="#000"
+                  isFixed={true}
+                />
+                {children}
+                <BottomNav />
+              </SplashWrapper>
+            </SiteStatusGate>
           </div>
 
         </div>
-        <AgentationWrapper />
+        {/* <AgentationWrapper /> */}
       </body>
     </html>
   );

@@ -15,6 +15,7 @@ const heroImages = [
 
 export default function HomeClient() {
   const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -23,8 +24,6 @@ export default function HomeClient() {
   const [videoSrc, setVideoSrc] = useState('/hero_home.mp4');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const searchInputRef = useRef(null);
-
-  const categories = ['All', 'Apparel / Clothing', 'Footwear', 'Headwear', 'Eyewear'];
 
   // Load cached hero video on mount
   useEffect(() => {
@@ -42,16 +41,16 @@ export default function HomeClient() {
     }
   }, []);
 
-  // Fetch products
+  // Fetch all products once on mount (and when search changes)
   useEffect(() => {
     async function fetchProducts() {
       try {
         setLoading(true);
-        const url = `/api/products?category=${encodeURIComponent(activeCategory)}&search=${encodeURIComponent(searchQuery)}`;
+        const url = `/api/products?category=All&search=${encodeURIComponent(searchQuery)}`;
         const res = await fetch(url);
         const data = await res.json();
         if (data.success) {
-          setProducts(data.products);
+          setAllProducts(data.products);
         }
       } catch (err) {
         console.error(err);
@@ -60,7 +59,32 @@ export default function HomeClient() {
       }
     }
     fetchProducts();
-  }, [activeCategory, searchQuery]);
+  }, [searchQuery]);
+
+  // Derive categories from fetched products
+  const categories = (() => {
+    const catSet = new Set();
+    allProducts.forEach(p => {
+      if (p.category) catSet.add(p.category);
+    });
+    return ['All', ...Array.from(catSet).sort()];
+  })();
+
+  // Filter products client-side by active category
+  useEffect(() => {
+    if (activeCategory === 'All') {
+      setProducts(allProducts);
+    } else {
+      const norm = activeCategory.toLowerCase().trim();
+      setProducts(allProducts.filter(p => {
+        const pCat = (p.category || '').toLowerCase().trim();
+        if (norm === 'apparel' || norm === 'apparel / clothing') {
+          return pCat === 'apparel' || pCat === 'apparel / clothing';
+        }
+        return pCat === norm;
+      }));
+    }
+  }, [activeCategory, allProducts]);
 
   // Load cart count
   useEffect(() => {
@@ -154,11 +178,14 @@ export default function HomeClient() {
       </div>
 
       {/* Horizontal Category Scroll */}
-      {/* <nav className="flex overflow-x-auto scrollbar-hide px-4 py-3 gap-5 border-b border-zinc-100 bg-white">
+      <nav className="flex overflow-x-auto scrollbar-hide px-4 py-3 gap-5 border-b border-zinc-100 bg-white">
         {categories.map((cat) => (
           <button
             key={cat}
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => {
+              setActiveCategory(cat);
+              document.getElementById('shop-content')?.scrollIntoView({ behavior: 'smooth' });
+            }}
             className={`text-[9px] tracking-wider uppercase font-semibold whitespace-nowrap pb-1 transition-all relative ${activeCategory === cat ? 'text-black' : 'text-zinc-400 hover:text-zinc-600'
               }`}
           >
@@ -168,7 +195,7 @@ export default function HomeClient() {
             )}
           </button>
         ))}
-      </nav> */}
+      </nav>
 
       {/* Minimal Hero Section */}
       <div className="px-4 py-3">
@@ -302,9 +329,23 @@ export default function HomeClient() {
             ))}
           </div>
         )}
-        <br />
-        <br />
-        <br />
+
+        {/* End of Products Indicator */}
+        {!loading && products.length > 0 && (
+          <div className="flex flex-col justify-center items-center py-12 text-center">
+            <div className="w-16 h-16 mb-4 overflow-hidden rounded-full border border-zinc-100 bg-zinc-50 flex items-center justify-center select-none">
+              <video 
+                src="/n0-data.mp4" 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                className="w-full h-full object-cover filter grayscale opacity-80"
+              />
+            </div>
+            <span className="text-[8px] tracking-[0.2em] uppercase text-zinc-400 font-medium">No more products to show</span>
+          </div>
+        )}
         <Footer />
       </main>
 
