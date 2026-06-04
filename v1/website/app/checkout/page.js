@@ -53,6 +53,7 @@ export default function CheckoutPage() {
   const [generatedOrderNum, setGeneratedOrderNum] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [showFeeDetails, setShowFeeDetails] = useState(false);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
 
   // Form Fields
   const [form, setForm] = useState({
@@ -145,6 +146,49 @@ export default function CheckoutPage() {
       }
     }
   }, [router]);
+
+  // Auto-fetch city, state, area on valid pincode entry
+  useEffect(() => {
+    const fetchPincodeDetails = async () => {
+      const pin = (form.pincode || '').trim();
+      if (/^\d{6}$/.test(pin)) {
+        setPincodeLoading(true);
+        try {
+          const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+          const data = await res.json();
+          if (data && data[0] && data[0].Status === 'Success') {
+            const postOffices = data[0].PostOffice;
+            if (postOffices && postOffices.length > 0) {
+              const info = postOffices[0];
+              const updatedFields = {
+                city: info.District || '',
+                state: info.State || '',
+                area: info.Name || '',
+              };
+              
+              setForm((prev) => ({
+                ...prev,
+                ...updatedFields,
+              }));
+
+              // Autosave to backend dynamically
+              Object.entries(updatedFields).forEach(([field, value]) => {
+                if (value) {
+                  handleAutoSave(field, value);
+                }
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch pincode details:', err);
+        } finally {
+          setPincodeLoading(false);
+        }
+      }
+    };
+
+    fetchPincodeDetails();
+  }, [form.pincode]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -548,7 +592,12 @@ export default function CheckoutPage() {
               />
             </div>
             <div className="flex flex-col gap-0.5 col-span-1">
-              <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">PIN Code</label>
+              <div className="flex items-center justify-between">
+                <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">PIN Code</label>
+                {pincodeLoading && (
+                  <span className="text-[7px] text-zinc-400 font-bold animate-pulse uppercase">[checking...]</span>
+                )}
+              </div>
               <input
                 type="text"
                 name="pincode"
@@ -702,7 +751,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Place Order Sticky Button */}
-          <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 max-w-[450px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+          <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 max-w-[430px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
             <button
               type="submit"
               disabled={placingOrder}

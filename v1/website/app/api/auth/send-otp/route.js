@@ -46,7 +46,7 @@ export async function POST(request) {
 
     const mailOptions = {
       // from: `AesthetX Ways <${process.env.EMAIL_USER}>`,
-      from: `WalkDrobe <${process.env.EMAIL_USER}>`,
+      from: `AesthetXways <${process.env.EMAIL_USER}>`,
       to: emailTrimmed,
       subject: 'Email Verification OTP - Aesthetx Ways',
       html: `

@@ -603,3 +603,29 @@ export const getByCategoryForCards = query({
     return products.map(toCardData);
   },
 });
+
+// ============ NEWSLETTER SUBSCRIBERS ============
+
+export const subscribeNewsletter = mutation({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const emailLower = email.toLowerCase().trim();
+    
+    // Check if already subscribed
+    const existing = await ctx.db
+      .query("subscribers")
+      .withIndex("by_email", (q) => q.eq("email", emailLower))
+      .first();
+      
+    if (existing) {
+      return { success: true, alreadySubscribed: true };
+    }
+    
+    const id = await ctx.db.insert("subscribers", {
+      email: emailLower,
+      subscribedAt: nowIso(),
+    });
+    
+    return { success: true, id };
+  },
+});

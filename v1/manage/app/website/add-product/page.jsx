@@ -47,7 +47,7 @@ const MAIN_CATEGORIES = [
 
 const CATEGORY_MAP = {
   footwear: ["Shoes", "boots", "sandals", "sneakers"],
-  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses"],
+  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses", "socks"],
   headwear: ["Hats", "caps", "beanies"],
   eyewear: ["Glasses", "sunglasses"]
 };
@@ -82,6 +82,27 @@ export default function WebsiteAddProduct() {
     if (has) delete sizeStock[size];
     else sizeStock[size] = 0;
     setForm({ ...form, sizes, sizeStock });
+  };
+
+  const handleSizeDisplayTypeChange = (type) => {
+    if (type === "free") {
+      setForm({
+        ...form,
+        sizeDisplayType: "free",
+        sizes: ["OS"],
+        sizeStock: { OS: form.sizeStock["OS"] || 0 }
+      });
+    } else {
+      const sizes = form.sizes.filter(s => s !== "OS");
+      const sizeStock = { ...form.sizeStock };
+      delete sizeStock["OS"];
+      setForm({
+        ...form,
+        sizeDisplayType: type,
+        sizes,
+        sizeStock
+      });
+    }
   };
 
   const totalStock = Object.values(form.sizeStock).reduce((sum, q) => sum + (q || 0), 0);
@@ -354,13 +375,13 @@ export default function WebsiteAddProduct() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Size Display System</label>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-4">
                       <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
                         <input
                           type="radio"
                           name="sizeDisplayType"
                           checked={form.sizeDisplayType === "alpha"}
-                          onChange={() => setForm({ ...form, sizeDisplayType: "alpha" })}
+                          onChange={() => handleSizeDisplayTypeChange("alpha")}
                           className="accent-slate-900 cursor-pointer"
                         />
                         Alpha (S, M, L, XL)
@@ -370,52 +391,70 @@ export default function WebsiteAddProduct() {
                           type="radio"
                           name="sizeDisplayType"
                           checked={form.sizeDisplayType === "numeric"}
-                          onChange={() => setForm({ ...form, sizeDisplayType: "numeric" })}
+                          onChange={() => handleSizeDisplayTypeChange("numeric")}
                           className="accent-slate-900 cursor-pointer"
                         />
                         Numeric (28, 30, 32, 34)
                       </label>
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="sizeDisplayType"
+                          checked={form.sizeDisplayType === "free"}
+                          onChange={() => handleSizeDisplayTypeChange("free")}
+                          className="accent-slate-900 cursor-pointer"
+                        />
+                        One Size / Free Size
+                      </label>
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Select sizes to activate and enter exact stock quantities.
-                  </p>
- 
-                  <div className="flex flex-wrap gap-2.5">
-                    {SIZES.map((s) => {
-                      const isActive = form.sizes.includes(s);
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => toggleSize(s)}
-                          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl text-xs font-bold transition-all border flex items-center justify-center cursor-pointer ${
-                            isActive
-                              ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-100 scale-105"
-                              : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
-                          }`}
-                        >
-                          {form.sizeDisplayType === "numeric" ? (SIZE_MAP[s] || s) : s}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {form.sizeDisplayType !== "free" && (
+                    <>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Select sizes to activate and enter exact stock quantities.
+                      </p>
+     
+                      <div className="flex flex-wrap gap-2.5">
+                        {SIZES.map((s) => {
+                          const isActive = form.sizes.includes(s);
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => toggleSize(s)}
+                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl text-xs font-bold transition-all border flex items-center justify-center cursor-pointer ${
+                                isActive
+                                  ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-100 scale-105"
+                                  : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                              }`}
+                            >
+                              {form.sizeDisplayType === "numeric" ? (SIZE_MAP[s] || s) : s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
  
                   {form.sizes.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 sm:gap-2.5 pt-2 animate-fadeIn">
                       {form.sizes
-                        .sort((a, b) => SIZES.indexOf(a) - SIZES.indexOf(b))
+                        .sort((a, b) => {
+                          if (a === "OS") return -1;
+                          if (b === "OS") return 1;
+                          return SIZES.indexOf(a) - SIZES.indexOf(b);
+                        })
                         .map((s) => (
                           <div key={s} className="bg-slate-50/70 border border-slate-100 rounded-2xl p-2.5 text-center">
                             <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
-                              {form.sizeDisplayType === "numeric" ? (SIZE_MAP[s] || s) : s}
+                              {s === "OS" ? "One Size (OS)" : (form.sizeDisplayType === "numeric" ? (SIZE_MAP[s] || s) : s)}
                             </label>
                             <input
                               type="number"
                               min="0"
                               required
-                              value={form.sizeStock[s] || ""}
+                              value={form.sizeStock[s] === 0 ? "0" : (form.sizeStock[s] || "")}
                               onChange={(e) =>
                                 setForm({
                                   ...form,

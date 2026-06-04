@@ -4,33 +4,84 @@ import { ArrowRight, Check } from 'lucide-react';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
+  const [status, setStatus] = useState('idle'); // idle, loading, success, error
+  const [message, setMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail('');
-      // Reset subscription status visual state after a few seconds
+    const emailTrimmed = email.trim();
+    if (!emailTrimmed) return;
+
+    setStatus('loading');
+    setMessage('');
+
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: emailTrimmed }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setStatus('success');
+        if (data.alreadySubscribed) {
+          setMessage('ALREADY SUBSCRIBED. THANK YOU.');
+        } else {
+          setMessage('YOU ARE IN. WELCOME.');
+        }
+        setEmail('');
+        setTimeout(() => {
+          setStatus('idle');
+          setMessage('');
+        }, 5000);
+      } else {
+        setStatus('error');
+        setMessage(data.message || 'FAILED. TRY AGAIN.');
+        setTimeout(() => {
+          setStatus('idle');
+          setMessage('');
+        }, 5000);
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus('error');
+      setMessage('CONNECTION ERROR. TRY AGAIN.');
       setTimeout(() => {
-        setSubscribed(false);
+        setStatus('idle');
+        setMessage('');
       }, 5000);
     }
   };
 
   return (
-    <footer className="w-full bg-zinc-950 text-zinc-400 pt-12 pb-28 px-6 mt-12 border-t border-zinc-900 rounded-b-[2px] relative overflow-hidden">
+    <footer className="w-full bg-white text-zinc-600 pt-2 pb-28 px-6 mt-0 border-t border-zinc-100 rounded-b-[2px] relative overflow-hidden">
       {/* Background Watermark/Logo text */}
-      <div className="absolute -bottom-6 -left-4 right-0 text-[5rem] tracking-[0.15em] uppercase font-moirai-thick text-zinc-900/40 select-none pointer-events-none whitespace-nowrap leading-none">
-        AESTHETX
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center select-none pointer-events-none w-max">
+        <span className="text-[30px] tracking-[0.15em] uppercase font-lovelo-black text-zinc-800 leading-none">
+          AesthetXways
+        </span>
+        {/* <span className="text-[6.5px] mr-4 tracking-[0.40em] uppercase font-mono text-zinc-700 leading-none mt-1.5">
+          cheaper than therapy
+        </span> */}
       </div>
+
+      {/* Background Watermark Logo - Centered horizontally */}
+      {/* <div 
+        className="absolute bottom-11 left-1/2 -translate-x-1/2 w-40 h-40 opacity-[0.10] select-none pointer-events-none"
+      >
+        <img src="/logo_t.svg" alt="" className="w-full h-full object-contain" />
+      </div> */}
 
       <div className="relative z-10 flex flex-col gap-8">
         {/* Brand Section */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <img src="/logo_t.svg" alt="Aesthetx Ways Logo" className="w-6 h-6 object-contain brightness-0 invert opacity-80" />
-            <span className="font-lovelo-black text-sm tracking-widest text-white">AESTHETX WAYS</span>
+          <div className="flex  gap-2">
+            <img src="/logo_t.svg" alt="Aesthetx Ways Logo" className="w-6 h-6 object-contain  opacity-100" />
+            <span className="font-lovelo-black mt-[6px] text-sm tracking-widest text-zinc-900">AESTHETX WAYS</span>
           </div>
           <p className="text-[9px] uppercase tracking-widest text-zinc-500 font-medium max-w-[280px] leading-relaxed">
             THE ART OF MINIMALISM IN STREETWEAR AND UTILITY.
@@ -38,47 +89,58 @@ export default function Footer() {
         </div>
 
         {/* Newsletter Signup */}
-        <div className="flex flex-col gap-2 border-t border-zinc-900 pt-6">
+        <div className="flex flex-col gap-2 border-t border-zinc-100 pt-6">
           <span className="text-[8px] tracking-[0.25em] uppercase text-zinc-500 font-bold">Join the Syndicate</span>
-          {subscribed ? (
+          {status === 'success' ? (
             <div className="flex items-center gap-2 text-emerald-500 py-1.5 animate-scale-in">
               <Check className="w-3.5 h-3.5" />
-              <span className="text-[9px] uppercase tracking-[0.15em] font-bold">You are in. Welcome.</span>
+              <span className="text-[9px] uppercase tracking-[0.15em] font-bold">{message}</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex gap-2 border-b border-zinc-800 focus-within:border-zinc-500 transition-colors py-1">
+            <form onSubmit={handleSubmit} className="flex gap-2 border-b border-zinc-200 focus-within:border-zinc-800 transition-colors py-1">
               <input
                 type="email"
                 required
+                disabled={status === 'loading'}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ENTER EMAIL ADDRESS"
-                className="flex-1 bg-transparent text-[9px] tracking-[0.15em] uppercase outline-none text-white placeholder-zinc-700 font-medium py-1"
+                placeholder={status === 'loading' ? 'SUBSCRIBING...' : 'ENTER EMAIL ADDRESS'}
+                className="flex-1 bg-transparent text-[9px] tracking-[0.15em] uppercase outline-none text-zinc-900 placeholder-zinc-400 font-medium py-1 disabled:opacity-50"
               />
               <button 
                 type="submit"
-                className="text-[9px] tracking-widest uppercase font-bold text-zinc-400 hover:text-white transition-colors py-1 px-2 flex items-center justify-center shrink-0"
+                disabled={status === 'loading'}
+                className="text-[9px] tracking-widest uppercase font-bold text-zinc-500 hover:text-zinc-900 transition-colors py-1 px-2 flex items-center justify-center shrink-0 disabled:opacity-50"
                 aria-label="Subscribe"
               >
                 <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             </form>
           )}
-          <span className="text-[7.5px] text-zinc-600 tracking-wider">SUBSCRIBE TO GET EARLY ACCESS AND LAUNCH ALERTS.</span>
+          {status === 'error' ? (
+            <span className="text-[7.5px] text-red-500 font-medium uppercase tracking-wider">{message}</span>
+          ) : (
+            status !== 'success' && (
+              <span className="text-[7.5px] text-zinc-400 tracking-wider">SUBSCRIBE TO GET EARLY ACCESS AND LAUNCH ALERTS.</span>
+            )
+          )}
         </div>
 
         {/* Navigation Columns */}
-        <div className="grid grid-cols-2 gap-8 border-t border-zinc-900 pt-6">
+        <div className="grid grid-cols-2 gap-8 border-t border-zinc-100 pt-6">
           <div className="flex flex-col gap-3">
             <span className="text-[8px] tracking-[0.25em] uppercase text-zinc-500 font-bold">Index</span>
             <div className="flex flex-col gap-2">
-              <Link href="/" className="text-[9px] uppercase tracking-wider text-zinc-400 hover:text-white transition-colors w-fit">
+              <Link href="/" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-900 transition-colors w-fit">
                 Shop Collection
               </Link>
-              <Link href="/cart" className="text-[9px] uppercase tracking-wider text-zinc-400 hover:text-white transition-colors w-fit">
+              <Link href="/stores" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-900 transition-colors w-fit">
+                Store Locator
+              </Link>
+              <Link href="/cart" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-900 transition-colors w-fit">
                 Shopping Bag
               </Link>
-              <Link href="/orders" className="text-[9px] uppercase tracking-wider text-zinc-400 hover:text-white transition-colors w-fit">
+              <Link href="/orders" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-900 transition-colors w-fit">
                 Order History
               </Link>
             </div>
@@ -87,13 +149,13 @@ export default function Footer() {
           <div className="flex flex-col gap-3">
             <span className="text-[8px] tracking-[0.25em] uppercase text-zinc-500 font-bold">Syndicate</span>
             <div className="flex flex-col gap-2">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-400 hover:text-white transition-colors w-fit">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-900 transition-colors w-fit">
                 Instagram
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-400 hover:text-white transition-colors w-fit">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-900 transition-colors w-fit">
                 Twitter / X
               </a>
-              <a href="#" className="text-[9px] uppercase tracking-wider text-zinc-400 hover:text-white transition-colors w-fit">
+              <a href="#" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-900 transition-colors w-fit">
                 Terms & Privacy
               </a>
             </div>
@@ -101,12 +163,12 @@ export default function Footer() {
         </div>
 
         {/* Bottom Credits */}
-        <div className="flex flex-col gap-2 border-t border-zinc-900 pt-6 pb-2 text-[8px] uppercase tracking-widest text-zinc-600">
+        <div className="flex flex-col gap-2  pt-6 pb-2 text-[8px] uppercase tracking-widest text-zinc-500">
           <div className="flex justify-between items-center w-full">
             <span>© 2026 AESTHETX WAYS</span>
             <span>EST. IN INDIA</span>
           </div>
-          <span className="text-[7.5px] tracking-normal normal-case font-mono text-zinc-700/80">
+          <span className="text-[7.5px] tracking-normal normal-case font-mono text-zinc-400">
             designed for the forward path.
           </span>
         </div>

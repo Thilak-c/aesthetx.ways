@@ -10,7 +10,7 @@ const nextConfig = {
     ],
   },
   allowedDevOrigins: [
-    'samuel-adoption-theta-boston.trycloudflare.com','companies-amount-telling-sold.trycloudflare.com', 'dream-serial-engaged-engines.trycloudflare.com', "momentum-isolation-focus-diane.trycloudflare.com",
+    'forward-ser-inform-keen.trycloudflare.com',
     ...(process.env.ALLOWED_DEV_ORIGINS ? process.env.ALLOWED_DEV_ORIGINS.split(',') : [])
   ],
 };

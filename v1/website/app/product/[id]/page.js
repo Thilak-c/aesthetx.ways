@@ -147,7 +147,6 @@ export default function ProductPage({ params }) {
       // When the very last item finishes, show success toast and trigger resets
       if (index === quantity - 1) {
         setShowToast(true);
-        setTimeout(() => setAddedToCart(false), 2000);
         setTimeout(() => setShowToast(false), 3000);
       }
       return remaining;
@@ -214,6 +213,11 @@ export default function ProductPage({ params }) {
   }, [cartCount]);
 
   const handleAddToCart = () => {
+    if (addedToCart) {
+      router.push('/cart');
+      return;
+    }
+
     if (!selectedSize) {
       setSizeError(true);
       // Double pulse vibration for warning feedback
@@ -347,7 +351,7 @@ export default function ProductPage({ params }) {
         </div>
 
         {/* Sticky Bottom Actions Bar Skeleton */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[450px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+        <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[430px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
           <div className="flex flex-col gap-1.5">
             <div className="h-2 bg-zinc-50 animate-pulse animate-shimmer rounded-[1px] w-12" />
             <div className="h-3 bg-zinc-100 animate-pulse animate-shimmer rounded-[1px] w-16" />
@@ -393,19 +397,20 @@ export default function ProductPage({ params }) {
         </div>
       </header>
 
-      {/* Premium Minimalist Toast Notification */}
-      <div 
-        className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-32px)] max-w-[418px] bg-zinc-950 text-white px-4 py-3 flex items-center justify-between shadow-xl rounded-[2px] transition-all duration-500 ease-out ${
-          showToast ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          {/* <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" /> */}
-          <span className="text-[9px] tracking-[0.2em] uppercase font-bold">Added to Bag</span>
+      {/* Premium Minimalist Sticky Toast Notification */}
+      <div className="sticky top-12 left-0 right-0 z-50 h-0 w-full pointer-events-none px-4">
+        <div 
+          className={`absolute left-4 right-4 bg-zinc-950 text-white px-4 py-3 flex items-center justify-between shadow-xl rounded-[2px] transition-all duration-500 ease-out pointer-events-auto ${
+            showToast ? 'opacity-100 translate-y-2' : 'opacity-0 -translate-y-2 pointer-events-none'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] tracking-[0.2em] uppercase font-bold">Added to Bag</span>
+          </div>
+          <Link href="/cart" className="text-[9px] tracking-[0.2em] uppercase font-bold text-white border-b border-white pb-0.5 hover:opacity-85 transition-opacity">
+            View Bag &rarr;
+          </Link>
         </div>
-        <Link href="/cart" className="text-[9px] tracking-[0.2em] uppercase font-bold text-white border-b border-white pb-0.5 hover:opacity-85 transition-opacity">
-          View Bag &rarr;
-        </Link>
       </div>
 
       {/* Invisible blocker to prevent routing/clicks while flying */}
@@ -432,7 +437,7 @@ export default function ProductPage({ params }) {
         <FallbackImage 
           src={activeImage} 
           alt={product.name} 
-          className="w-full h-full object-cover" 
+          className="absolute inset-0 w-full h-full object-cover" 
           logoSize="w-8 h-8"
         />
       
@@ -512,6 +517,7 @@ export default function ProductPage({ params }) {
                   onClick={() => {
                     setSelectedSize(size);
                     setSizeError(false);
+                    setAddedToCart(false);
                   }}
                   className={`w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-[1px] border transition-all ${
                     !hasStock
@@ -535,14 +541,20 @@ export default function ProductPage({ params }) {
           <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-medium">Quantity</span>
           <div className="flex items-center border border-zinc-200 w-24 h-7 mt-2 rounded-[1px]">
             <button 
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              onClick={() => {
+                setQuantity(Math.max(1, quantity - 1));
+                setAddedToCart(false);
+              }}
               className="flex-1 flex justify-center items-center text-zinc-500 hover:text-black"
             >
               <Minus className="w-2.5 h-2.5" />
             </button>
             <span className="text-[10px] font-bold text-black flex-1 text-center">{quantity}</span>
             <button 
-              onClick={() => setQuantity(quantity + 1)}
+              onClick={() => {
+                setQuantity(quantity + 1);
+                setAddedToCart(false);
+              }}
               className="flex-1 flex justify-center items-center text-zinc-500 hover:text-black"
             >
               <Plus className="w-2.5 h-2.5" />
@@ -562,7 +574,7 @@ export default function ProductPage({ params }) {
       </div>
 
       {/* Sticky Bottom Actions Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[430px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+      <div className="fixed bottom-11 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[430px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
         <div className="flex flex-col">
           <span className="text-[8px] uppercase text-zinc-400 font-medium tracking-wider">Total Price</span>
           <div className="flex items-center mt-0.5">
@@ -585,10 +597,7 @@ export default function ProductPage({ params }) {
           }`}
         >
           {addedToCart ? (
-            <>
-              <Check className="w-3 h-3 stroke-3" />
-              Added
-            </>
+            'Go to Bag'
           ) : (
             'Add to Bag'
           )}

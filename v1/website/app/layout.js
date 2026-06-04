@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import SplashWrapper from "@/components/SplashWrapper";
 import StaggeredMenu from "@/components/StaggeredMenu";
+import BottomNav from "@/components/BottomNav";
+import AgentationWrapper from "@/components/AgentationWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,12 +34,13 @@ const loveloBlack = localFont({
 });
 
 export const metadata = {
-  title: "𝔸𝔼𝕊𝕋ℍ𝔼𝕋𝕏 𝕎𝔸𝕐𝕊 | ℍ𝕠𝕞𝕖 ℙ𝕒𝕘𝕖",
+  title: "​​🇦​​🇪​​🇸​​🇹​​🇭​​🇪​​🇹​​🇽​​🇼​​🇦​​🇾​​🇸​ | ​🇭​​🇴​​🇲​​🇪​ ​🇵​​🇦​​🇬​​🇪​",
   description: "Sleek, minimalistic clothing, footwear, headwear, and eyewear.",
 };
 
 const menuItems = [
   { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+  { label: 'Stores', ariaLabel: 'Go to store locations page', link: '/stores' },
   { label: 'Bag', ariaLabel: 'Go to cart page', link: '/cart' },
   { label: 'Orders', ariaLabel: 'Go to orders page', link: '/orders' }
 ];
@@ -66,7 +69,7 @@ export default function RootLayout({ children }) {
 
 
           {/* Main Mobile App Container */}
-          <div id="mobile-frame" className="w-full flex-1 flex flex-col relative bg-white">
+          <div id="mobile-frame" className="w-full flex-1 flex flex-col relative bg-white pb-12">
             <SplashWrapper>
               <StaggeredMenu
                 position="right"
@@ -83,10 +86,12 @@ export default function RootLayout({ children }) {
                 isFixed={true}
               />
               {children}
+              <BottomNav />
             </SplashWrapper>
           </div>
 
         </div>
+        <AgentationWrapper />
       </body>
     </html>
   );

@@ -207,3 +207,21 @@ header.sticky.top-0.z-40 {
   animation: shimmer 1.5s infinite;
   content: '';
 }
+
+/* Premium Infinite Loop Marquee */
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+.pause-animation:hover {
+  animation-play-state: paused;
+}

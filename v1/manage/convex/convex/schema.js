@@ -1099,6 +1099,13 @@ export default defineSchema({
     .index("by_used_at", ["usedAt"])
     .index("by_user_coupon", ["userId", "couponId"]),
 
+  subscribers: defineTable({
+    email: v.string(),
+    subscribedAt: v.string(),
+  })
+    .index("by_email", ["email"])
+    .index("by_subscribed_at", ["subscribedAt"]),
+
   // Shiprocket packaging configuration
   shiprocketConfig: defineTable({
     length: v.number(),
