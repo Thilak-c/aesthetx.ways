@@ -6,6 +6,21 @@ export default function SiteStatusGate({ children }) {
   const [siteStatus, setSiteStatus] = useState('open');
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [bypassed, setBypassed] = useState(false);
+  const [bypassChecked, setBypassChecked] = useState(false);
+
+  // Check bypass key on client mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get('bypasskey');
+    if (key === 'Narzo50pro@gmail.com') {
+      sessionStorage.setItem('aw_bypass', 'true');
+      setBypassed(true);
+    } else if (sessionStorage.getItem('aw_bypass') === 'true') {
+      setBypassed(true);
+    }
+    setBypassChecked(true);
+  }, []);
 
   const fetchStatus = async () => {
     try {
@@ -16,7 +31,6 @@ export default function SiteStatusGate({ children }) {
         setStatusMessage(data.message || '');
       }
     } catch (err) {
-      // If fetch fails, default to open
       console.error('Site status check failed:', err);
     } finally {
       setLoading(false);
@@ -25,13 +39,12 @@ export default function SiteStatusGate({ children }) {
 
   useEffect(() => {
     fetchStatus();
-    // Poll every 30 seconds
     const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Don't block while loading — show content optimistically
-  if (loading || siteStatus === 'open') {
+  // Show children while loading, if bypass active, if open, or if bypass hasn't been checked yet
+  if (loading || !bypassChecked || siteStatus === 'open' || bypassed) {
     return children;
   }
 
