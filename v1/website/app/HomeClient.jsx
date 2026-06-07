@@ -7,12 +7,6 @@ import { getCachedVideo, getCachedImage } from '@/lib/mediaCache';
 import FallbackImage from '@/components/FallbackImage';
 import Footer from '@/components/Footer';
 
-const heroImages = [
-  '/home/b1.jpeg',
-  '/home/b2.jpeg',
-  '/home/b3.jpeg'
-];
-
 export default function HomeClient() {
   const [products, setProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
@@ -21,17 +15,23 @@ export default function HomeClient() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [cartCount, setCartCount] = useState(0);
-  const [videoSrc, setVideoSrc] = useState('/hero_home.mp4');
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [banners, setBanners] = useState([]);
   const searchInputRef = useRef(null);
 
-  // Load cached hero video on mount
+  // Fetch banners on mount
   useEffect(() => {
-    async function loadVideo() {
-      const src = await getCachedVideo('/hero_home.mp4');
-      setVideoSrc(src);
+    async function fetchBanners() {
+      try {
+        const res = await fetch('/api/banners');
+        const data = await res.json();
+        if (data.success && data.banners?.length > 0) {
+          setBanners(data.banners);
+        }
+      } catch (err) {
+        console.error('Failed to fetch banners:', err);
+      }
     }
-    loadVideo();
+    fetchBanners();
   }, []);
 
   // Reset tab title to home page
@@ -106,17 +106,6 @@ export default function HomeClient() {
     };
   }, []);
 
-  // Revoke previous object URLs to avoid memory leaks and handle non-blob URLs safely
-  const videoUrlRef = useRef(null);
-  useEffect(() => {
-    if (videoUrlRef.current && videoUrlRef.current !== videoSrc && videoUrlRef.current.startsWith('blob:')) {
-      URL.revokeObjectURL(videoUrlRef.current);
-    }
-    if (videoSrc && videoSrc.startsWith('blob:')) {
-      videoUrlRef.current = videoSrc;
-    }
-  }, [videoSrc]);
-
   // Handle programmatic focus on search toggle
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
@@ -127,14 +116,6 @@ export default function HomeClient() {
       searchInputRef.current?.blur();
     }
   }, [searchOpen]);
-
-  // Auto-scroll hero images every 4 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <div className="flex flex-col flex-1 bg-white">
@@ -197,62 +178,66 @@ export default function HomeClient() {
         ))}
       </nav>
 
-      {/* Minimal Hero Section */}
-      <div className="px-4 py-3">
-        <div className="relative h-[65vh] w-full bg-zinc-100 overflow-hidden rounded-[2px] flex items-end">
-            {/* Looping Hero Video - Commented out per user request */}
-            {/* 
-            <video
-              key={videoSrc}
-              src={videoSrc}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover filter brightness-[0.95]"
-              onError={(e) => {
-                console.error('Video load error, falling back to original:', e);
-                setVideoSrc('/hero_home.mp4');
-              }}
-            />
-            */}
+      {/* Dynamic Hero Banner Grid */}
+      {(() => {
+        const leftBanner = banners.find((b) => b.position === 'left') || {
+          imageUrl: '/home/banner_left.webp',
+          productLink: '#'
+        };
+        const rightTopBanner = banners.find((b) => b.position === 'right_top') || {
+          imageUrl: '/home/banner_right_top.webp',
+          productLink: '#'
+        };
+        const rightBottomBanner = banners.find((b) => b.position === 'right_bottom') || {
+          imageUrl: '/home/banner_right_bottom.webp',
+          productLink: '#'
+        };
 
-            {/* Auto-scrolling Hero Images with crossfade transition */}
-            {heroImages.map((src, index) => (
-              <img
-                key={src}
-                src={src}
-                alt={`Hero image ${index + 1}`}
-                className={`absolute inset-0 w-full h-full object-cover filter brightness-[0.95] transition-opacity duration-1000 ease-in-out ${
-                  index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
-            ))}
-          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
-
-          {/* Watermark Logo */}
-          <div className="absolute top-4 left-4 z-20 pointer-events-none opacity-40">
-            <img src="/logo_t.svg" alt="Watermark Logo" className="w-8 h-8 object-contain" />
-          </div>
-
-          {/* Hero Content Row */}
-          <div className="relative z-10 w-full p-4 flex flex-col text-white">
-            <span className="text-[8px] tracking-[0.2em] uppercase opacity-90 font-medium">Our Last Winter</span>
-            <div className="flex items-center justify-between w-full mt-0.5">
-              <h2 className="text-[11px] font-bold tracking-wide uppercase">We Sold 300 pieces in 18 days</h2>
-
-              {/* Transparent Continue Scroll Button */}
-              <button
-                onClick={() => document.getElementById('shop-content')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center gap-1 text-[8px] tracking-[0.2em] uppercase opacity-90 font-medium cursor-pointer hover:opacity-80 transition-opacity"
+        return (
+          <div className="px-4 py-3">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 h-auto md:h-[65vh] w-full">
+              {/* Left Tall Banner */}
+              <Link
+                href={leftBanner.productLink}
+                className="md:col-span-3 h-[50vh] md:h-full relative overflow-hidden rounded-[2px] border border-zinc-150 bg-zinc-50 group block"
               >
-                Continue
-                <ChevronDown className="w-3 h-3 stroke-[2.5]" />
-              </button>
+                <img
+                  src={leftBanner.imageUrl}
+                  alt="Left Hero Banner"
+                  className="absolute inset-0 w-full h-full object-cover filter brightness-[0.98] group-hover:scale-[1.01] transition-transform duration-500 ease-out"
+                />
+              </Link>
+
+              {/* Right Stacked Column */}
+              <div className="md:col-span-2 grid grid-cols-1 grid-rows-2 gap-3 h-[60vh] md:h-full">
+                {/* Right Top Banner */}
+                <Link
+                  href={rightTopBanner.productLink}
+                  className="h-full relative overflow-hidden rounded-[2px] border border-zinc-150 bg-zinc-50 group block"
+                >
+                  <img
+                    src={rightTopBanner.imageUrl}
+                    alt="Right Top Banner"
+                    className="absolute inset-0 w-full h-full object-cover filter brightness-[0.98] group-hover:scale-[1.01] transition-transform duration-500 ease-out"
+                  />
+                </Link>
+
+                {/* Right Bottom Banner */}
+                <Link
+                  href={rightBottomBanner.productLink}
+                  className="h-full relative overflow-hidden rounded-[2px] border border-zinc-150 bg-zinc-50 group block"
+                >
+                  <img
+                    src={rightBottomBanner.imageUrl}
+                    alt="Right Bottom Banner"
+                    className="absolute inset-0 w-full h-full object-cover filter brightness-[0.98] group-hover:scale-[1.01] transition-transform duration-500 ease-out"
+                  />
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Main Content Area */}
       <main id="shop-content" className="flex-1 px-4 pb-20">

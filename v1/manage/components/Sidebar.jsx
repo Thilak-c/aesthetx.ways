@@ -18,7 +18,8 @@ import {
   Tag,
   Truck,
   Receipt,
-  MessageCircle
+  MessageCircle,
+  Image
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -26,6 +27,7 @@ import toast from "react-hot-toast";
 const navItems = [
   { href: "/website", label: "Dashboard", icon: LayoutDashboard, description: "Website overview" },
   { href: "/website/orders", label: "Orders", icon: ShoppingCart, description: "Customer orders" },
+  { href: "/website/banners", label: "Hero Banners", icon: Image, description: "Manage homepage banners" },
   { href: "/website/coupons", label: "Coupons", icon: Tag, description: "Discount codes" },
   { href: "/website/Bill-offline", label: "Bill Offline", icon: Receipt, description: "Walk-in offline billing" },
   { href: "/website/whatsapp", label: "WhatsApp Console", icon: MessageCircle, description: "Gateway session link" },

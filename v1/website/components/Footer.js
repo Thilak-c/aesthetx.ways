@@ -63,7 +63,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="w-full bg-white text-zinc-400 pt-2 pb-28 px-6 mt-0 border-t border-zinc-800 rounded-b-[2px] relative overflow-hidden">
+    <footer className="w-full bg-white text-zinc-400 pt-2 pb-28 px-6 mt-0 border-t border-zinc-100 rounded-b-[2px] relative overflow-hidden">
       {/* Ferrofluid Background */}
       <div
         className="absolute inset-0 w-full h-full z-0"
@@ -93,8 +93,8 @@ export default function Footer() {
       </div>
 
       {/* Background Watermark/Logo text */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center select-none pointer-events-none w-max z-[1]">
-        <span className="text-[30px] tracking-[0.15em] uppercase font-lovelo-black text-black leading-none">
+      <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex flex-col items-center select-none pointer-events-none w-max z-[1]">
+        <span className="text-[32px] tracking-[0.18em] uppercase font-lovelo-black text-zinc-950/[0.04] leading-none">
           AesthetXways
         </span>
         {/* <span className="text-[6.5px] mr-4 tracking-[0.40em] uppercase font-mono text-zinc-700 leading-none mt-1.5">
@@ -122,7 +122,7 @@ export default function Footer() {
         </div>
 
         {/* Newsletter Signup */}
-        <div className="flex flex-col gap-2 border-t border-zinc-800 pt-6">
+        <div className="flex flex-col gap-2 border-t border-zinc-100 pt-6">
           <span className="text-[8px] tracking-[0.25em] uppercase text-zinc-400 font-bold">Join the Syndicate</span>
           {status === 'success' ? (
             <div className="flex items-center gap-2 text-emerald-400 py-1.5 animate-scale-in">
@@ -130,7 +130,7 @@ export default function Footer() {
               <span className="text-[9px] uppercase tracking-[0.15em] font-bold">{message}</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex gap-2 border-b border-zinc-700 focus-within:border-zinc-400 transition-colors py-1">
+            <form onSubmit={handleSubmit} className="flex gap-2 border-b border-zinc-200 focus-within:border-zinc-950 transition-colors py-1">
               <input
                 type="email"
                 required
@@ -138,12 +138,12 @@ export default function Footer() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={status === 'loading' ? 'SUBSCRIBING...' : 'ENTER EMAIL ADDRESS'}
-                className="flex-1 bg-transparent text-[9px] tracking-[0.15em] uppercase outline-none text-white placeholder-zinc-600 font-medium py-1 disabled:opacity-50"
+                className="flex-1 bg-transparent text-[9px] tracking-[0.15em] uppercase outline-none text-zinc-950 placeholder-zinc-400 font-medium py-1 disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="text-[9px] tracking-widest uppercase font-bold text-zinc-400 hover:text-white transition-colors py-1 px-2 flex items-center justify-center shrink-0 disabled:opacity-50"
+                className="text-[9px] tracking-widest uppercase font-bold text-zinc-400 hover:text-zinc-950 transition-colors py-1 px-2 flex items-center justify-center shrink-0 disabled:opacity-50"
                 aria-label="Subscribe"
               >
                 <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -160,20 +160,20 @@ export default function Footer() {
         </div>
 
         {/* Navigation Columns */}
-        <div className="grid grid-cols-2 gap-8 border-t border-zinc-800 pt-6">
+        <div className="grid grid-cols-2 gap-8 border-t border-zinc-100 pt-6">
           <div className="flex flex-col gap-3">
             <span className="text-[8px] tracking-[0.25em] uppercase text-zinc-400 font-bold">Index</span>
             <div className="flex flex-col gap-2">
-              <Link href="/" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors w-fit">
+              <Link href="/" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
                 Shop Collection
               </Link>
-              <Link href="/stores" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors w-fit">
+              <Link href="/stores" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
                 Store Locator
               </Link>
-              <Link href="/cart" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors w-fit">
+              <Link href="/cart" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
                 Shopping Bag
               </Link>
-              <Link href="/orders" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors w-fit">
+              <Link href="/orders" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
                 Order History
               </Link>
             </div>
@@ -182,13 +182,13 @@ export default function Footer() {
           <div className="flex flex-col gap-3">
             <span className="text-[8px] tracking-[0.25em] uppercase text-zinc-400 font-bold">Syndicate</span>
             <div className="flex flex-col gap-2">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors w-fit">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
                 Instagram
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors w-fit">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
                 Twitter / X
               </a>
-              <a href="#" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors w-fit">
+              <a href="#" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
                 Terms & Privacy
               </a>
             </div>

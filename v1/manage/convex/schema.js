@@ -1127,4 +1127,13 @@ export default defineSchema({
     updatedAt: v.string(),
   })
     .index("by_key", ["key"]),
+
+  // Banners table for homepage hero banner grid
+  banners: defineTable({
+    position: v.string(), // "left", "right_top", "right_bottom"
+    imageUrl: v.string(),
+    productLink: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_position", ["position"]),
 });

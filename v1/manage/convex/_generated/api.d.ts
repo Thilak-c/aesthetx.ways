@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as backup from "../backup.js";
+import type * as banners from "../banners.js";
 import type * as cart from "../cart.js";
 import type * as category from "../category.js";
 import type * as chatSessions from "../chatSessions.js";
@@ -17,6 +18,7 @@ import type * as convex__generated_api from "../convex/_generated/api.js";
 import type * as convex__generated_server from "../convex/_generated/server.js";
 import type * as convex_auth from "../convex/auth.js";
 import type * as convex_backup from "../convex/backup.js";
+import type * as convex_banners from "../convex/banners.js";
 import type * as convex_cart from "../convex/cart.js";
 import type * as convex_category from "../convex/category.js";
 import type * as convex_chatSessions from "../convex/chatSessions.js";
@@ -73,6 +75,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   backup: typeof backup;
+  banners: typeof banners;
   cart: typeof cart;
   category: typeof category;
   chatSessions: typeof chatSessions;
@@ -80,6 +83,7 @@ declare const fullApi: ApiFromModules<{
   "convex/_generated/server": typeof convex__generated_server;
   "convex/auth": typeof convex_auth;
   "convex/backup": typeof convex_backup;
+  "convex/banners": typeof convex_banners;
   "convex/cart": typeof convex_cart;
   "convex/category": typeof convex_category;
   "convex/chatSessions": typeof convex_chatSessions;
