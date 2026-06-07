@@ -8,9 +8,9 @@ import FallbackImage from '@/components/FallbackImage';
 import Footer from '@/components/Footer';
 
 const heroImages = [
-  '/home/IMG_6026.JPG.jpeg',
-  '/home/IMG_6027.JPG.jpeg',
-  '/home/IMG_6028.JPG.jpeg'
+  '/home/b1.jpeg',
+  '/home/b2.jpeg',
+  '/home/b3.jpeg'
 ];
 
 export default function HomeClient() {
