@@ -54,13 +54,19 @@ export const cleanBanners = mutation({
       let newProductLink = banner.productLink;
       let newImageUrl = banner.imageUrl;
 
-      if (banner.productLink && (banner.productLink.startsWith("https://aesthetxways.com") || banner.productLink.startsWith("http://aesthetxways.com"))) {
-        newProductLink = banner.productLink.replace(/^https?:\/\/aesthetxways\.com/, "");
-        needsUpdate = true;
+      if (banner.productLink && banner.productLink.includes("/product/")) {
+        const idx = banner.productLink.indexOf("/product/");
+        if (idx > 0) {
+          newProductLink = banner.productLink.substring(idx);
+          needsUpdate = true;
+        }
       }
-      if (banner.imageUrl && (banner.imageUrl.startsWith("https://aesthetxways.com") || banner.imageUrl.startsWith("http://aesthetxways.com"))) {
-        newImageUrl = banner.imageUrl.replace(/^https?:\/\/aesthetxways\.com/, "");
-        needsUpdate = true;
+      if (banner.imageUrl && banner.imageUrl.includes("/api/uploads/")) {
+        const idx = banner.imageUrl.indexOf("/api/uploads/");
+        if (idx > 0) {
+          newImageUrl = banner.imageUrl.substring(idx);
+          needsUpdate = true;
+        }
       }
 
       if (needsUpdate) {

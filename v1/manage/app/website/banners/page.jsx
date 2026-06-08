@@ -19,6 +19,15 @@ import Link from "next/link";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://aesthetxways.com";
 
+const getDisplayImageUrl = (url) => {
+  if (!url) return "";
+  const idx = url.indexOf("/api/uploads/");
+  if (idx !== -1) {
+    return url.substring(idx);
+  }
+  return url;
+};
+
 export default function BannersPage() {
   const banners = useQuery(api.banners.getBanners);
   const products = useQuery(api.products.getAllProducts);
@@ -84,6 +93,12 @@ export default function BannersPage() {
 
   // Upload image inside the modal
   const uploadModalImage = async (file) => {
+    const MAX_SIZE = 4 * 1024 * 1024; // 4MB
+    if (file.size > MAX_SIZE) {
+      toast.error("Image file is too large. Please select an image under 4MB.");
+      return;
+    }
+
     setModalUploading(true);
     try {
       const fd = new FormData();
@@ -91,6 +106,16 @@ export default function BannersPage() {
 
       toast.loading("Uploading image...", { id: "modal-upload" });
       const res = await fetch("/api/upload", { method: "POST", body: fd });
+
+      if (res.status === 413) {
+        toast.error("Upload failed: Image file is too large for the server.", { id: "modal-upload" });
+        return;
+      }
+      if (!res.ok) {
+        toast.error(`Upload failed (Status ${res.status})`, { id: "modal-upload" });
+        return;
+      }
+
       const data = await res.json();
 
       if (data.success && data.url) {
@@ -104,7 +129,7 @@ export default function BannersPage() {
       }
     } catch (err) {
       console.error("Upload error:", err);
-      toast.error("Upload failed.", { id: "modal-upload" });
+      toast.error("Upload failed: Invalid server response.", { id: "modal-upload" });
     } finally {
       setModalUploading(false);
     }
@@ -282,7 +307,7 @@ export default function BannersPage() {
                       <div className="mb-5">
                         {config.imageUrl ? (
                           <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border shadow-sm bg-slate-50">
-                            <img src={config.imageUrl} className="w-full h-full object-cover" alt={pos.label} />
+                            <img src={getDisplayImageUrl(config.imageUrl)} className="w-full h-full object-cover" alt={pos.label} />
                           </div>
                         ) : (
                           <div className="w-full aspect-[4/5] border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50">
@@ -375,7 +400,7 @@ export default function BannersPage() {
                     </label>
                     {modalConfig.imageUrl ? (
                       <div className="relative w-full aspect-[4/5] max-w-[200px] mx-auto rounded-2xl overflow-hidden group border shadow-sm bg-slate-50">
-                        <img src={modalConfig.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                        <img src={getDisplayImageUrl(modalConfig.imageUrl)} className="w-full h-full object-cover" alt="Preview" />
                         <button
                           type="button"
                           onClick={() =>
