@@ -63,8 +63,10 @@ export const cleanBanners = mutation({
       }
       if (banner.imageUrl && banner.imageUrl.includes("/api/uploads/")) {
         const idx = banner.imageUrl.indexOf("/api/uploads/");
-        if (idx > 0) {
-          newImageUrl = banner.imageUrl.substring(idx);
+        const relativePath = banner.imageUrl.substring(idx);
+        const targetUrl = `https://manage.aesthetxways.com${relativePath}`;
+        if (banner.imageUrl !== targetUrl) {
+          newImageUrl = targetUrl;
           needsUpdate = true;
         }
       }
