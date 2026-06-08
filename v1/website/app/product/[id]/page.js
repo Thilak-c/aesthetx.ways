@@ -232,16 +232,16 @@ export default function ProductPage({ params }) {
   // Derived array of all product images
   const productImages = product
     ? [
-        getCachedImage(product.itemId, product.mainImage),
-        ...(product.otherImages || []).map((img, idx) =>
-          getCachedImage(`${product.itemId}-other-${idx}`, img)
-        ),
-      ]
+      getCachedImage(product.itemId, product.mainImage),
+      ...(product.otherImages || []).map((img, idx) =>
+        getCachedImage(`${product.itemId}-other-${idx}`, img)
+      ),
+    ]
     : [];
 
   const isSocksProduct = product?.category?.toLowerCase() === 'socks';
   const suggestionCategory = isSocksProduct ? 'pants' : 'socks';
-  const suggestionTitle = isSocksProduct 
+  const suggestionTitle = isSocksProduct
     ? "Complete your aesthetic with our pants"
     : "For ₹199, don't lose aesthetic in your foo";
 
@@ -719,11 +719,10 @@ export default function ProductPage({ params }) {
                       e.preventDefault();
                       setCurrentImageIndex(index);
                     }}
-                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer border ${
-                      isActive
+                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer border ${isActive
                         ? 'w-5 bg-white border-white shadow-[0_0_8px_rgba(255,255,255,0.4)]'
                         : 'w-2 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40'
-                    }`}
+                      }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />
                 );
@@ -739,9 +738,8 @@ export default function ProductPage({ params }) {
               <button
                 key={i}
                 onClick={() => setCurrentImageIndex(i)}
-                className={`relative w-12 h-15 rounded-[1px] overflow-hidden border transition-all duration-200 ${
-                  currentImageIndex === i ? 'border-black scale-[1.02]' : 'border-zinc-200 opacity-60 hover:opacity-100'
-                }`}
+                className={`relative w-12 h-15 rounded-[1px] overflow-hidden border transition-all duration-200 ${currentImageIndex === i ? 'border-black scale-[1.02]' : 'border-zinc-200 opacity-60 hover:opacity-100'
+                  }`}
               >
                 <FallbackImage
                   src={imgUrl}
@@ -804,12 +802,12 @@ export default function ProductPage({ params }) {
                         setAddedToCart(false);
                       }}
                       className={`w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-[1px] border transition-all ${!hasStock
-                          ? 'border-zinc-100 text-zinc-300 relative line-through cursor-not-allowed'
-                          : selectedSize === size
-                            ? 'border-black bg-black text-white'
-                            : sizeError
-                              ? 'border-red-400 text-red-500 hover:border-red-500 animate-pulse'
-                              : 'border-zinc-200 text-black hover:border-zinc-400'
+                        ? 'border-zinc-100 text-zinc-300 relative line-through cursor-not-allowed'
+                        : selectedSize === size
+                          ? 'border-black bg-black text-white'
+                          : sizeError
+                            ? 'border-red-400 text-red-500 hover:border-red-500 animate-pulse'
+                            : 'border-zinc-200 text-black hover:border-zinc-400'
                         }`}
                     >
                       {getDisplaySize(size, product.sizeDisplayType)}
@@ -856,16 +854,16 @@ export default function ProductPage({ params }) {
             </p>
           </div>
         </div>
-        <div 
-          ref={suggestionSectionRef} 
+        <div
+          ref={suggestionSectionRef}
           className={`transition-all duration-300 ${shakeSuggestions ? 'animate-shake' : ''}`}
         >
-          <SuggestionBar 
-            category={suggestionCategory} 
-            customTitle={suggestionTitle} 
+          <SuggestionBar
+            category={suggestionCategory}
+            customTitle={suggestionTitle}
             highlightRed={showedSocksNudge}
             shake={shakeSuggestions}
-            onItemClick={handleSuggestionClick} 
+            onItemClick={handleSuggestionClick}
           />
         </div>
         <Footer />
@@ -887,21 +885,20 @@ export default function ProductPage({ params }) {
           onClick={handleAddToCart}
           disabled={!product.inStock}
           className={`relative overflow-hidden flex items-center justify-center gap-1.5 text-[9px] tracking-[0.2em] uppercase font-bold py-3 px-8 rounded-[1px] transition-colors ${!product.inStock
-              ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
-              : addedToCart
-                ? 'bg-zinc-900 text-white'
-                : 'bg-black text-white hover:bg-zinc-900'
+            ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
+            : addedToCart
+              ? 'bg-zinc-900 text-white'
+              : 'bg-black text-white hover:bg-zinc-900'
             }`}
         >
           <span>{addedToCart ? 'Go to Bag' : showedSocksNudge ? 'Add anyway' : 'Add to Bag'}</span>
-          
+
           {/* Draining Progress Bar */}
-          <div 
-            className={`absolute bottom-0 left-0 right-0 h-[2.5px] bg-zinc-800/80 transition-opacity duration-300 ${
-              addedToCart ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            }`}
+          <div
+            className={`absolute bottom-0 left-0 right-0 h-[2.5px] bg-zinc-800/80 transition-opacity duration-300 ${addedToCart ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
           >
-            <div 
+            <div
               className="h-full bg-white transition-all duration-[3000ms] ease-linear"
               style={{ width: addedToCart ? '0%' : '100%' }}
             />
