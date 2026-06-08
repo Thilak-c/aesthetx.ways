@@ -1,7 +1,7 @@
 import OrdersClient from './OrdersClient';
 
 export const metadata = {
-  title: "​​🇦​​🇪​​🇸​​🇹​​🇭​​🇪​​🇹​​🇽​​🇼​​🇦​​🇾​​🇸​ | ​🇴​​🇷​​🇩​​🇪​​🇷​​🇸​",
+  title: "Aesthetx Ways | Orders",
 };
 
 export default function OrdersPage() {

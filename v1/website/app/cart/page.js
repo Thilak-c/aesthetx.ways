@@ -1,7 +1,7 @@
 import CartClient from './CartClient';
 
 export const metadata = {
-  title: "​​🇦​​🇪​​🇸​​🇹​​🇭​​🇪​​🇹​​🇽​​🇼​​🇦​​🇾​​🇸​ | ​🇧​​🇦​​🇬​",
+  title: "Aesthetx Ways | Bag",
 };
 
 export default function CartPage() {

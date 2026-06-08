@@ -47,7 +47,7 @@ export default function OrdersClient() {
   // Set dynamic browser tab title (fallback for client side router updates)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      document.title = "​​🇦​​🇪​​🇸​​🇹​​🇭​​🇪​​🇹​​🇽​​🇼​​🇦​​🇾​​🇸​ | ​🇴​​🇷​​🇩​​🇪​​🇷​​🇸​";
+      document.title = "Aesthetx Ways | Orders";
     }
   }, []);
 

@@ -8,7 +8,7 @@ const nextConfig = {
       },
     ],
   },
-  allowedDevOrigins: ['soa-thumbs-qld-hopes.trycloudflare.com'],
+  allowedDevOrigins: ['*.trycloudflare.com', 'localhost'],
 };
 
 export default nextConfig;

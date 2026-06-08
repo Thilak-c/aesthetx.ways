@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getCachedImage } from '@/lib/mediaCache';
 import FallbackImage from '@/components/FallbackImage';
 
-export default function SuggestionBar() {
+export default function SuggestionBar({ category, customTitle, onItemClick, highlightRed, shake }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
@@ -19,8 +19,16 @@ export default function SuggestionBar() {
         const data = await res.json();
         console.log("Suggestions raw products:", data.products);
         if (data.success && data.products) {
+          let filtered = data.products;
+          if (category) {
+            const normCat = category.toLowerCase().trim();
+            filtered = filtered.filter(p => {
+              const pCat = (p.category || '').toLowerCase().trim();
+              return pCat === normCat;
+            });
+          }
           // Shuffle and pick up to 8 random items
-          const shuffled = [...data.products].sort(() => 0.5 - Math.random());
+          const shuffled = [...filtered].sort(() => 0.5 - Math.random());
           setProducts(shuffled.slice(0, 8));
         }
       } catch (err) {
@@ -30,7 +38,7 @@ export default function SuggestionBar() {
       }
     }
     fetchSuggestions();
-  }, []);
+  }, [category]);
 
   useEffect(() => {
     if (products.length === 0 || userInteracted) return;
@@ -100,8 +108,10 @@ export default function SuggestionBar() {
     <div className="w-full py-6 border-t border-zinc-100 my-4 bg-white overflow-hidden relative flex flex-col gap-3">
       {/* Header section with uppercase tech styling */}
       <div className="px-4 flex justify-between items-center">
-        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-400">
-          Suggested Additions
+        <span className={`text-[9px] tracking-[0.2em] uppercase font-bold transition-all duration-300 ${
+          highlightRed ? 'text-red-500 font-extrabold' : 'text-zinc-400'
+        } ${shake ? 'animate-shake' : ''}`}>
+          {customTitle || 'Suggested Additions'}
         </span>
         <span className="text-[7px] tracking-wider uppercase font-bold text-zinc-300">
           {userInteracted ? '[ Swipe to Browse ]' : '[ Auto Scrolling ]'}
@@ -120,6 +130,11 @@ export default function SuggestionBar() {
             <div key={`${product._id}-${idx}`} className="w-[110px] shrink-0">
               <Link 
                 href={`/product/${product.itemId}`}
+                onClick={(e) => {
+                  if (onItemClick) {
+                    onItemClick(product, e);
+                  }
+                }}
                 className="flex flex-col gap-1.5 group cursor-pointer active:scale-[0.98] transition-transform duration-200"
               >
                 {/* Product Image */}

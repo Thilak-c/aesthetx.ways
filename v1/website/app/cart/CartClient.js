@@ -80,7 +80,7 @@ export default function CartClient() {
   // Set dynamic browser tab title
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      document.title = "​​🇦​​🇪​​🇸​​🇹​​🇭​​🇪​​🇹​​🇽​​🇼​​🇦​​🇾​​🇸​ | ​🇧​​🇦​​🇬​";
+      document.title = "Aesthetx Ways | Bag";
     }
   }, []);
 

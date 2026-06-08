@@ -10,7 +10,8 @@ const nextConfig = {
     ],
   },
   allowedDevOrigins: [
-    'forward-ser-inform-keen.trycloudflare.com','shield-detailed-lindsay-photographer.trycloudflare.com',
+    '*.trycloudflare.com',
+    'localhost',
     ...(process.env.ALLOWED_DEV_ORIGINS ? process.env.ALLOWED_DEV_ORIGINS.split(',') : [])
   ],
 };
