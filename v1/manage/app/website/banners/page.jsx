@@ -17,6 +17,8 @@ import {
 import toast from "react-hot-toast";
 import Link from "next/link";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://aesthetxways.com";
+
 export default function BannersPage() {
   const banners = useQuery(api.banners.getBanners);
   const products = useQuery(api.products.getAllProducts);
@@ -300,12 +302,12 @@ export default function BannersPage() {
                             <LinkIcon className="text-slate-400 w-3.5 h-3.5 flex-shrink-0" />
                             {config.productLink ? (
                               <a
-                                href={config.productLink.startsWith("http") ? config.productLink : `https://aesthetxways.com${config.productLink}`}
+                                href={config.productLink.startsWith("http") ? config.productLink : `${APP_URL}${config.productLink}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate font-medium flex-1"
+                                className="text-xs text-blue-600 hover:text-blue-850 hover:underline truncate font-medium flex-1"
                               >
-                                {config.productLink.startsWith("http") ? config.productLink : `https://aesthetxways.com${config.productLink}`}
+                                {config.productLink.startsWith("http") ? config.productLink : `${APP_URL}${config.productLink}`}
                               </a>
                             ) : (
                               <span className="text-xs text-slate-400 italic flex-1">
@@ -421,12 +423,12 @@ export default function BannersPage() {
                       <LinkIcon className="text-slate-400 w-3.5 h-3.5 flex-shrink-0" />
                       {modalConfig.productLink ? (
                         <a
-                          href={modalConfig.productLink.startsWith("http") ? modalConfig.productLink : `https://aesthetxways.com${modalConfig.productLink}`}
+                          href={modalConfig.productLink.startsWith("http") ? modalConfig.productLink : `${APP_URL}${modalConfig.productLink}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate font-medium flex-1"
                         >
-                          {modalConfig.productLink.startsWith("http") ? modalConfig.productLink : `https://aesthetxways.com${modalConfig.productLink}`}
+                          {modalConfig.productLink.startsWith("http") ? modalConfig.productLink : `${APP_URL}${modalConfig.productLink}`}
                         </a>
                       ) : (
                         <span className="text-xs text-slate-400 italic flex-1">

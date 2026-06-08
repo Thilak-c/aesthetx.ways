@@ -41,3 +41,38 @@ export const updateBanner = mutation({
     return { success: true };
   },
 });
+
+// Clean up existing banners in the database to remove hardcoded domains
+export const cleanBanners = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const banners = await ctx.db.query("banners").collect();
+    let updatedCount = 0;
+
+    for (const banner of banners) {
+      let needsUpdate = false;
+      let newProductLink = banner.productLink;
+      let newImageUrl = banner.imageUrl;
+
+      if (banner.productLink && (banner.productLink.startsWith("https://aesthetxways.com") || banner.productLink.startsWith("http://aesthetxways.com"))) {
+        newProductLink = banner.productLink.replace(/^https?:\/\/aesthetxways\.com/, "");
+        needsUpdate = true;
+      }
+      if (banner.imageUrl && (banner.imageUrl.startsWith("https://aesthetxways.com") || banner.imageUrl.startsWith("http://aesthetxways.com"))) {
+        newImageUrl = banner.imageUrl.replace(/^https?:\/\/aesthetxways\.com/, "");
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        await ctx.db.patch(banner._id, {
+          productLink: newProductLink,
+          imageUrl: newImageUrl,
+          updatedAt: nowIso(),
+        });
+        updatedCount++;
+      }
+    }
+
+    return { success: true, updatedCount };
+  },
+});

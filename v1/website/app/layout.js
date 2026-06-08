@@ -71,7 +71,7 @@ export default function RootLayout({ children }) {
 
           {/* Main Mobile App Container */}
           <div id="mobile-frame" className="w-full flex-1 flex flex-col relative bg-white pb-12">
-            {/* <SiteStatusGate> */}
+            <SiteStatusGate>
               <SplashWrapper>
                 <StaggeredMenu
                   position="right"
@@ -90,11 +90,11 @@ export default function RootLayout({ children }) {
                 {children}
                 <BottomNav />
               </SplashWrapper>
-            {/* </SiteStatusGate> */}
+            </SiteStatusGate>
           </div>
 
         </div>
-        <AgentationWrapper />
+        {/* <AgentationWrapper /> */}
       </body>
     </html>
   );
