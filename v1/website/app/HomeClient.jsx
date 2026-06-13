@@ -450,7 +450,7 @@ export default function HomeClient() {
   }, [searchOpen]);
 
   // Premium helper to render product card cleanly and without code duplication
-  const renderProductCard = (product) => {
+  const renderProductCard = (product, hideTopSellerBadge = false) => {
     const hasAlternativeImage = product.otherImages && product.otherImages.length > 0;
     const altImageUrl = hasAlternativeImage
       ? getCachedImage(`${product.itemId}-other-0`, product.otherImages[0])
@@ -474,7 +474,7 @@ export default function HomeClient() {
             />
           )}
           {product.inStock ? (
-            product.isTopSeller ? (
+            product.isTopSeller && !hideTopSellerBadge ? (
               <div className="absolute top-2 left-2 bg-amber-500 text-white text-[7px] tracking-wider uppercase font-bold px-1.5 py-0.5 rounded-[1px] z-10 shadow-sm">
                 Top Seller
               </div>
@@ -783,7 +783,7 @@ export default function HomeClient() {
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-6">
-                {topSellers.map(renderProductCard)}
+                {topSellers.map(product => renderProductCard(product, true))}
               </div>
             </div>
           );
