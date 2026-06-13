@@ -787,7 +787,7 @@ export default function CheckoutPage() {
               </label>
             </div>
 
-            <button
+            {/* <button
               type="button"
               onClick={() => {
                 setGeneratedOrderNum('ORD-TEST-12345');
@@ -799,7 +799,7 @@ export default function CheckoutPage() {
               className="w-full text-center text-[8px] tracking-widest uppercase font-bold py-2 border border-dashed border-zinc-300 text-zinc-500 hover:text-black hover:border-black rounded-[1px] transition-colors mt-3 mb-8"
             >
               [Dev] Test Confetti & Success Screen
-            </button>
+            </button> */}
           </div>
 
           {/* Place Order Sticky Button */}
