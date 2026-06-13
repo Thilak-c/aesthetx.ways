@@ -108,7 +108,7 @@ export default function SuggestionBar({ category, customTitle, onItemClick, high
     <div className="w-full py-6 border-t border-zinc-100 my-4 bg-white overflow-hidden relative flex flex-col gap-3">
       {/* Header section with uppercase tech styling */}
       <div className="px-4 flex justify-between items-center">
-        <span className={`text-[9px] tracking-[0.2em] uppercase font-bold transition-all duration-300 ${
+        <span className={`text-[8px] tracking-[0.2em] uppercase font-bold transition-all duration-300 ${
           highlightRed ? 'text-red-500 font-extrabold' : 'text-zinc-400'
         } ${shake ? 'animate-shake' : ''}`}>
           {customTitle || 'Suggested Additions'}

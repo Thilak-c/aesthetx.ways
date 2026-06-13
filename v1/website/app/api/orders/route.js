@@ -40,6 +40,9 @@ export async function POST(request) {
     
     // 2. Validate stock in Convex before placing order
     for (const item of items) {
+      if (item.productId === 'aw-carry-bag') {
+        continue;
+      }
       const product = await convexClient.query('webStore:getProductByItemId', { itemId: item.productId });
       if (!product) {
         return NextResponse.json({ success: false, message: `Product ${item.name} not found` }, { status: 404 });

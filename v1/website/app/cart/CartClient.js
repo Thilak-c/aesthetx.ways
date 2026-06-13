@@ -50,6 +50,17 @@ export default function CartClient() {
   const [authLoading, setAuthLoading] = useState(false);
   const [shakeModal, setShakeModal] = useState(false);
   const [deletingItems, setDeletingItems] = useState([]);
+  const [bagExiting, setBagExiting] = useState(false);
+  const [animateNewBag, setAnimateNewBag] = useState(false);
+
+  useEffect(() => {
+    if (animateNewBag) {
+      const timer = setTimeout(() => {
+        setAnimateNewBag(false);
+      }, 600); // clear after animation completes
+      return () => clearTimeout(timer);
+    }
+  }, [animateNewBag]);
 
   const handleDeleteClick = (productId, size) => {
     const key = `${productId}-${size}`;
@@ -311,6 +322,23 @@ export default function CartClient() {
 
   return (
     <div className="flex flex-col flex-1 bg-white relative pb-28 min-h-[90vh]">
+      <style>{`
+        @keyframes slideInLeft {
+          from {
+            transform: translateX(-100%);
+            opacity: 0;
+            max-height: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+            max-height: 150px;
+          }
+        }
+        .animate-slide-in-left {
+          animation: slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
       {/* Sleek Top Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-zinc-950 hover:text-black">
@@ -348,6 +376,7 @@ export default function CartClient() {
             {cartItems.map((item, idx) => {
               const itemKey = `${item.productId}-${item.size}`;
               const isDeleting = deletingItems.includes(itemKey);
+              const isNewBag = item.productId === 'aw-carry-bag' && animateNewBag;
               return (
                 <div 
                   key={`${item.productId}-${item.size}-${idx}`}
@@ -355,7 +384,7 @@ export default function CartClient() {
                     isDeleting 
                       ? 'translate-x-full opacity-0 max-h-0 py-0 border-b-0 overflow-hidden pointer-events-none' 
                       : ''
-                  }`}
+                  } ${isNewBag ? 'animate-slide-in-left' : ''}`}
                   style={{
                     maxHeight: isDeleting ? '0px' : '150px',
                   }}
@@ -432,8 +461,13 @@ export default function CartClient() {
             {/* Aesthetx Ways Bag Upsell */}
             {(() => {
               const bagInCart = cartItems.some(item => item.productId === 'aw-carry-bag');
+              if (bagInCart && !bagExiting) return null;
               return (
-                <div className="mt-2 py-3 border-b border-zinc-100 flex items-center gap-3">
+                <div className={`mt-2 py-3 border-b border-zinc-100 flex items-center gap-3 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) origin-left ${
+                  bagExiting 
+                    ? '-translate-x-full opacity-0 max-h-0 py-0 border-b-0 overflow-hidden pointer-events-none' 
+                    : 'max-h-[150px]'
+                }`}>
                   <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 flex items-center justify-center p-2">
                     <img src="/icons/bag_t.png" alt="Aesthetx Ways Bag" className="w-full h-full object-contain" />
                   </div>
@@ -444,27 +478,26 @@ export default function CartClient() {
                   </div>
                   <button
                     onClick={() => {
-                      if (bagInCart) return;
-                      const newItem = {
-                        productId: 'aw-carry-bag',
-                        name: 'Aesthetx Ways Bag',
-                        price: 20,
-                        quantity: 1,
-                        size: 'One Size',
-                        image: '/icons/bag.png',
-                        color: 'Default',
-                      };
-                      const updated = [...cartItems, newItem];
-                      saveCart(updated);
+                      setBagExiting(true);
+                      setTimeout(() => {
+                        const newItem = {
+                          productId: 'aw-carry-bag',
+                          name: 'Aesthetx Ways Bag',
+                          price: 20,
+                          quantity: 1,
+                          size: 'One Size',
+                          image: '/icons/bag.png',
+                          color: 'Default',
+                        };
+                        setAnimateNewBag(true);
+                        const updated = [...cartItems, newItem];
+                        saveCart(updated);
+                        setBagExiting(false);
+                      }, 500);
                     }}
-                    disabled={bagInCart}
-                    className={`text-[8px] tracking-widest uppercase font-bold px-3 py-1.5 rounded-[1px] transition-colors shrink-0 ${
-                      bagInCart
-                        ? 'bg-zinc-100 text-zinc-400 cursor-default'
-                        : 'bg-black text-white hover:bg-zinc-900'
-                    }`}
+                    className="bg-black text-white hover:bg-zinc-900 text-[8px] tracking-widest uppercase font-bold px-3 py-1.5 rounded-[1px] transition-colors shrink-0"
                   >
-                    {bagInCart ? 'Added' : 'Add'}
+                    Add
                   </button>
                 </div>
               );
@@ -675,7 +708,7 @@ export default function CartClient() {
                       value={authEmail}
                       onChange={(e) => setAuthEmail(e.target.value)}
                       placeholder="ENTER YOUR EMAIL"
-                      className="border-b border-zinc-200 focus-within:border-black bg-transparent text-[10px] tracking-wider py-1.5 uppercase outline-none text-black placeholder-zinc-300"
+                      className="border-b border-zinc-200 focus-within:border-black bg-transparent text-[10px] tracking-wider py-1.5      outline-none text-black placeholder-zinc-300"
                     />
                   </div>
 

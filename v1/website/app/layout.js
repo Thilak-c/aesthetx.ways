@@ -6,6 +6,7 @@ import StaggeredMenu from "@/components/StaggeredMenu";
 import BottomNav from "@/components/BottomNav";
 import AgentationWrapper from "@/components/AgentationWrapper";
 import SiteStatusGate from "@/components/SiteStatusGate";
+import ApiKeyInterceptor from "@/components/ApiKeyInterceptor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,8 +72,9 @@ export default function RootLayout({ children }) {
 
           {/* Main Mobile App Container */}
           <div id="mobile-frame" className="w-full flex-1 flex flex-col relative bg-white pb-12">
-            <SiteStatusGate>
+            {/* <SiteStatusGate> */}
               <SplashWrapper>
+                <ApiKeyInterceptor />
                 <StaggeredMenu
                   position="right"
                   items={menuItems}
@@ -90,7 +92,7 @@ export default function RootLayout({ children }) {
                 {children}
                 <BottomNav />
               </SplashWrapper>
-            </SiteStatusGate>
+            {/* </SiteStatusGate> */}
           </div>
 
         </div>

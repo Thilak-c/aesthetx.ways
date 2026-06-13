@@ -243,7 +243,7 @@ export default function ProductPage({ params }) {
   const suggestionCategory = isSocksProduct ? 'pants' : 'socks';
   const suggestionTitle = isSocksProduct
     ? "Complete your aesthetic with our pants"
-    : "For ₹199, don't lose aesthetic in your foo";
+    : "For ₹199, don't lose aesthetic in your feet";
 
   const handleScroll = () => {
     if (isScrollingRef.current) return;

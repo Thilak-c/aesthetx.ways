@@ -243,14 +243,13 @@ export default function HomeClient() {
     if (count <= 1 || isHovered || !autoplayEnabled) return;
     const interval = setInterval(() => {
       setCurrentBannerIndex((prev) => (prev + 1) % count);
-    }, 5000);
+    }, 1500);
     return () => clearInterval(interval);
   }, [banners, isHovered, autoplayEnabled]);
 
   // Handle scroll snap manual swipes
   const handleScroll = () => {
     if (isScrollingRef.current) return;
-    setAutoplayEnabled(false); // Stop autoplay once user interacts
     if (sliderRef.current) {
       const container = sliderRef.current;
       const width = container.clientWidth;
@@ -681,6 +680,8 @@ export default function HomeClient() {
               <div
                 ref={sliderRef}
                 onScroll={handleScroll}
+                onMouseDown={() => setAutoplayEnabled(false)}
+                onWheel={() => setAutoplayEnabled(false)}
                 className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth rounded-[2px]"
                 style={{ WebkitOverflowScrolling: 'touch' }}
               >

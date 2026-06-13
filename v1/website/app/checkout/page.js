@@ -68,7 +68,10 @@ export default function CheckoutPage() {
     pincode: '',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('COD');
+  const [paymentMethod, setPaymentMethod] = useState('CARD');
+  const [codError, setCodError] = useState(false);
+  const [codErrorMsg, setCodErrorMsg] = useState('');
+  const [showCodOption, setShowCodOption] = useState(true);
 
   // Load cart, verify session, and fetch user profile
   useEffect(() => {
@@ -195,6 +198,24 @@ export default function CheckoutPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePaymentMethodChange = (method) => {
+    if (method === 'COD') {
+      setCodError(true);
+      setCodErrorMsg(`Sorry ${form.fullName || 'User'} you not Eligible for COD orders`);
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([80, 50, 80]);
+      }
+      setTimeout(() => {
+        setCodError(false);
+      }, 800);
+      setShowCodOption(false);
+      setPaymentMethod('CARD');
+      return;
+    }
+    setCodErrorMsg(''); // Clear error if they select CARD
+    setPaymentMethod(method);
+  };
+
   // Real-time autosave to database
   const handleAutoSave = async (field, value) => {
     const userStr = localStorage.getItem('aw_user');
@@ -249,7 +270,7 @@ export default function CheckoutPage() {
   const estimatedTotal = orderSubtotal + freeDeliveryDiscount - couponDiscount;
 
   const handlePlaceOrder = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
 
     // Validation
     if (!form.fullName || !form.phone || !form.email || !form.address || !form.houseNo || !form.area || !form.city || !form.state || !form.pincode) {
@@ -270,7 +291,7 @@ export default function CheckoutPage() {
     try {
       setPlacingOrder(true);
 
-      const payAmount = paymentMethod === 'COD' ? 100 : estimatedTotal;
+      const payAmount = estimatedTotal;
 
       // 1. Create Razorpay order on backend
       const orderRes = await fetch('/api/checkout/create-razorpay-order', {
@@ -299,8 +320,8 @@ export default function CheckoutPage() {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderResult.amount,
         currency: orderResult.currency,
-        name: 'AesthetX Ways',
-        description: paymentMethod === 'COD' ? 'Prepaid COD Advance Charge (₹100)' : 'Prepaid Order Payment',
+        name: 'Aesthetxways',
+        description: 'Prepaid Order Payment',
         image: 'https://manage.aesthetxways.com/logo.png',
         order_id: orderResult.orderId,
         handler: async function (response) {
@@ -674,20 +695,6 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Prepaid COD Advance & Payable on Delivery breakdown (Animated) */}
-            <div className={`grid transition-all duration-300 ease-in-out ${paymentMethod === 'COD' ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}>
-              <div className="overflow-hidden flex flex-col gap-3">
-                <div className="flex justify-between items-center text-[9px] uppercase text-amber-600 font-semibold tracking-wider">
-                  <span>Prepaid COD Advance</span>
-                  <span className="font-mono">₹100</span>
-                </div>
-                <div className="flex justify-between items-center text-[9px] uppercase text-zinc-500 tracking-wider">
-                  <span>Payable on Delivery (COD)</span>
-                  <span className="font-mono">₹{(estimatedTotal - 100).toLocaleString('en-IN')}</span>
-                </div>
-              </div>
-            </div>
-
             {/* Final Estimated Total */}
             <div className="flex justify-between items-center border-t border-zinc-200 pt-4 mt-2">
               <span className="text-[11px] uppercase font-black text-black tracking-widest">Estimated Total</span>
@@ -695,38 +702,83 @@ export default function CheckoutPage() {
             </div>
           </div>
 
+          {/* COD Error Message block */}
+          {codErrorMsg && (
+            <div className="mt-4 rounded-[2px] p-3 text-red-600 flex flex-col gap-2 transition-all duration-300 animate-fade-in">
+              <span className="text-[9.5px] font-bold uppercase tracking-wider leading-relaxed">
+                {codErrorMsg}
+              </span>
+              <p className="text-[9px] text-zinc-500 leading-relaxed font-semibold">
+                But you can use online card banking, UPI and mobile wallets. We accept Mastercard, Visa, and all major UPI payments.
+              </p>
+              
+              {/* Brand Logos & Pay Online Action */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mt-2 select-none bg-white/50 p-2  rounded-[1px]">
+                <div className="flex flex-wrap items-center gap-3">
+                  <img src="/payment-icon/visa.png" alt="Visa" className="h-4 w-auto object-contain shrink-0" />
+                  <img src="/payment-icon/card.png" alt="Mastercard" className="h-4 w-auto object-contain shrink-0" />
+                  <img src="/payment-icon/phonepe.png" alt="PhonePe" className="h-4 w-auto object-contain shrink-0" />
+                  <img src="/payment-icon/google-pay.png" alt="Google Pay" className="h-4 w-auto object-contain shrink-0" />
+                  <img src="/payment-icon/paytm.png" alt="Paytm" className="h-4 w-auto object-contain shrink-0" />
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    handlePaymentMethodChange('CARD');
+                    // Trigger place order flow
+                    handlePlaceOrder();
+                  }}
+                  className="bg-black text-white hover:bg-zinc-900 text-[8px] tracking-widest uppercase font-bold px-3 py-1.5 rounded-[1px] transition-colors shrink-0"
+                >
+                  Pay Online
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Payment Method */}
-          <div className="mt-4 border-t border-zinc-100 pt-3">
+          <div className={`mt-4 border-t border-zinc-100 pt-3 transition-all duration-300 ${codError ? 'animate-shake' : ''}`}>
             <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-bold block mb-2">Payment Option</span>
             <div className="flex flex-col gap-2">
-              <label className={`flex items-center justify-between p-3 border rounded-[1px] cursor-pointer transition-colors ${paymentMethod === 'COD' ? 'border-black bg-zinc-50' : 'border-zinc-200'}`}>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="COD"
-                    checked={paymentMethod === 'COD'}
-                    onChange={() => setPaymentMethod('COD')}
-                    className="accent-black"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold uppercase text-black">Cash on Delivery (COD)</span>
-                    <span className="text-[8px] text-zinc-500 uppercase tracking-wider mt-0.5">
-                      ₹100 advance pay now + ₹{(estimatedTotal - 100).toLocaleString('en-IN')} on delivery
-                    </span>
+              {showCodOption && (
+                <label 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePaymentMethodChange('COD');
+                  }}
+                  className={`flex items-center justify-between p-3 border rounded-[1px] cursor-pointer transition-colors ${paymentMethod === 'COD' ? 'border-black bg-zinc-50' : 'border-zinc-200'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="COD"
+                      checked={paymentMethod === 'COD'}
+                      onChange={() => {}}
+                      className="accent-black"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase text-black">Cash on Delivery (COD)</span>
+                    </div>
                   </div>
-                </div>
-                <span className="text-[9px] font-bold text-amber-600 uppercase">₹100 now</span>
-              </label>
+                </label>
+              )}
 
-              <label className={`flex items-center justify-between p-3 border rounded-[1px] cursor-pointer transition-colors ${paymentMethod === 'CARD' ? 'border-black bg-zinc-50' : 'border-zinc-200'}`}>
+              <label 
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePaymentMethodChange('CARD');
+                }}
+                className={`flex items-center justify-between p-3 border rounded-[1px] cursor-pointer transition-colors ${paymentMethod === 'CARD' ? 'border-black bg-zinc-50' : 'border-zinc-200'}`}
+              >
                 <div className="flex items-center gap-2">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="CARD"
                     checked={paymentMethod === 'CARD'}
-                    onChange={() => setPaymentMethod('CARD')}
+                    onChange={() => {}}
                     className="accent-black"
                   />
                   <span className="text-[10px] font-bold uppercase text-black">Card / UPI</span>
@@ -759,9 +811,7 @@ export default function CheckoutPage() {
             >
               {placingOrder 
                 ? 'Processing...' 
-                : paymentMethod === 'COD'
-                  ? `Pay ₹100 Advance & Place COD Order`
-                  : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} & Place Order`
+                : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} & Place Order`
               }
             </button>
           </div>
