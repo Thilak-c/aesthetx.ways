@@ -151,6 +151,7 @@ export default defineSchema({
     updatedAt: v.optional(v.string()),
     updatedBy: v.optional(v.string()),
     sizeDisplayType: v.optional(v.string()),
+    isTopSeller: v.optional(v.boolean()),
   })
     .index("by_deleted", ["isDeleted"])
     .index("by_itemId", ["itemId"])

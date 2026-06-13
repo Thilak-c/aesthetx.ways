@@ -20,6 +20,8 @@ export const addProduct = mutation({
     secondaryColor: v.optional(v.string()),
     availableSizes: v.array(v.string()),
     sizeStock: v.any(),
+    sizeDisplayType: v.optional(v.string()),
+    isTopSeller: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     // Check duplicate
@@ -44,10 +46,12 @@ export const addProduct = mutation({
       secondaryColor: args.secondaryColor || "",
       availableSizes: args.availableSizes,
       sizeStock: args.sizeStock,
+      sizeDisplayType: args.sizeDisplayType || "alpha",
       totalStock,
       inStock: totalStock > 0,
       isHidden: false,
       isDeleted: false,
+      isTopSeller: args.isTopSeller,
       createdAt: nowIso(),
       updatedAt: nowIso(),
     });
@@ -147,6 +151,8 @@ export const updateProductFull = mutation({
     secondaryColor: v.optional(v.string()),
     availableSizes: v.array(v.string()),
     sizeStock: v.any(),
+    sizeDisplayType: v.optional(v.string()),
+    isTopSeller: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, ...args }) => {
     const product = await ctx.db.get(id);
@@ -168,8 +174,10 @@ export const updateProductFull = mutation({
       secondaryColor: args.secondaryColor || "",
       availableSizes: args.availableSizes,
       sizeStock: args.sizeStock,
+      sizeDisplayType: args.sizeDisplayType,
       totalStock,
       inStock: totalStock > 0,
+      isTopSeller: args.isTopSeller,
       updatedAt: nowIso(),
     });
 

@@ -50,7 +50,8 @@ export async function GET(request) {
         category: "apparel",
         price: 3200,
         inStock: true,
-        color: "Vintage Grey"
+        color: "Vintage Grey",
+        isTopSeller: true
       },
       {
         _id: "mock-black",

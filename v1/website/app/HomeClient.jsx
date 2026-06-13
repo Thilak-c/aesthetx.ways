@@ -761,6 +761,28 @@ export default function HomeClient() {
 
       {/* Main Content Area */}
       <main id="shop-content" className="flex-1 px-4 pb-28">
+        {/* Top Seller of our Websites Section */}
+        {!loading && activeCategory === 'All' && !searchQuery && (() => {
+          const topSellers = sortedProducts.filter(p => p.isTopSeller);
+          if (topSellers.length === 0) return null;
+          return (
+            <div className="mb-8 bg-zinc-50/50 p-4.5 rounded-[4px] border border-zinc-100/60 shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+              <div className="flex items-center justify-between pb-2 mb-4 border-b border-zinc-100">
+                <h2 className="text-[11px] tracking-widest uppercase font-bold text-black font-lovelo-black flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  Top Seller of our Websites
+                </h2>
+                <span className="text-[7.5px] bg-black text-white px-1.5 py-0.5 rounded-[1px] uppercase tracking-wider font-bold">
+                  Best Seller
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-6">
+                {topSellers.map(renderProductCard)}
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="flex items-center justify-between py-2 mb-2">
           <span className="text-[9px] tracking-widest uppercase font-bold text-zinc-400">
             {activeCategory === 'All' ? 'ALL PRODUCTS' : `CATALOGUE / ${activeCategory.toUpperCase()}`}

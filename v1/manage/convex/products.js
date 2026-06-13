@@ -2271,6 +2271,7 @@ export const getProductsForWebsiteList = query({
       currentStock: p.currentStock || p.totalAvailable || 0,
       totalAvailable: p.totalAvailable || p.currentStock || 0,
       sizeDisplayType: p.sizeDisplayType || "alpha",
+      isTopSeller: p.isTopSeller,
     }));
   },
 });
@@ -2610,6 +2611,7 @@ export const addProduct = mutation({
     availableSizes: v.array(v.string()),
     sizeStock: v.any(),
     sizeDisplayType: v.optional(v.string()),
+    isTopSeller: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     // Check duplicate
@@ -2642,6 +2644,7 @@ export const addProduct = mutation({
       isDeleted: false,
       buys: 0,
       inCart: 0,
+      isTopSeller: args.isTopSeller,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -2682,6 +2685,7 @@ export const updateProductFull = mutation({
     availableSizes: v.array(v.string()),
     sizeStock: v.any(),
     sizeDisplayType: v.optional(v.string()),
+    isTopSeller: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, ...args }) => {
     const product = await ctx.db.get(id);
@@ -2707,6 +2711,7 @@ export const updateProductFull = mutation({
       currentStock: totalStock,
       totalAvailable: totalStock,
       inStock: totalStock > 0,
+      isTopSeller: args.isTopSeller,
       updatedAt: new Date().toISOString(),
     });
 

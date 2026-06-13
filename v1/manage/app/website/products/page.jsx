@@ -203,6 +203,7 @@ export default function WebsiteProducts() {
         sizes: fullProduct.availableSizes || [],
         sizeStock: fullProduct.sizeStock || {},
         sizeDisplayType: fullProduct.sizeDisplayType || "alpha",
+        isTopSeller: fullProduct.isTopSeller || false,
       });
     } catch (err) {
       toast.error("Error loading product.");
@@ -262,6 +263,7 @@ export default function WebsiteProducts() {
         availableSizes: editForm.sizes,
         sizeStock: editForm.sizeStock,
         sizeDisplayType: editForm.sizeDisplayType,
+        isTopSeller: editForm.isTopSeller || false,
       });
       toast.success("Product successfully updated!");
       setEditing(null);
@@ -581,8 +583,14 @@ export default function WebsiteProducts() {
                                   <Package className="w-5 h-5 text-slate-300" />
                                 )}
                               </div>
-                              <span className="font-bold text-slate-800 text-sm tracking-tight hover:underline cursor-pointer" onClick={() => handleEdit(p)}>
+                              <span className="font-bold text-slate-800 text-sm tracking-tight hover:underline cursor-pointer flex items-center gap-1.5" onClick={() => handleEdit(p)}>
                                 {p.name}
+                                {p.isTopSeller && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[9px] font-bold border border-amber-200">
+                                    <Sparkles className="w-2.5 h-2.5" />
+                                    Top Seller
+                                  </span>
+                                )}
                               </span>
                             </div>
                           </td>
@@ -675,7 +683,14 @@ export default function WebsiteProducts() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="font-bold text-slate-800 text-[13px] truncate cursor-pointer" onClick={() => handleEdit(p)}>{p.name}</p>
+                            <p className="font-bold text-slate-800 text-[13px] truncate cursor-pointer flex items-center gap-1" onClick={() => handleEdit(p)}>
+                              {p.name}
+                              {p.isTopSeller && (
+                                <span className="inline-flex items-center bg-amber-50 text-amber-700 text-[8px] font-bold px-1 rounded border border-amber-250">
+                                  Top
+                                </span>
+                              )}
+                            </p>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="font-mono text-[10px] font-bold text-slate-400">{p.itemId}</span>
                               {p.category && <span className="text-[10px] text-slate-400">· {p.category}</span>}
@@ -815,6 +830,19 @@ export default function WebsiteProducts() {
                         rows={2}
                         className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-slate-800 rounded-xl text-xs focus:outline-none resize-none"
                       />
+                    </div>
+
+                    <div className="col-span-2 flex items-center gap-2 mt-1">
+                      <input
+                        type="checkbox"
+                        id="editIsTopSeller"
+                        checked={editForm.isTopSeller || false}
+                        onChange={(e) => setEditForm({ ...editForm, isTopSeller: e.target.checked })}
+                        className="w-4 h-4 text-slate-900 border-slate-300 rounded focus:ring-slate-900 cursor-pointer"
+                      />
+                      <label htmlFor="editIsTopSeller" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                        Mark as Top Seller of our Websites
+                      </label>
                     </div>
                   </div>
                 </div>
