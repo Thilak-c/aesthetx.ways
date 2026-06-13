@@ -474,9 +474,15 @@ export default function HomeClient() {
             />
           )}
           {product.inStock ? (
-            <div className="absolute top-2 left-2 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
+            product.isTopSeller ? (
+              <div className="absolute top-2 left-2 bg-amber-500 text-white text-[7px] tracking-wider uppercase font-bold px-1.5 py-0.5 rounded-[1px] z-10 shadow-sm">
+                Top Seller
+              </div>
+            ) : (
+              <div className="absolute top-2 left-2 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
 
-            </div>
+              </div>
+            )
           ) : (
             <div className="absolute top-2 left-2 bg-black text-white text-[7px] tracking-wider uppercase font-semibold px-1.5 py-0.5 rounded-[1px] z-10">
               Out of Stock
@@ -762,7 +768,7 @@ export default function HomeClient() {
       {/* Main Content Area */}
       <main id="shop-content" className="flex-1 px-4 pb-28">
         {/* Top Seller of our Websites Section */}
-        {!loading && activeCategory === 'All' && !searchQuery && (() => {
+        {!loading && !searchQuery && (() => {
           const topSellers = sortedProducts.filter(p => p.isTopSeller);
           if (topSellers.length === 0) return null;
           return (
