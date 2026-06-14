@@ -18,9 +18,37 @@ export default function BottomNav() {
   const loaderRef = useRef(null);
   const progressBarRef = useRef(null);
 
+   const [cartCount, setCartCount] = useState(0);
+  const [ordersCount, setOrdersCount] = useState(0);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const updateCounts = () => {
+      if (typeof window !== 'undefined') {
+        const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+        const cCount = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+        setCartCount(cCount);
+
+        const orders = JSON.parse(localStorage.getItem('aw_orders') || '[]');
+        setOrdersCount(orders.length);
+      }
+    };
+
+    updateCounts();
+
+    window.addEventListener('storage', updateCounts);
+    window.addEventListener('cart-updated', updateCounts);
+    window.addEventListener('orders-updated', updateCounts);
+
+    return () => {
+      window.removeEventListener('storage', updateCounts);
+      window.removeEventListener('cart-updated', updateCounts);
+      window.removeEventListener('orders-updated', updateCounts);
+    };
+  }, [pathname]);
 
   // Helper to determine if a route is active
   const isActive = (path) => {
@@ -158,7 +186,9 @@ export default function BottomNav() {
               isActive('/cart') ? 'text-black' : 'text-zinc-400 hover:text-black transition-colors'
             }`}
           >
-            <span className="text-[9px] tracking-widest uppercase font-bold">Bag</span>
+            <span className="text-[9px] tracking-widest uppercase font-bold text-center">
+              Bag {cartCount > 0 && `(${cartCount})`}
+            </span>
             <span className={`w-1 h-1 rounded-full ${isActive('/cart') ? 'bg-black' : 'bg-transparent'}`}></span>
           </Link>
           <Link 
@@ -168,7 +198,9 @@ export default function BottomNav() {
               isActive('/orders') ? 'text-black' : 'text-zinc-400 hover:text-black transition-colors'
             }`}
           >
-            <span className="text-[9px] tracking-widest uppercase font-bold">Orders</span>
+            <span className="text-[9px] tracking-widest uppercase font-bold text-center">
+              Orders {ordersCount > 0 && `(${ordersCount})`}
+            </span>
             <span className={`w-1 h-1 rounded-full ${isActive('/orders') ? 'bg-black' : 'bg-transparent'}`}></span>
           </Link>
         </div>

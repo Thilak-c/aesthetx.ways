@@ -172,13 +172,39 @@ export default function ProductPage({ params }) {
         const res = await fetch(`/api/products`);
         const data = await res.json();
         if (data.success) {
-          const found = data.products.find(p => p.itemId === id);
+          let found = data.products.find(p => p.itemId === id);
+          if (!found && id === 'aw-carry-bag') {
+            found = {
+              _id: 'aw-carry-bag',
+              itemId: 'aw-carry-bag',
+              name: 'Aesthetx Ways Bag',
+              mainImage: '/icons/bag.png',
+              otherImages: [],
+              category: 'accessories',
+              price: 20,
+              inStock: true,
+              color: 'Default',
+              description: 'Premium Aesthetx Ways Carry Bag. Heavyweight and styled with structural stability to keep your purchases safe and premium.',
+              sizeDisplayType: 'free',
+              availableSizes: ['OS'],
+              sizeStock: { 'OS': 999 }
+            };
+          }
           if (found) {
             setProduct(found);
 
-            // Auto-select size 'OS' if it's socks
-            if (found.category?.toLowerCase() === 'socks' && found.availableSizes?.includes('OS')) {
+            // Auto-select size if it's a free-size product (socks, caps, cap, or sizeDisplayType is free)
+            const catLower = found.category?.toLowerCase().trim();
+            const isFreeSize = found.sizeDisplayType === 'free' || 
+                               catLower === 'socks' || 
+                               catLower === 'cap' || 
+                               catLower === 'caps' ||
+                               (found.availableSizes?.length === 1 && found.availableSizes?.[0] === 'OS');
+
+            if (isFreeSize && found.availableSizes?.includes('OS')) {
               setSelectedSize('OS');
+            } else if (isFreeSize && found.availableSizes?.length === 1) {
+              setSelectedSize(found.availableSizes[0]);
             }
 
             // Pre-cache main and other images in the background
@@ -240,6 +266,12 @@ export default function ProductPage({ params }) {
     : [];
 
   const isSocksProduct = product?.category?.toLowerCase() === 'socks';
+  const catLower = product?.category?.toLowerCase().trim();
+  const isFreeSizeProduct = product?.sizeDisplayType === 'free' || 
+                             catLower === 'socks' || 
+                             catLower === 'cap' || 
+                             catLower === 'caps' ||
+                             (product?.availableSizes?.length === 1 && product?.availableSizes?.[0] === 'OS');
   const suggestionCategory = isSocksProduct ? 'pants' : 'socks';
   const suggestionTitle = isSocksProduct
     ? "Complete your aesthetic with our pants"
@@ -770,10 +802,10 @@ export default function ProductPage({ params }) {
           </div>
 
           {/* Size Selection */}
-          {isSocksProduct ? (
+          {isFreeSizeProduct ? (
             <div className="mt-4 border-t border-zinc-100 pt-3">
               <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-medium">Size</span>
-              <span className="text-[10px] text-black font-medium block mt-0.5">free style</span>
+              <span className="text-[10px] text-black font-medium block mt-0.5">Free Size</span>
             </div>
           ) : (
             <div ref={sizeSectionRef} className={`mt-4 border-t border-zinc-100 pt-3 transition-all duration-300 ${sizeError ? 'animate-shake' : ''}`}>

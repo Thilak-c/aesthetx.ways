@@ -390,24 +390,27 @@ export default function CartClient() {
                   }}
                 >
                 {/* Product Image */}
-                <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 relative group">
+                <Link 
+                  href={`/product/${item.productId}`}
+                  className="w-16 h-20 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 relative group block hover:opacity-90 transition-opacity"
+                >
                   <FallbackImage 
                     src={getCachedImage(item.productId, item.image)} 
                     alt={item.name} 
                     className="w-full h-full object-cover" 
                     logoSize="w-5 h-5"
                   />
-                  {/* <div className="absolute top-1.5 left-1.5 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
-                    <img src="/logo_t.svg" alt="Watermark Logo" className="w-3.5 h-3.5 object-contain" />
-                  </div> */}
-                </div>
+                </Link>
                 
                 {/* Details */}
                 <div className="flex flex-col flex-1 min-w-0 justify-between">
                   <div>
                     <div className="flex justify-between items-start gap-1">
-                      <div>
-                        <h3 className="text-[10px] font-bold tracking-wide uppercase text-black line-clamp-1">
+                      <Link 
+                        href={`/product/${item.productId}`}
+                        className="flex-1 min-w-0 hover:opacity-85 transition-opacity group"
+                      >
+                        <h3 className="text-[10px] font-bold tracking-wide uppercase text-black line-clamp-1 group-hover:underline">
                           {item.name}
                         </h3>
                         <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-medium block mt-0.5">
@@ -418,7 +421,8 @@ export default function CartClient() {
                           <span>×</span>
                           <OdometerNumber value={item.quantity} className="text-[9px] font-mono text-zinc-400" />
                         </div>
-                      </div>
+                      </Link>
+                      
                       <div className="flex flex-col items-end justify-between min-h-[60px] shrink-0">
                         <div className="flex items-center text-[10px] font-bold text-black font-mono select-none">
                           <OdometerNumber value={`₹${(item.price * item.quantity).toLocaleString('en-IN')}`} className="text-[10px] font-bold text-black font-mono" />
@@ -468,14 +472,20 @@ export default function CartClient() {
                     ? '-translate-x-full opacity-0 max-h-0 py-0 border-b-0 overflow-hidden pointer-events-none' 
                     : 'max-h-[150px]'
                 }`}>
-                  <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 flex items-center justify-center p-2">
+                  <Link 
+                    href="/product/aw-carry-bag"
+                    className="w-16 h-20 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 flex items-center justify-center p-2 hover:opacity-90 transition-opacity"
+                  >
                     <img src="/icons/bag_t.png" alt="Aesthetx Ways Bag" className="w-full h-full object-contain" />
-                  </div>
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <h3 className="text-[10px] font-bold tracking-wide uppercase text-black">Aesthetx Ways Bag</h3>
+                  </Link>
+                  <Link 
+                    href="/product/aw-carry-bag"
+                    className="flex flex-col flex-1 min-w-0 hover:opacity-85 transition-opacity group"
+                  >
+                    <h3 className="text-[10px] font-bold tracking-wide uppercase text-black group-hover:underline">Aesthetx Ways Bag</h3>
                     <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-medium mt-0.5">Premium Carry Bag</span>
                     <span className="text-[9px] font-semibold text-black mt-1 font-mono">₹20</span>
-                  </div>
+                  </Link>
                   <button
                     onClick={() => {
                       setBagExiting(true);

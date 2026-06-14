@@ -210,7 +210,10 @@ export default function OrderDetailsPage({ params }) {
           <div className="border border-zinc-100 rounded-[2px] p-3 flex flex-col gap-3 bg-zinc-50/50">
             {order.items.map((item, idx) => (
               <div key={idx} className="flex gap-3 items-center py-1.5 last:border-b-0 border-b border-zinc-100">
-                <div className="w-10 h-13 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 relative">
+                <Link 
+                  href={`/product/${item.productId}`}
+                  className="w-10 h-13 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 relative hover:opacity-90 transition-opacity block"
+                >
                   <FallbackImage 
                     src={item.image} 
                     alt={item.name} 
@@ -218,11 +221,16 @@ export default function OrderDetailsPage({ params }) {
                     hideText={true}
                     logoSize="w-4 h-4"
                   />
-                </div>
+                </Link>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[9.5px] font-bold text-black uppercase block truncate">
-                    {item.name}
-                  </span>
+                  <Link 
+                    href={`/product/${item.productId}`}
+                    className="hover:underline"
+                  >
+                    <span className="text-[9.5px] font-bold text-black uppercase block truncate">
+                      {item.name}
+                    </span>
+                  </Link>
                   <span className="text-[8px] text-zinc-400 block mt-0.5 uppercase tracking-wide font-medium">
                     Size: {getDisplaySize(item.size, item.sizeDisplayType)} &bull; Qty: {item.quantity}
                   </span>

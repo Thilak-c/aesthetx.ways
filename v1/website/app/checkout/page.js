@@ -368,6 +368,7 @@ export default function CheckoutPage() {
               localStorage.removeItem('aw_cart');
               localStorage.removeItem('aw_coupon');
               window.dispatchEvent(new Event('cart-updated'));
+              window.dispatchEvent(new Event('orders-updated'));
 
               setOrderSuccess(true);
               setTimeout(() => {

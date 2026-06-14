@@ -326,8 +326,6 @@ export default function HomeClient() {
     });
 
     const categoryOrder = [
-      'cap',
-      'caps',
       'headwear',
       'eyewear',
       'accessories',
@@ -335,7 +333,11 @@ export default function HomeClient() {
       'apparel / clothing',
       't-shirt',
       't-shirts',
+      'jersey',
+      'jerseys',
       'pants',
+      'cap',
+      'caps',
       'socks',
       'shoes',
       'slides',
@@ -495,7 +497,20 @@ export default function HomeClient() {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setActiveQuickAddProductId(activeQuickAddProductId === product._id ? null : product._id);
+                const catLower = (product.category || '').toLowerCase().trim();
+                const isFree = product.sizeDisplayType === 'free' || 
+                               catLower === 'socks' || 
+                               catLower === 'cap' || 
+                               catLower === 'caps' ||
+                               (product.availableSizes?.length === 1 && product.availableSizes?.[0] === 'OS');
+                if (isFree) {
+                  const size = (product.availableSizes && product.availableSizes.length > 0)
+                    ? product.availableSizes[0]
+                    : 'OS';
+                  handleQuickAddToCart(product, size);
+                } else {
+                  setActiveQuickAddProductId(activeQuickAddProductId === product._id ? null : product._id);
+                }
               }}
               className="absolute bottom-2 right-2 z-20 w-7 h-7 rounded-full bg-black text-white hover:bg-zinc-800 flex items-center justify-center shadow-lg transition-transform duration-300 active:scale-95 cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
               aria-label="Quick add size"
@@ -738,7 +753,7 @@ export default function HomeClient() {
 
               {/* Indicator Dots */}
               {heroBanners.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                <div className="absolute bottom-11 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
                   {heroBanners.map((_, index) => {
                     const isActive = index === currentBannerIndex;
                     return (
@@ -760,6 +775,30 @@ export default function HomeClient() {
                   })}
                 </div>
               )}
+
+              {/* Sticky/Absolute Marquee Ticker at the bottom of the hero banner */}
+              <div className="absolute bottom-0 left-0 right-0 z-20 bg-black/90 backdrop-blur-xs text-white py-2.5 overflow-hidden border-t border-zinc-900">
+                <div className="flex w-max animate-marquee whitespace-nowrap text-[8.5px] uppercase tracking-[0.2em] font-extrabold select-none">
+                  {/* First identical half */}
+                  <div className="flex items-center shrink-0">
+                    <span className="mx-6">Just arrived, biggest streetwear brand in Eastern India.</span>
+                    <span className="mx-6 text-zinc-500">•</span>
+                    <span className="mx-6">Everything is fresh and new.</span>
+                    <span className="mx-6 text-zinc-500">•</span>
+                    <span className="mx-6">We also have COD and prepaid.</span>
+                    <span className="mx-6 text-zinc-500">•</span>
+                  </div>
+                  {/* Second identical half for seamless loop */}
+                  <div className="flex items-center shrink-0" aria-hidden="true">
+                    <span className="mx-6">Just arrived, biggest streetwear brand in Eastern India.</span>
+                    <span className="mx-6 text-zinc-500">•</span>
+                    <span className="mx-6">Everything is fresh and new.</span>
+                    <span className="mx-6 text-zinc-500">•</span>
+                    <span className="mx-6">We also have COD and prepaid.</span>
+                    <span className="mx-6 text-zinc-500">•</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         );

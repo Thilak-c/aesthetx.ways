@@ -49,7 +49,7 @@ const MAIN_CATEGORIES = [
 
 const CATEGORY_MAP = {
   footwear: ["Shoes", "boots", "sandals", "sneakers"],
-  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses", "socks"],
+  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses", "socks", "jersey", "jerseys"],
   headwear: ["Hats", "caps", "beanies"],
   eyewear: ["Glasses", "sunglasses"]
 };
