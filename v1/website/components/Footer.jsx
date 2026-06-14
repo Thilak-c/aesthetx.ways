@@ -93,13 +93,25 @@ export default function Footer() {
       </div>
 
       {/* Background Watermark/Logo text */}
-      <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex flex-col items-center select-none pointer-events-none w-max z-[1]">
-        <span className="text-[32px] tracking-[0.18em] uppercase font-lovelo-black text-zinc-950/[0.04] leading-none">
+      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex flex-col items-center w-max z-10">
+        <span className="text-[32px] tracking-[0.18em] uppercase font-lovelo-black text-zinc-950/[0.04] leading-none select-none pointer-events-none">
           AesthetXways
         </span>
-        {/* <span className="text-[6.5px] mr-4 tracking-[0.40em] uppercase font-mono text-zinc-700 leading-none mt-1.5">
-          cheaper than therapy
-        </span> */}
+
+        {/* Collaborative Logo Mark */}
+        <div className="flex items-center gap-2 mt-2.5 mb-1.5 select-none pointer-events-none">
+          <img src="/logo_t.svg" alt="Aesthetx Ways" className="w-5 h-5 object-contain" />
+          <span className="text-[10px] font-mono text-zinc-950/[0.15]">×</span>
+          <img src="/flowify.svg" alt="Flowify" className="w-10 h-10 object-contain" />
+        </div>
+
+        {/* Credits Link */}
+        <a 
+          href="mailto:flowifyy.agency@gmail.com"
+          className="text-[10px] font-bold tracking-[0.1em] font-mono text-zinc-400 hover:text-zinc-900 transition-colors mt-1 cursor-pointer"
+        >
+          Made by <span className='text-black underline'>Flowify</span>
+        </a>
       </div>
 
       {/* Background Watermark Logo - Centered horizontally */}
@@ -182,15 +194,10 @@ export default function Footer() {
           <div className="flex flex-col gap-3">
             <span className="text-[8px] tracking-[0.25em] uppercase text-zinc-400 font-bold">Syndicate</span>
             <div className="flex flex-col gap-2">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
+              <a href="https://www.instagram.com/aesthetxways__" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
                 Instagram
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
-                Twitter / X
-              </a>
-              <a href="#" className="text-[9px] uppercase tracking-wider text-zinc-500 hover:text-zinc-950 transition-colors w-fit">
-                Terms & Privacy
-              </a>
+             
             </div>
           </div>
         </div>
@@ -202,7 +209,7 @@ export default function Footer() {
             <span>EST. IN INDIA</span>
           </div>
           <span className="text-[7.5px] tracking-normal normal-case font-mono text-zinc-600">
-            designed for the forward path.
+            designed for the forward path by Flowify.agency.
           </span>
         </div>
       </div>

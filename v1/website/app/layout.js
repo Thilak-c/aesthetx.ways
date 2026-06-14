@@ -36,6 +36,11 @@ const loveloBlack = localFont({
   variable: "--font-lovelo-black",
 });
 
+const adobeDia = localFont({
+  src: "../public/Adobe-Dia.ttf",
+  variable: "--font-adobe-dia",
+});
+
 export const metadata = {
   title: "Aesthetx Ways | Home Page",
   description: "Sleek, minimalistic clothing, footwear, headwear, and eyewear.",
@@ -49,15 +54,14 @@ const menuItems = [
 ];
 
 const socialItems = [
-  { label: 'Instagram', link: 'https://instagram.com' },
-  { label: 'Twitter', link: 'https://twitter.com' }
+  { label: 'Instagram', link: 'https://www.instagram.com/aesthetxways__' }
 ];
 
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${moiraiOne.variable} ${oi.variable} ${loveloBlack.variable} antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${moiraiOne.variable} ${oi.variable} ${loveloBlack.variable} ${adobeDia.variable} antialiased`}
     >
       <body className="bg-zinc-100 sm:bg-zinc-950 sm:flex sm:justify-center sm:items-center text-zinc-950 font-sans p-0 sm:p-6 sm:overflow-hidden relative">
         {/* Premium Luxury Tech Glow Backdrop - Visible on Desktop only */}
