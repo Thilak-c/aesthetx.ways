@@ -134,6 +134,48 @@ export default function HomeClient() {
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef(null);
 
+  // Dynamic trending search suggestions from actual product names
+  const [trendingTags, setTrendingTags] = useState([
+    'Aesthetx Signature Hoodie',
+    'Cargo Track Pants',
+    'Oversized Graphic Tee',
+    'Vintage Street Cap',
+    'Rest Slide Sandals'
+  ]);
+
+  useEffect(() => {
+    if (allProducts && allProducts.length > 0 && !searchQuery) {
+      const uniqueNames = Array.from(new Set(allProducts.map(p => p.name)));
+      const shuffled = [...uniqueNames].sort(() => 0.5 - Math.random());
+      setTrendingTags(shuffled.slice(0, 5));
+    }
+  }, [allProducts, searchQuery]);
+
+  // Intercept browser Back button when search is open to close it
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = (event) => {
+      setSearchOpen(false);
+      setSearchQuery('');
+    };
+
+    if (searchOpen) {
+      if (window.history.state?.searchOpen !== true) {
+        window.history.pushState({ searchOpen: true }, '');
+      }
+      window.addEventListener('popstate', handlePopState);
+    } else {
+      if (window.history.state?.searchOpen === true) {
+        window.history.back();
+      }
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [searchOpen]);
+
   // Close dropdowns on click outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -293,24 +335,59 @@ export default function HomeClient() {
     }
   }, []);
 
-  // Fetch all products once on mount (and when search changes)
+  // Fetch all products once on mount (and when search changes) with robust retry logic and cache-busting
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        const url = `/api/products?category=All&search=${encodeURIComponent(searchQuery)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.success) {
-          setAllProducts(data.products);
+    let active = true;
+
+    async function fetchProductsWithRetry(retries = 3, delay = 1000) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          if (!active) return;
+          setLoading(true);
+          // Add cache-busting timestamp
+          const url = `/api/products?category=All&search=${encodeURIComponent(searchQuery)}&_t=${Date.now()}`;
+          const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+
+          const data = await res.json();
+          if (data && data.success) {
+            if (active) {
+              setAllProducts(data.products);
+              setLoading(false);
+            }
+            return; // Success! Exit function.
+          } else {
+            throw new Error('API returned success: false or invalid payload');
+          }
+        } catch (err) {
+          console.error(`Attempt ${i + 1} to fetch products failed:`, err);
+          if (i === retries - 1) {
+            if (active) {
+              setLoading(false);
+            }
+          } else {
+            // Exponential backoff delay: 1000ms, then 2000ms
+            await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+          }
         }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
       }
     }
-    fetchProducts();
+
+    fetchProductsWithRetry();
+
+    return () => {
+      active = false;
+    };
   }, [searchQuery]);
 
   // Derive categories from fetched products and sort them with custom order (Caps at top, Shoes at bottom)
@@ -613,12 +690,24 @@ export default function HomeClient() {
             ref={searchInputRef}
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSearchQuery(val);
+              if (val === '') {
+                setSearchOpen(false);
+              }
+            }}
             placeholder="Search products..."
             className="w-full text-xs bg-transparent border-none outline-none py-0.5 text-black placeholder-zinc-400"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="text-zinc-400 hover:text-black">
+            <button 
+              onClick={() => {
+                setSearchQuery('');
+                setSearchOpen(false);
+              }} 
+              className="text-zinc-400 hover:text-black"
+            >
               <X className="w-3 h-3" />
             </button>
           )}
@@ -627,7 +716,7 @@ export default function HomeClient() {
         {/* Popular / Trending Search Suggestions */}
         <div className="flex items-center gap-2 mt-1.5 overflow-x-auto scrollbar-hide">
           <span className="text-[7.5px] uppercase tracking-wider text-zinc-400 font-bold whitespace-nowrap">Trending:</span>
-          {['Hoodie', 'Cargo', 'Oversized', 'Cap', 'Slides'].map((tag) => (
+          {trendingTags.map((tag) => (
             <button
               key={tag}
               onClick={() => setSearchQuery(tag)}
@@ -690,7 +779,18 @@ export default function HomeClient() {
         const heroBanners = [leftBanner, rightTopBanner, rightBottomBanner];
 
         return (
-          <div className="px-4 py-3">
+          <div
+            style={{
+              transition: 'all 600ms cubic-bezier(0.16, 1, 0.3, 1)',
+              maxHeight: searchOpen ? '0px' : '750px',
+              opacity: searchOpen ? 0 : 1,
+              transform: searchOpen ? 'translateX(-100%)' : 'translateX(0)',
+              paddingTop: searchOpen ? '0px' : '12px',
+              paddingBottom: searchOpen ? '0px' : '12px',
+              pointerEvents: searchOpen ? 'none' : 'auto',
+            }}
+            className="px-4 py-3 overflow-hidden"
+          >
             <div 
               className="w-full aspect-[4/5] relative overflow-hidden rounded-[2px] bg-zinc-50 group"
               onMouseEnter={() => setIsHovered(true)}
@@ -777,7 +877,7 @@ export default function HomeClient() {
               )}
 
               {/* Sticky/Absolute Marquee Ticker at the bottom of the hero banner */}
-              <div className="absolute bottom-0 left-0 right-0 z-20 bg-black/90 backdrop-blur-xs text-white py-2.5 overflow-hidden border-t border-zinc-900">
+              <div className="absolute bottom-0 left-0 right-0 z-20 bg-black/90 backdrop-blur-xs text-white py-0 overflow-hidden border-t border-zinc-900">
                 <div className="flex w-max animate-marquee whitespace-nowrap text-[8.5px] uppercase tracking-[0.2em] font-extrabold select-none">
                   {/* First identical half */}
                   <div className="flex items-center shrink-0">
@@ -932,80 +1032,91 @@ export default function HomeClient() {
 
       {/* Floating Control Bar for Sorting and Layout Toggling */}
       {!loading && products.length > 0 && (
-        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 w-auto max-w-[95%] bg-white/70 backdrop-blur-xl border border-zinc-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] px-4 py-2.5 rounded-full flex items-center gap-3.5 text-xs select-none">
-          {/* Category Selector Control */}
-          <div ref={categoryDropdownRef} className="relative flex items-center gap-1 border-r border-zinc-200/60 pr-3">
-            <span className="text-[8.5px] uppercase font-bold text-zinc-400 tracking-wider">Sort</span>
-            <button
-              onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-              className="flex items-center gap-0.5 w-[62px] text-[9.5px] font-bold text-black cursor-pointer uppercase tracking-wider"
-            >
-              <span>
-                {activeCategory === 'All' ? 'All' : (activeCategory === 'Apparel / Clothing' ? 'Apparel' : activeCategory)}
-              </span>
-              <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Custom Dropdown Options with slide/fade animation */}
-            <div
-              className={`absolute bottom-[calc(100%+12px)] left-0 z-50 min-w-[130px] bg-white/70 backdrop-blur-xl border border-zinc-200/50 rounded-[8px] shadow-[0_4px_20px_rgba(0,0,0,0.08)] p-1 flex flex-col gap-0.5 transition-all duration-300 origin-bottom-left ${
-                categoryDropdownOpen
-                  ? 'opacity-100 scale-100 translate-y-0'
-                  : 'opacity-0 scale-95 translate-y-2 pointer-events-none'
-              }`}
-            >
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setCategoryDropdownOpen(false);
-                    isProgrammaticScrollRef.current = true;
-                    if (cat === 'All') {
-                      document.getElementById('shop-content')?.scrollIntoView({ behavior: 'smooth' });
-                    } else {
-                      const targetId = `category-section-${cat.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-                      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
-                    }
-                    setTimeout(() => {
-                      isProgrammaticScrollRef.current = false;
-                    }, 800);
-                  }}
-                  className={`w-full text-left text-[9.5px] font-bold uppercase tracking-wider px-2 py-1.5 rounded-[4px] transition-all cursor-pointer ${
-                    activeCategory === cat
-                      ? 'bg-black text-white'
-                      : 'text-zinc-500 hover:bg-black/5 hover:text-black'
-                  }`}
-                >
-                  {cat === 'Apparel / Clothing' ? 'Apparel' : cat}
-                </button>
-              ))}
-            </div>
+        <div
+          ref={categoryDropdownRef}
+          className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 w-auto max-w-[95%] select-none"
+        >
+          {/* Custom Dropdown Options with slide/fade animation */}
+          <div
+            style={{
+              transition: 'all 500ms cubic-bezier(0.16, 1, 0.3, 1)',
+              transform: categoryDropdownOpen
+                ? 'translateY(0) scale(1)'
+                : 'translateY(calc(100% + 1px)) scale(0.95)',
+            }}
+            className={`absolute bottom-[calc(100%+12px)] left-4 z-0 min-w-[130px] bg-white/70 backdrop-blur-xl border border-zinc-200/50 rounded-[8px] shadow-[0_4px_20px_rgba(0,0,0,0.08)] p-1 flex flex-col gap-0.5 origin-bottom-left ${
+              categoryDropdownOpen
+                ? 'opacity-100'
+                : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setCategoryDropdownOpen(false);
+                  isProgrammaticScrollRef.current = true;
+                  if (cat === 'All') {
+                    document.getElementById('shop-content')?.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    const targetId = `category-section-${cat.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+                    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                  setTimeout(() => {
+                    isProgrammaticScrollRef.current = false;
+                  }, 800);
+                }}
+                className={`w-full text-left text-[9.5px] font-bold uppercase tracking-wider px-2 py-1.5 rounded-[4px] transition-all cursor-pointer ${
+                  activeCategory === cat
+                    ? 'bg-black text-white'
+                    : 'text-zinc-500 hover:bg-black/5 hover:text-black'
+                }`}
+              >
+                {cat === 'Apparel / Clothing' ? 'Apparel' : cat}
+              </button>
+            ))}
           </div>
 
+          {/* Main Floating Bar */}
+          <div className="relative z-10 bg-white/70 backdrop-blur-xl border border-zinc-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] px-4 py-2.5 rounded-full flex items-center gap-3.5 text-xs">
+            {/* Category Selector Control */}
+            <div className="relative flex items-center gap-1 border-r border-zinc-200/60 pr-3">
+              <span className="text-[8.5px] uppercase font-bold text-zinc-400 tracking-wider">Sort</span>
+              <button
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                className="flex items-center gap-0.5 w-[62px] text-[9.5px] font-bold text-black cursor-pointer uppercase tracking-wider"
+              >
+                <span>
+                  {activeCategory === 'All' ? 'All' : (activeCategory === 'Apparel / Clothing' ? 'Apparel' : activeCategory)}
+                </span>
+                <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
 
-          {/* Layout Toggle */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleLayoutChange('grid')}
-              className={`text-[8.5px] tracking-widest uppercase font-bold px-2.5 py-1 rounded-full transition-all cursor-pointer ${
-                layoutView === 'grid'
-                  ? 'bg-black text-white'
-                  : 'text-zinc-500 hover:text-black'
-              }`}
-            >
-              Grid
-            </button>
-            <button
-              onClick={() => handleLayoutChange('focus')}
-              className={`text-[8.5px] tracking-widest uppercase font-bold px-2.5 py-1 rounded-full transition-all cursor-pointer ${
-                layoutView === 'focus'
-                  ? 'bg-black text-white'
-                  : 'text-zinc-500 hover:text-black'
-              }`}
-            >
-              Focus
-            </button>
+            {/* Layout Toggle */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleLayoutChange('grid')}
+                className={`text-[8.5px] tracking-widest uppercase font-bold px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                  layoutView === 'grid'
+                    ? 'bg-black text-white'
+                    : 'text-zinc-500 hover:text-black'
+                }`}
+              >
+                Grid
+              </button>
+              <button
+                onClick={() => handleLayoutChange('focus')}
+                className={`text-[8.5px] tracking-widest uppercase font-bold px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                  layoutView === 'focus'
+                    ? 'bg-black text-white'
+                    : 'text-zinc-500 hover:text-black'
+                }`}
+              >
+                Focus
+              </button>
+            </div>
           </div>
         </div>
       )}
