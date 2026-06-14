@@ -7,6 +7,7 @@ import BottomNav from "@/components/BottomNav";
 import AgentationWrapper from "@/components/AgentationWrapper";
 import SiteStatusGate from "@/components/SiteStatusGate";
 import ApiKeyInterceptor from "@/components/ApiKeyInterceptor";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -89,7 +90,9 @@ export default function RootLayout({ children }) {
                   accentColor="#000"
                   isFixed={true}
                 />
-                {children}
+                <ErrorBoundary>
+                  {children}
+                </ErrorBoundary>
                 <BottomNav />
               </SplashWrapper>
             {/* </SiteStatusGate> */}

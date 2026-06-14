@@ -35,6 +35,7 @@ const navItems = [
   { href: "/website/products", label: "All Products", icon: Package, description: "Website inventory" },
   { href: "/website/history", label: "History", icon: History, description: "Stock movements" },
   { href: "/website/shiprocket", label: "Shiprocket", icon: Truck, description: "Logistics & packaging" },
+  { href: "/website/reports", label: "Error Logs", icon: AlertTriangle, description: "System logs & errors" },
   { href: "/website/settings", label: "Settings", icon: Settings, description: "Preferences" },
 ];
 
