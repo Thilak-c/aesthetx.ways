@@ -37,8 +37,8 @@ export default function AnalyticsDashboardPage() {
   const renderFunnelGraph = () => {
     if (showSkeleton) {
       return (
-        <div className="w-full border border-zinc-100 rounded-sm p-4 mt-2 bg-white">
-          <div className="h-[200px] w-full flex flex-col justify-between font-mono text-[9px] relative overflow-hidden">
+        <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white min-w-0 overflow-hidden">
+          <div className="h-[180px] sm:h-[200px] w-full flex flex-col justify-between font-mono text-[9px] relative overflow-hidden">
             {/* Grid lines */}
             <div className="absolute inset-0 flex flex-col justify-between py-2 pointer-events-none">
               <div className="border-b border-zinc-50 w-full" />
@@ -134,8 +134,8 @@ export default function AnalyticsDashboardPage() {
     };
 
     return (
-      <div className="w-full border border-zinc-100 rounded-sm p-4 mt-2 bg-white">
-        <div className="h-[200px] w-full">
+      <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white min-w-0 overflow-hidden">
+        <div className="h-[180px] sm:h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart key={period} data={data} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
               <defs>
@@ -258,7 +258,7 @@ export default function AnalyticsDashboardPage() {
     };
 
     return (
-      <div className="w-full border border-zinc-100 rounded-sm p-4 mt-2 bg-white">
+      <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white min-w-0 overflow-hidden">
         <div className="h-[180px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart key={period} data={data} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
@@ -305,7 +305,7 @@ export default function AnalyticsDashboardPage() {
   const renderDonutChart = (data, chartId) => {
     if (showSkeleton) {
       return (
-        <div className="border border-zinc-100 rounded-sm p-4 mt-2 flex flex-col sm:flex-row items-center gap-6 font-mono text-xs bg-white flex-1">
+        <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 font-mono text-xs bg-white flex-1 min-w-0 w-full overflow-hidden">
           <div className="relative w-[110px] h-[110px] shrink-0 flex items-center justify-center animate-pulse">
             <svg className="w-full h-full text-zinc-100" viewBox="0 0 36 36">
               <path
@@ -355,7 +355,7 @@ export default function AnalyticsDashboardPage() {
     })();
 
     return (
-      <div className="border border-zinc-100 rounded-sm p-4 mt-2 flex flex-col sm:flex-row items-center gap-6 font-mono text-xs bg-white flex-1">
+      <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 font-mono text-xs bg-white flex-1 min-w-0 w-full overflow-hidden">
         {/* Recharts Pie Donut Chart */}
         <div className="relative w-[110px] h-[110px] shrink-0 flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
@@ -410,7 +410,7 @@ export default function AnalyticsDashboardPage() {
   const renderBarChart = (data, chartId) => {
     if (showSkeleton) {
       return (
-        <div className="border border-zinc-100 rounded-sm p-4 mt-2 bg-white flex-1">
+        <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white flex-1 min-w-0 w-full overflow-hidden">
           <div className="h-[140px] w-full flex flex-col justify-between font-mono text-[9px] relative overflow-hidden">
             {/* Grid lines */}
             <div className="absolute inset-0 flex flex-col justify-between py-2 pointer-events-none">
@@ -457,7 +457,7 @@ export default function AnalyticsDashboardPage() {
     }
 
     return (
-      <div className="border border-zinc-100 rounded-sm p-4 mt-2 bg-white flex-1">
+      <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white flex-1 min-w-0 w-full overflow-hidden">
         <div className="h-[140px] w-full font-mono text-[10px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart key={period} id={chartId} data={data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
@@ -553,7 +553,7 @@ export default function AnalyticsDashboardPage() {
     const chartHeight = Math.max(300, data.length * 26);
 
     return (
-      <div className="w-full border border-zinc-100 rounded-sm p-4 mt-2 bg-white max-h-[450px] overflow-y-auto pr-2">
+      <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white max-h-[450px] overflow-y-auto pr-2 min-w-0 overflow-hidden">
         <div style={{ height: `${chartHeight}px` }} className="w-full font-mono text-[10px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
@@ -655,7 +655,7 @@ export default function AnalyticsDashboardPage() {
     const chartHeight = Math.max(300, data.length * 26);
 
     return (
-      <div className="w-full border border-zinc-100 rounded-sm p-4 mt-2 bg-white max-h-[450px] overflow-y-auto pr-2">
+      <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white max-h-[450px] overflow-y-auto pr-2 min-w-0 overflow-hidden">
         <div style={{ height: `${chartHeight}px` }} className="w-full font-mono text-[10px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
@@ -782,8 +782,8 @@ export default function AnalyticsDashboardPage() {
     };
 
     return (
-      <div className="w-full border border-zinc-100 rounded-sm p-4 mt-2 bg-white">
-        <div className="h-[200px] w-full">
+      <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white min-w-0 overflow-hidden">
+        <div className="h-[180px] sm:h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart key={period} data={data} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
               <defs>
@@ -883,7 +883,7 @@ export default function AnalyticsDashboardPage() {
     const chartHeight = Math.max(200, data.length * 26);
 
     return (
-      <div className="w-full border border-zinc-100 rounded-sm p-4 mt-2 bg-white max-h-[300px] overflow-y-auto pr-2">
+      <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white max-h-[300px] overflow-y-auto pr-2 min-w-0 overflow-hidden">
         <div style={{ height: `${chartHeight}px` }} className="w-full font-mono text-[10px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
@@ -986,7 +986,7 @@ export default function AnalyticsDashboardPage() {
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 w-full overflow-x-hidden">
         <div className="max-w-5xl mx-auto pt-12 lg:pt-0">
           
           <div className="flex flex-col gap-8">
