@@ -17,7 +17,6 @@ export default function SuggestionBar({ category, customTitle, onItemClick, high
         // Add cache-busting timestamp to prevent aggressive Next.js routing cache
         const res = await fetch('/api/products?t=' + Date.now(), { cache: 'no-store' });
         const data = await res.json();
-        console.log("Suggestions raw products:", data.products);
         if (data.success && data.products) {
           let filtered = data.products;
           if (category) {

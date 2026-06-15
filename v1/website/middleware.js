@@ -23,8 +23,8 @@ if (typeof globalThis !== 'undefined') {
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Only protect API routes
-  if (pathname.startsWith('/api')) {
+  // Only protect API routes (exclude Razorpay order creation route)
+  if (pathname.startsWith('/api') && pathname !== '/api/checkout/create-razorpay-order') {
     // 1. Validate API Access Key
     const apiKey = request.headers.get('x-api-key');
     const expectedKey = process.env.INTERNAL_API_KEY;

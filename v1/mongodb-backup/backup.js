@@ -9,32 +9,16 @@ dotenv.config();
 const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || "https://db.aesthetxways.com";
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/aesthetx-ways";
 
-// All 24 core Convex database tables to back up
+// All core Convex database tables to back up
 const TABLES = [
   "users",
   "sessions",
   "passwordResetOTPs",
-  "phoneOTPs",
   "trash",
   "products",
-  "web_trash",
-  "off_trash",
-  "web_products",
-  "off_products",
-  "web_bills",
-  "off_bills",
-  "web_movements",
-  "off_movements",
-  "reviews",
-  "cart",
-  "wishlist",
   "orders",
   "recentlyViewed",
-  "views",
-  "dailyAccess",
-  "reports",
-  "chatSessions",
-  "chatMessages"
+  "reports"
 ];
 
 const BACKUP_QUERY_PATH = "backup:getTableData";

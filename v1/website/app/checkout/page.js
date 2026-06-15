@@ -240,7 +240,6 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       if (data.success) {
-        console.log(`Auto-saved ${field}:`, value);
         // Sync local storage if name changed
         if (field === 'fullName') {
           userObj.name = value;

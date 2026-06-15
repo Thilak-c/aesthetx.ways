@@ -15,7 +15,6 @@ import type * as banners from "../banners.js";
 import type * as coupons from "../coupons.js";
 import type * as crons from "../crons.js";
 import type * as inventory from "../inventory.js";
-import type * as offStore from "../offStore.js";
 import type * as orders from "../orders.js";
 import type * as products from "../products.js";
 import type * as reports from "../reports.js";
@@ -38,7 +37,6 @@ declare const fullApi: ApiFromModules<{
   coupons: typeof coupons;
   crons: typeof crons;
   inventory: typeof inventory;
-  offStore: typeof offStore;
   orders: typeof orders;
   products: typeof products;
   reports: typeof reports;

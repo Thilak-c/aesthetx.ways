@@ -3226,7 +3226,7 @@ export const getProductsForShop = query({
   },
 });
 
-// Migration function to set mainCategory to footwear for all products and off_products
+// Migration function to set mainCategory to footwear for all products
 export const migrateMainCategoryToFootwear = mutation({
   args: {},
   handler: async (ctx) => {
@@ -3241,22 +3241,10 @@ export const migrateMainCategoryToFootwear = mutation({
       }
     }
 
-    const offProducts = await ctx.db.query("off_products").collect();
-    let offMigratedCount = 0;
-    for (const product of offProducts) {
-      if (!product.mainCategory) {
-        await ctx.db.patch(product._id, {
-          mainCategory: "footwear"
-        });
-        offMigratedCount++;
-      }
-    }
-
     return {
       success: true,
       webMigratedCount,
-      offMigratedCount,
-      message: `Migrated ${webMigratedCount} online products and ${offMigratedCount} offline products to footwear`
+      message: `Migrated ${webMigratedCount} online products to footwear`
     };
   },
 });
