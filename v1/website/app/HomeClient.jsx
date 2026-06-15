@@ -8,6 +8,7 @@ import { gsap } from 'gsap';
 import { getCachedVideo, getCachedImage } from '@/lib/mediaCache';
 import FallbackImage from '@/components/FallbackImage';
 import Footer from '@/components/Footer';
+import { trackEvent } from '@/lib/analytics';
 
 // Standalone component to animate individual item on a stagger delay
 function FlyingItem({ image, coords, index, total, onComplete }) {
@@ -223,6 +224,14 @@ export default function HomeClient() {
       }
 
       localStorage.setItem('aw_cart', JSON.stringify(cart));
+
+      trackEvent('action', 'add_to_cart', {
+        productId: product.itemId,
+        name: product.name,
+        price: product.price,
+        size: selectedSize,
+        quantity: 1,
+      });
 
       // Calculate coordinates dynamically relative to the mobile mockup container
       const btnEl = document.getElementById(`quick-add-${product.itemId}-${selectedSize}`);

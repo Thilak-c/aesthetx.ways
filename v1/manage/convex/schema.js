@@ -775,58 +775,25 @@ export default defineSchema({
     .index("by_display_order", ["displayOrder"])
     .index("by_type", ["type"]),
 
-  // User Activity table for tracking all user actions
-  userActivity: defineTable({
-    // User identification
-    userId: v.optional(v.id("users")), // Null for anonymous users
-    sessionId: v.string(), // Unique session identifier
-    
-    // Activity details
-    activityType: v.string(), // 'page_view', 'action', 'event'
-    actionType: v.optional(v.string()), // Specific action like 'add_to_cart'
-    
-    // Page/location data
-    page: v.string(), // Current page URL
-    previousPage: v.optional(v.string()),
-    
-    // Action data
-    actionData: v.optional(v.any()), // JSON data about the action
-    
-    // Session metadata
-    deviceType: v.string(), // 'mobile', 'tablet', 'desktop'
-    browser: v.string(),
-    os: v.string(),
-    screenResolution: v.optional(v.string()),
-    
-    // Location data (approximate)
-    country: v.optional(v.string()),
-    city: v.optional(v.string()),
-    postal: v.optional(v.string()), // Postal/PIN code
-    ipAddress: v.optional(v.string()), // Hashed for privacy
-    
-    // Referrer data
-    referrer: v.optional(v.string()),
-    referrerDomain: v.optional(v.string()),
-    utmSource: v.optional(v.string()),
-    utmMedium: v.optional(v.string()),
-    utmCampaign: v.optional(v.string()),
-    
-    // Timestamps
-    timestamp: v.string(),
-    duration: v.optional(v.number()), // Time spent on page (ms)
-    
-    // Privacy
-    isAnonymized: v.boolean(),
-    optedOut: v.optional(v.boolean()),
+  // Pre-aggregated daily analytics counters to handle scalability
+  dailyAnalytics: defineTable({
+    date: v.string(), // "YYYY-MM-DD"
+    type: v.string(), // "metric", "page", "location", "funnel", "device", "browser", "os", "referrer", "campaign"
+    key: v.string(), // e.g. "totalViews", "/product/AWT0293", "India/Patna", "add_to_cart", "desktop"
+    count: v.number(),
+    meta: v.optional(v.any()), // e.g. { latitude, longitude } for location
   })
-    .index("by_user", ["userId"])
-    .index("by_session", ["sessionId"])
-    .index("by_timestamp", ["timestamp"])
-    .index("by_activity_type", ["activityType"])
-    .index("by_action_type", ["actionType"])
-    .index("by_page", ["page"])
-    .index("by_user_timestamp", ["userId", "timestamp"]),
+    .index("by_date", ["date"])
+    .index("by_type_date", ["type", "date"])
+    .index("by_type_date_key", ["type", "date", "key"]),
 
+  // Daily unique session registry to count totalSessions and uniqueUsers
+  sessionTracker: defineTable({
+    date: v.string(),
+    sessionId: v.string(),
+  })
+    .index("by_date_session", ["date", "sessionId"]),
+ 
   // Active Sessions table for tracking current user sessions
   activeSessions: defineTable({
     sessionId: v.string(),
@@ -845,6 +812,12 @@ export default defineSchema({
     country: v.optional(v.string()),
     city: v.optional(v.string()),
     postal: v.optional(v.string()), // Postal/PIN code
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    
+    // Acquisition / Referral Info
+    referrer: v.optional(v.string()),
+    referrerDomain: v.optional(v.string()),
     
     // Session stats
     pageViews: v.number(),
@@ -1137,4 +1110,31 @@ export default defineSchema({
     updatedAt: v.string(),
   })
     .index("by_position", ["position"]),
+
+  // Payments table for tracking customer online & cash payments
+  payments: defineTable({
+    orderId: v.optional(v.id("orders")),
+    orderNumber: v.string(),
+    customerName: v.string(),
+    customerEmail: v.optional(v.string()),
+    customerPhone: v.optional(v.string()),
+    amount: v.float64(),
+    currency: v.string(),
+    paymentMethod: v.string(),
+    paymentStatus: v.string(), // "completed", "pending", "failed", "refunded"
+    razorpayOrderId: v.optional(v.string()),
+    razorpayPaymentId: v.optional(v.string()),
+    paymentAddress: v.string(), // customer delivery address
+    products: v.array(v.object({
+      productId: v.string(),
+      name: v.string(),
+      price: v.float64(),
+      quantity: v.number(),
+      size: v.string(),
+    })),
+    createdAt: v.string(), // ISO format
+  })
+    .index("by_order", ["orderNumber"])
+    .index("by_razorpay", ["razorpayPaymentId"])
+    .index("by_created", ["createdAt"]),
 });

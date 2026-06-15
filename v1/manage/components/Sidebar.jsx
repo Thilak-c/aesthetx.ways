@@ -19,13 +19,16 @@ import {
   Truck,
   Receipt,
   MessageCircle,
-  Image
+  Image,
+  BarChart2,
+  AlertTriangle
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 // Website Store Navigation
 const navItems = [
   { href: "/website", label: "Dashboard", icon: LayoutDashboard, description: "Website overview" },
+  { href: "/website/analytics", label: "Analytics", icon: BarChart2, description: "Audience & funnel patterns" },
   { href: "/website/orders", label: "Orders", icon: ShoppingCart, description: "Customer orders" },
   { href: "/website/banners", label: "Hero Banners", icon: Image, description: "Manage homepage banners" },
   { href: "/website/coupons", label: "Coupons", icon: Tag, description: "Discount codes" },

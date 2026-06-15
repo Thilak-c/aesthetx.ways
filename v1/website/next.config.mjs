@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['geoip-lite'],
   images: {
     domains: ['localhost', 'aesthetxways.com', 'manage.aesthetxways.com'],
     remotePatterns: [

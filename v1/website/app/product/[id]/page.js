@@ -11,6 +11,7 @@ import { getCachedImage } from '@/lib/mediaCache';
 import FallbackImage from '@/components/FallbackImage';
 import SuggestionBar from '@/components/SuggestionBar';
 import Footer from '@/components/Footer';
+import { trackEvent } from '@/lib/analytics';
 
 const SIZE_MAP = {
   S: '28',
@@ -366,6 +367,14 @@ export default function ProductPage({ params }) {
 
       localStorage.setItem('aw_cart', JSON.stringify(cart));
 
+      trackEvent('action', 'add_to_cart', {
+        productId: product.itemId,
+        name: product.name,
+        price: product.price,
+        size: selectedSize,
+        quantity: quantity,
+      });
+
       // Calculate coordinates dynamically relative to the mobile mockup container to keep it perfect and local
       const btnEl = document.getElementById('add-to-bag-btn');
       const menuEl = document.getElementById('nav-bag-btn');
@@ -469,6 +478,22 @@ export default function ProductPage({ params }) {
       }
 
       localStorage.setItem('aw_cart', JSON.stringify(cart));
+
+      trackEvent('action', 'add_to_cart', {
+        productId: product.itemId,
+        name: product.name,
+        price: product.price,
+        size: selectedSize,
+        quantity: quantity,
+      });
+      
+      trackEvent('action', 'add_to_cart', {
+        productId: suggestedProduct.itemId,
+        name: suggestedProduct.name,
+        price: suggestedProduct.price,
+        size: suggestedSize,
+        quantity: 1,
+      });
 
       // Calculate coordinates dynamically relative to the mobile mockup container
       const btnEl = document.getElementById('add-to-bag-btn');

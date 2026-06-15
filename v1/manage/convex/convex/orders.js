@@ -122,6 +122,37 @@ export const createOrder = mutation({
         updatedAt: orderTimestamp,
       });
 
+      // Format full payment shipping address safely
+      const streetAddress = args.shippingDetails.address || "";
+      const cityLoc = args.shippingDetails.city || "";
+      const stateLoc = args.shippingDetails.state || "";
+      const pinCode = args.shippingDetails.pincode || "";
+      const formattedAddress = [streetAddress, cityLoc, stateLoc, pinCode].filter(Boolean).join(", ");
+
+      // Create the payment record in the payments table
+      await ctx.db.insert("payments", {
+        orderId,
+        orderNumber,
+        customerName: args.shippingDetails.fullName,
+        customerEmail: args.shippingDetails.email,
+        customerPhone: args.shippingDetails.phone,
+        amount: args.orderTotal,
+        currency: args.paymentDetails.currency || "INR",
+        paymentMethod: enhancedPaymentDetails.paymentMethod,
+        paymentStatus: args.paymentDetails.status || "completed",
+        razorpayOrderId: args.paymentDetails.razorpayOrderId,
+        razorpayPaymentId: args.paymentDetails.razorpayPaymentId,
+        paymentAddress: formattedAddress,
+        products: args.items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          size: item.size,
+        })),
+        createdAt: nowIso(),
+      });
+
       // Admin notification is now sent from the frontend checkout page
       // This avoids Convex action/mutation limitations
 
@@ -684,5 +715,18 @@ export const trackOrder = query({
     }
 
     return null;
+  },
+});
+
+// Fetch all payment transactions
+export const getAllPayments = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("payments")
+      .order("desc")
+      .take(args.limit || 100);
   },
 });

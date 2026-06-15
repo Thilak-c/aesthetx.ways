@@ -9,6 +9,7 @@ import FallbackImage from '@/components/FallbackImage';
 import { OdometerNumber } from '@/components/SplashWrapper';
 import Footer from '@/components/Footer';
 import SuggestionBar from '@/components/SuggestionBar';
+import { trackEvent } from '@/lib/analytics';
 
 const SIZE_MAP = {
   S: '28',
@@ -114,10 +115,20 @@ export default function CartClient() {
   };
 
   const removeItem = (productId, size) => {
+    const itemToRemove = cartItems.find(item => item.productId === productId && item.size === size);
     const filtered = cartItems.filter(
       (item) => !(item.productId === productId && item.size === size)
     );
     saveCart(filtered);
+    if (itemToRemove) {
+      trackEvent('action', 'remove_from_cart', {
+        productId: itemToRemove.productId,
+        name: itemToRemove.name,
+        price: itemToRemove.price,
+        size: itemToRemove.size,
+        quantity: itemToRemove.quantity
+      });
+    }
   };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -220,6 +231,19 @@ export default function CartClient() {
 
   const handleProceedToCheckout = (e) => {
     e.preventDefault();
+
+    // Log initiate checkout
+    trackEvent('action', 'initiate_checkout', {
+      items: cartItems.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        size: item.size,
+        quantity: item.quantity
+      })),
+      total: estimatedTotal
+    });
+
     const userStr = localStorage.getItem('aw_user');
     if (userStr) {
       try {
@@ -282,6 +306,7 @@ export default function CartClient() {
       const data = await res.json();
       if (data.success) {
         const userSession = {
+          id: data.user.id,
           email: data.user.email,
           name: data.user.name,
           loggedIn: true,

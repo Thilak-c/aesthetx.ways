@@ -31,6 +31,7 @@ export async function GET(request) {
     return NextResponse.json({
       success: true,
       user: {
+        id: user._id,
         fullName: user.name || '',
         email: user.email || '',
         phone: user.phoneNumber || '',

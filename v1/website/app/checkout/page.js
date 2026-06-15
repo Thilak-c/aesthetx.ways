@@ -7,6 +7,7 @@ import { ArrowLeft, CheckCircle2, ChevronRight } from 'lucide-react';
 import { getCachedImage } from '@/lib/mediaCache';
 import Confetti from '@/components/Confetti';
 import FallbackImage from '@/components/FallbackImage';
+import { trackEvent } from '@/lib/analytics';
 
 const SIZE_MAP = {
   S: '28',
@@ -102,6 +103,10 @@ export default function CheckoutPage() {
           .then((res) => res.json())
           .then((data) => {
             if (data.success && data.user) {
+              if (!userObj.id && data.user.id) {
+                userObj.id = data.user.id;
+                localStorage.setItem('aw_user', JSON.stringify(userObj));
+              }
               setForm({
                 fullName: data.user.fullName || userObj.name || '',
                 phone: data.user.phone || '',
@@ -363,6 +368,19 @@ export default function CheckoutPage() {
                 customerDetails: form,
               });
               localStorage.setItem('aw_orders', JSON.stringify(existingOrders));
+
+              trackEvent('action', 'purchase_complete', {
+                orderNumber: data.orderNumber,
+                items: cartItems.map(item => ({
+                  productId: item.productId,
+                  name: item.name,
+                  price: item.price,
+                  size: item.size,
+                  quantity: item.quantity
+                })),
+                total: estimatedTotal,
+                paymentMethod: paymentMethod
+              });
 
               // Clear Cart & Coupon
               localStorage.removeItem('aw_cart');

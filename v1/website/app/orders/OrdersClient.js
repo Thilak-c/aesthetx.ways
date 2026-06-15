@@ -141,6 +141,7 @@ export default function OrdersClient() {
       const data = await res.json();
       if (data.success) {
         const userSession = {
+          id: data.user.id,
           email: data.user.email,
           name: data.user.name,
           loggedIn: true,

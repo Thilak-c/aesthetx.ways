@@ -1124,4 +1124,31 @@ export default defineSchema({
     updatedAt: v.string(),
   })
     .index("by_position", ["position"]),
+
+  // Payments table for tracking customer online & cash payments
+  payments: defineTable({
+    orderId: v.optional(v.id("orders")),
+    orderNumber: v.string(),
+    customerName: v.string(),
+    customerEmail: v.optional(v.string()),
+    customerPhone: v.optional(v.string()),
+    amount: v.float64(),
+    currency: v.string(),
+    paymentMethod: v.string(),
+    paymentStatus: v.string(), // "completed", "pending", "failed", "refunded"
+    razorpayOrderId: v.optional(v.string()),
+    razorpayPaymentId: v.optional(v.string()),
+    paymentAddress: v.string(), // customer delivery address
+    products: v.array(v.object({
+      productId: v.string(),
+      name: v.string(),
+      price: v.float64(),
+      quantity: v.number(),
+      size: v.string(),
+    })),
+    createdAt: v.string(), // ISO format
+  })
+    .index("by_order", ["orderNumber"])
+    .index("by_razorpay", ["razorpayPaymentId"])
+    .index("by_created", ["createdAt"]),
 });

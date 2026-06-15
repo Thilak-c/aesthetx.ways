@@ -8,6 +8,7 @@ import AgentationWrapper from "@/components/AgentationWrapper";
 import SiteStatusGate from "@/components/SiteStatusGate";
 import ApiKeyInterceptor from "@/components/ApiKeyInterceptor";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,6 +81,7 @@ export default function RootLayout({ children }) {
             {/* <SiteStatusGate> */}
               <SplashWrapper>
                 <ApiKeyInterceptor />
+                <AnalyticsTracker />
                 <StaggeredMenu
                   position="right"
                   items={menuItems}
