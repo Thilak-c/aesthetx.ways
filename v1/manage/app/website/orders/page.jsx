@@ -567,7 +567,7 @@ export default function WebsiteOrdersPage() {
 
                               {/* Payment details */}
                               <td className="px-4 py-3 text-right">
-                                {order.paymentDetails?.paymentMethod === "cod" ? (
+                                {order.paymentDetails?.paymentMethod?.toLowerCase() === "cod" ? (
                                   <div className="space-y-0.5 font-mono text-[11px]">
                                     <div className="font-extrabold text-zinc-950">₹{order.orderTotal?.toLocaleString("en-IN")}</div>
                                     <div className="text-[9px] text-emerald-600">Paid upfront: ₹{(order.paymentDetails?.codCharge || 100).toLocaleString("en-IN")}</div>
@@ -793,7 +793,7 @@ export default function WebsiteOrdersPage() {
                         <span className="text-zinc-400 text-[10px]">Gateway Method</span>
                         <span className="block font-bold text-zinc-950 uppercase">{selectedOrder.paymentDetails?.paymentMethod || "cod"}</span>
                       </div>
-                      {selectedOrder.paymentDetails?.paymentMethod === "cod" ? (
+                      {selectedOrder.paymentDetails?.paymentMethod?.toLowerCase() === "cod" ? (
                         <div className="space-y-1.5 pt-1.5 border-t border-dashed border-zinc-100">
                           <div className="flex justify-between">
                             <span className="text-zinc-400">Paid Upfront</span>

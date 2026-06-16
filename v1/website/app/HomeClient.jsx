@@ -552,28 +552,26 @@ export default function HomeClient() {
             alt={product.name}
             className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.02] ${
               hasAlternativeImage ? 'group-hover:opacity-0' : ''
-            }`}
+            } ${!product.inStock ? 'blur-[3px] grayscale-[20%]' : ''}`}
           />
           {hasAlternativeImage && (
             <FallbackImage
               src={altImageUrl}
               alt={`${product.name} Alternate View`}
-              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-700 ease-out pointer-events-none"
+              className={`absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-700 ease-out pointer-events-none ${!product.inStock ? 'blur-[3px] grayscale-[20%]' : ''}`}
             />
           )}
-          {product.inStock ? (
-            product.isTopSeller && !hideTopSellerBadge ? (
-              <div className="absolute top-2 left-2 bg-amber-500 text-white text-[7px] tracking-wider uppercase font-bold px-1.5 py-0.5 rounded-[1px] z-10 shadow-sm">
-                Top Seller
-              </div>
-            ) : (
-              <div className="absolute top-2 left-2 z-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-300">
-
-              </div>
-            )
-          ) : (
-            <div className="absolute top-2 left-2 bg-black text-white text-[7px] tracking-wider uppercase font-semibold px-1.5 py-0.5 rounded-[1px] z-10">
-              Out of Stock
+          {product.inStock && product.isTopSeller && !hideTopSellerBadge && (
+            <div className="absolute top-2 left-2 bg-amber-500 text-white text-[7px] tracking-wider uppercase font-bold px-1.5 py-0.5 rounded-[1px] z-10 shadow-sm">
+              Top Seller
+            </div>
+          )}
+          {!product.inStock && (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/40 z-10 pointer-events-none">
+            
+                <span className="text-[10px] tracking-[0.25em] text-red-500 font-lovelo-black font-extrabold uppercase mt-0.5">
+                  SOLD OUT
+                </span>
             </div>
           )}
 
@@ -1033,7 +1031,7 @@ export default function HomeClient() {
                 className="w-full h-full object-cover filter grayscale opacity-80"
               />
             </div>
-            <span className="text-[8px] tracking-[0.2em] uppercase text-zinc-400 font-medium">No more products to show</span>
+            <span className="text-[8px] tracking-[0.2em] uppercase text-zinc-400 font-medium">u seen all {products.length} products</span>
           </div>
         )}
         <Footer />

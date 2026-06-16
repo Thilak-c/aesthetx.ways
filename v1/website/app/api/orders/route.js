@@ -20,22 +20,24 @@ export async function POST(request) {
     }
 
     // 1. Verify Razorpay payment signature
-    if (razorpayOrderId && razorpayPaymentId && razorpaySignature) {
-      const secret = process.env.RAZORPAY_KEY_SECRET;
-      if (!secret) {
-        return NextResponse.json({ success: false, message: 'Razorpay key secret not configured on server' }, { status: 500 });
-      }
+    if (paymentMethod !== 'COD') {
+      if (razorpayOrderId && razorpayPaymentId && razorpaySignature) {
+        const secret = process.env.RAZORPAY_KEY_SECRET;
+        if (!secret) {
+          return NextResponse.json({ success: false, message: 'Razorpay key secret not configured on server' }, { status: 500 });
+        }
 
-      const generatedSignature = crypto
-        .createHmac('sha256', secret)
-        .update(razorpayOrderId + '|' + razorpayPaymentId)
-        .digest('hex');
+        const generatedSignature = crypto
+          .createHmac('sha256', secret)
+          .update(razorpayOrderId + '|' + razorpayPaymentId)
+          .digest('hex');
 
-      if (generatedSignature !== razorpaySignature) {
-        return NextResponse.json({ success: false, message: 'Payment verification failed: invalid signature' }, { status: 400 });
+        if (generatedSignature !== razorpaySignature) {
+          return NextResponse.json({ success: false, message: 'Payment verification failed: invalid signature' }, { status: 400 });
+        }
+      } else {
+        return NextResponse.json({ success: false, message: 'Payment verification failed: missing payment identifiers' }, { status: 400 });
       }
-    } else {
-      return NextResponse.json({ success: false, message: 'Payment verification failed: missing payment identifiers' }, { status: 400 });
     }
     
     // 2. Validate stock in Convex before placing order

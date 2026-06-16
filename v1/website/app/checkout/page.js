@@ -73,6 +73,7 @@ export default function CheckoutPage() {
   const [codError, setCodError] = useState(false);
   const [codErrorMsg, setCodErrorMsg] = useState('');
   const [showCodOption, setShowCodOption] = useState(true);
+  const [showCodConfirm, setShowCodConfirm] = useState(false);
 
   // Load cart, verify session, and fetch user profile
   useEffect(() => {
@@ -204,6 +205,7 @@ export default function CheckoutPage() {
   };
 
   const handlePaymentMethodChange = (method) => {
+    /*
     if (method === 'COD') {
       setCodError(true);
       setCodErrorMsg(`Sorry ${form.fullName || 'User'} you not Eligible for COD orders`);
@@ -217,6 +219,7 @@ export default function CheckoutPage() {
       setPaymentMethod('CARD');
       return;
     }
+    */
     setCodErrorMsg(''); // Clear error if they select CARD
     setPaymentMethod(method);
   };
@@ -273,7 +276,7 @@ export default function CheckoutPage() {
   
   const estimatedTotal = orderSubtotal + freeDeliveryDiscount - couponDiscount;
 
-  const handlePlaceOrder = async (e) => {
+  const handlePlaceOrder = async (e, forceConfirm = false) => {
     if (e && e.preventDefault) e.preventDefault();
 
     // Validation
@@ -292,8 +295,75 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (paymentMethod === 'COD' && !forceConfirm) {
+      setShowCodConfirm(true);
+      return;
+    }
+
     try {
       setPlacingOrder(true);
+      setShowCodConfirm(false);
+
+      if (paymentMethod === 'COD') {
+        const orderData = {
+          items: cartItems,
+          customerDetails: form,
+          paymentMethod: 'COD',
+          orderTotal: estimatedTotal,
+        };
+
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setGeneratedOrderNum(data.orderNumber);
+          
+          const existingOrders = JSON.parse(localStorage.getItem('aw_orders') || '[]');
+          existingOrders.unshift({
+            orderNumber: data.orderNumber,
+            date: new Date().toISOString(),
+            items: cartItems,
+            total: estimatedTotal,
+            status: 'pending',
+            customerDetails: form,
+          });
+          localStorage.setItem('aw_orders', JSON.stringify(existingOrders));
+
+          trackEvent('action', 'purchase_complete', {
+            orderNumber: data.orderNumber,
+            items: cartItems.map(item => ({
+              productId: item.productId,
+              name: item.name,
+              price: item.price,
+              size: item.size,
+              quantity: item.quantity
+            })),
+            total: estimatedTotal,
+            paymentMethod: 'COD'
+          });
+
+          localStorage.removeItem('aw_cart');
+          localStorage.removeItem('aw_coupon');
+          window.dispatchEvent(new Event('cart-updated'));
+          window.dispatchEvent(new Event('orders-updated'));
+
+          setOrderSuccess(true);
+          setTimeout(() => {
+            router.push('/orders');
+          }, 4000);
+        } else {
+          alert(data.message || 'Failed to place order. Please try again.');
+        }
+        setPlacingOrder(false);
+        return;
+      }
 
       const payAmount = estimatedTotal;
 
@@ -829,11 +899,42 @@ export default function CheckoutPage() {
             >
               {placingOrder 
                 ? 'Processing...' 
-                : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} & Place Order`
+                : paymentMethod === 'COD'
+                  ? 'Confirm COD & Place Order'
+                  : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} & Place Order`
               }
             </button>
           </div>
         </form>
+
+        {/* COD Confirmation Modal */}
+        {showCodConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+            <div className="bg-white p-6 border border-zinc-200 shadow-2xl max-w-[360px] w-full mx-4 text-center rounded-[2px] transition-all">
+              <h3 className="text-[11px] tracking-[0.2em] uppercase font-bold text-zinc-900 mb-6 leading-relaxed">
+                Are you sure you want to continue with COD?
+              </h3>
+              <div className="space-y-2.5">
+                <button
+                  type="button"
+                  disabled={placingOrder}
+                  onClick={() => handlePlaceOrder(null, true)}
+                  className="w-full flex items-center justify-center py-3.5 bg-black text-white hover:bg-zinc-900 transition-colors text-[9px] tracking-[0.2em] uppercase font-bold rounded-[1px] disabled:bg-zinc-400"
+                >
+                  {placingOrder ? 'Processing...' : 'Place order'}
+                </button>
+                <button
+                  type="button"
+                  disabled={placingOrder}
+                  onClick={() => setShowCodConfirm(false)}
+                  className="w-full py-3 border border-zinc-200 hover:bg-zinc-50 transition-colors text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-500 rounded-[1px] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -731,12 +731,21 @@ export default function ProductPage({ params }) {
                 <FallbackImage
                   src={imgUrl}
                   alt={`${product.name} Image ${index + 1}`}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className={`absolute inset-0 w-full h-full object-cover ${!product.inStock ? 'blur-[4px] grayscale-[20%]' : ''}`}
                   logoSize="w-8 h-8"
                 />
               </div>
             ))}
           </div>
+          {!product.inStock && (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/40 z-10 pointer-events-none">
+              {/* <div className="flex flex-col items-center gap-2 backdrop-blur-md px-6 py-5 rounded-[2px] shadow-[0_12px_40px_rgba(0,0,0,0.6)]"> */}
+                <span className="text-[14px] tracking-[0.3em] text-red-500 font-lovelo-black font-extrabold uppercase mt-1">
+                  SOLD OUT
+                </span>
+              {/* </div> */}
+            </div>
+          )}
 
           {/* Navigation Arrows */}
           {productImages.length > 1 && (
@@ -800,7 +809,7 @@ export default function ProductPage({ params }) {
               >
                 <FallbackImage
                   src={imgUrl}
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full object-cover ${!product.inStock ? 'blur-[1px] grayscale-[20%]' : ''}`}
                   hideText={true}
                   logoSize="w-4 h-4"
                 />

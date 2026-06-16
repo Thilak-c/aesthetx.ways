@@ -141,9 +141,26 @@ export default function SuggestionBar({ category, customTitle, onItemClick, high
                   <FallbackImage
                     src={getCachedImage(product.itemId, product.mainImage)}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+                    className={`w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out ${!product.inStock ? 'blur-[3px] grayscale-[20%]' : ''}`}
                     logoSize="w-5 h-5"
                   />
+                  {!product.inStock && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/45 z-10 pointer-events-none">
+                      <div 
+                        className="flex flex-col items-center gap-1 backdrop-blur-xs px-2 py-1.5 rounded-[2px] shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                        style={{
+                          border: '1px solid transparent',
+                          background: 'linear-gradient(rgba(9, 9, 11, 0.9), rgba(9, 9, 11, 0.9)) padding-box, linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.01)) border-box'
+                        }}
+                      >
+                        <span className="text-[4.5px] tracking-[0.25em] text-zinc-500 uppercase font-mono font-semibold">AESTHETX</span>
+                        <span className="text-[8px] tracking-[0.2em] text-red-500 font-lovelo-black font-extrabold uppercase mt-0.5">
+                          SOLD OUT
+                        </span>
+                        <span className="text-[4.5px] tracking-[0.15em] text-zinc-400 uppercase font-mono font-medium mt-0.5">OUT OF STOCK</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Product Details */}
