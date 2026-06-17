@@ -9,6 +9,7 @@ const FallbackImage = forwardRef(function FallbackImage({
   style, 
   hideText = false, 
   logoSize = 'w-6 h-6',
+  fallbackSrc = null,
   onError: externalOnError,
   ...props 
 }, ref) {
@@ -35,6 +36,18 @@ const FallbackImage = forwardRef(function FallbackImage({
   };
 
   if (hasError) {
+    if (fallbackSrc) {
+      return (
+        <img
+          ref={ref}
+          src={fallbackSrc}
+          alt={alt}
+          className={className}
+          style={style}
+          {...props}
+        />
+      );
+    }
     return (
       <div 
         className="w-full h-full flex flex-col items-center justify-center gap-1 bg-zinc-50 select-none"

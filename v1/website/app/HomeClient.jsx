@@ -783,7 +783,11 @@ export default function HomeClient() {
           productLink: '#'
         };
 
-        const heroBanners = [leftBanner, rightTopBanner, rightBottomBanner];
+        const heroBanners = [
+          { ...leftBanner, fallbackUrl: '/home/b1.webp' },
+          { ...rightTopBanner, fallbackUrl: '/home/b2.webp' },
+          { ...rightBottomBanner, fallbackUrl: '/home/b3.webp' }
+        ];
 
         return (
           <div
@@ -820,8 +824,9 @@ export default function HomeClient() {
                       href={banner.productLink}
                       className="w-full h-full flex-shrink-0 snap-start snap-always relative block"
                     >
-                      <img
+                      <FallbackImage
                         src={banner.imageUrl}
+                        fallbackSrc={banner.fallbackUrl}
                         alt={`Hero Banner ${index + 1}`}
                         className="w-full h-full object-cover filter brightness-[0.98] group-hover:scale-[1.01] transition-transform duration-500 ease-out"
                       />

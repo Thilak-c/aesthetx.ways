@@ -7,14 +7,39 @@ export async function GET(request) {
     const banners = await convexClient.query('banners:getBanners');
     
     // Resolve banner images to absolute URLs pointing to the admin/insys panel
-    const manageUrl = process.env.NEXT_PUBLIC_INSYS_URL || 'https://manage.aesthetxways.com';
+    const requestUrl = new URL(request.url);
+    const hostname = requestUrl.hostname;
+
+    const envUrl = process.env.NEXT_PUBLIC_INSYS_URL;
+    let manageUrl = 'https://manage.aesthetxways.com';
+
+    if (envUrl) {
+      if (envUrl.startsWith('https://')) {
+        manageUrl = envUrl;
+      } else {
+        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+        const isLocalIp = hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.');
+
+        if (isLocalhost) {
+          manageUrl = envUrl;
+        } else if (isLocalIp) {
+          manageUrl = envUrl.replace('localhost', hostname).replace('127.0.0.1', hostname);
+        }
+      }
+    }
+
     const resolvedBanners = banners.map((banner) => {
       let imageUrl = banner.imageUrl;
       if (imageUrl) {
         // Strip out local host domain if present, or resolve relative paths
-        const idx = imageUrl.indexOf('/api/uploads/');
-        if (idx !== -1) {
-          imageUrl = `${manageUrl}${imageUrl.substring(idx)}`;
+        const isLocalhostDbUrl = imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1');
+        const isRelativePath = imageUrl.startsWith('/');
+
+        if (isLocalhostDbUrl || isRelativePath) {
+          const idx = imageUrl.indexOf('/api/uploads/');
+          if (idx !== -1) {
+            imageUrl = `${manageUrl}${imageUrl.substring(idx)}`;
+          }
         }
       }
       return { ...banner, imageUrl };
