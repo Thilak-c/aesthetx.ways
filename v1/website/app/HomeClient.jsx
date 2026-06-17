@@ -567,9 +567,8 @@ export default function HomeClient() {
             </div>
           )}
           {!product.inStock && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/40 z-10 pointer-events-none">
-            
-                <span className="text-[10px] tracking-[0.25em] text-red-500 font-lovelo-black font-extrabold uppercase mt-0.5">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 pointer-events-none">
+                <span className="text-[10px] tracking-[0.25em] text-white font-lovelo-black font-extrabold uppercase mt-0.5">
                   SOLD OUT
                 </span>
             </div>
@@ -803,7 +802,7 @@ export default function HomeClient() {
             className="px-4 py-3 overflow-hidden"
           >
             <div 
-              className="w-full aspect-[4/5] relative overflow-hidden rounded-[2px] bg-zinc-50 group"
+              className="w-full aspect-[4/5] relative overflow-hidden rounded-[2pxz] bg-zinc-50 group"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               onTouchStart={() => setAutoplayEnabled(false)}
