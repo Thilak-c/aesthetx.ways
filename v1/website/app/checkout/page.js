@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -69,163 +69,10 @@ export default function CheckoutPage() {
     pincode: '',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('CARD');
-  const [codError, setCodError] = useState(false);
-  const [codErrorMsg, setCodErrorMsg] = useState('');
-  const [showCodOption, setShowCodOption] = useState(true);
-  const [showCodConfirm, setShowCodConfirm] = useState(false);
-
-  // Load cart, verify session, and fetch user profile
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
-      if (cart.length === 0) {
-        router.push('/cart');
-        return;
-      }
-      setCartItems(cart);
-
-      // Check if user is logged in
-      const userStr = localStorage.getItem('aw_user');
-      if (!userStr) {
-        router.push('/cart');
-        return;
-      }
-
-      try {
-        const userObj = JSON.parse(userStr);
-        if (!userObj || !userObj.loggedIn || !userObj.email) {
-          router.push('/cart');
-          return;
-        }
-
-        // Fetch user profile to populate previously saved address fields
-        fetch(`/api/auth/profile?email=${encodeURIComponent(userObj.email)}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success && data.user) {
-              if (!userObj.id && data.user.id) {
-                userObj.id = data.user.id;
-                localStorage.setItem('aw_user', JSON.stringify(userObj));
-              }
-              setForm({
-                fullName: data.user.fullName || userObj.name || '',
-                phone: data.user.phone || '',
-                email: data.user.email || userObj.email || '',
-                address: data.user.address || '',
-                houseNo: data.user.houseNo || '',
-                area: data.user.area || '',
-                city: data.user.city || '',
-                state: data.user.state || '',
-                pincode: data.user.pincode || '',
-              });
-            } else {
-              setForm((prev) => ({
-                ...prev,
-                email: userObj.email,
-                fullName: userObj.name || '',
-              }));
-            }
-            setLoading(false);
-          })
-          .catch((err) => {
-            console.error('Failed to fetch user profile:', err);
-            setForm((prev) => ({
-              ...prev,
-              email: userObj.email,
-              fullName: userObj.name || '',
-            }));
-            setLoading(false);
-          });
-
-      } catch (err) {
-        console.error('Failed to parse user session:', err);
-        router.push('/cart');
-        return;
-      }
-
-      // Load coupon
-      const savedCoupon = localStorage.getItem('aw_coupon');
-      if (savedCoupon) {
-        try {
-          setAppliedCoupon(JSON.parse(savedCoupon));
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-  }, [router]);
-
-  // Auto-fetch city, state, area on valid pincode entry
-  useEffect(() => {
-    const fetchPincodeDetails = async () => {
-      const pin = (form.pincode || '').trim();
-      if (/^\d{6}$/.test(pin)) {
-        setPincodeLoading(true);
-        try {
-          const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-          const data = await res.json();
-          if (data && data[0] && data[0].Status === 'Success') {
-            const postOffices = data[0].PostOffice;
-            if (postOffices && postOffices.length > 0) {
-              const info = postOffices[0];
-              const updatedFields = {
-                city: info.District || '',
-                state: info.State || '',
-                area: info.Name || '',
-              };
-              
-              setForm((prev) => ({
-                ...prev,
-                ...updatedFields,
-              }));
-
-              // Autosave to backend dynamically
-              Object.entries(updatedFields).forEach(([field, value]) => {
-                if (value) {
-                  handleAutoSave(field, value);
-                }
-              });
-            }
-          }
-        } catch (err) {
-          console.error('Failed to fetch pincode details:', err);
-        } finally {
-          setPincodeLoading(false);
-        }
-      }
-    };
-
-    fetchPincodeDetails();
-  }, [form.pincode]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handlePaymentMethodChange = (method) => {
-    /*
-    if (method === 'COD') {
-      setCodError(true);
-      setCodErrorMsg(`Sorry ${form.fullName || 'User'} you not Eligible for COD orders`);
-      if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        navigator.vibrate([80, 50, 80]);
-      }
-      setTimeout(() => {
-        setCodError(false);
-      }, 800);
-      setShowCodOption(false);
-      setPaymentMethod('CARD');
-      return;
-    }
-    */
-    setCodErrorMsg(''); // Clear error if they select CARD
-    setPaymentMethod(method);
-  };
+  const [paymentMethod] = useState('CARD');
 
   // Real-time autosave to database
-  const handleAutoSave = async (field, value) => {
+  const handleAutoSave = useCallback(async (field, value) => {
     const userStr = localStorage.getItem('aw_user');
     if (!userStr) return;
     try {
@@ -252,6 +99,164 @@ export default function CheckoutPage() {
     } catch (err) {
       console.error('Autosave error:', err);
     }
+  }, []);
+
+  // Load cart, verify session, and fetch user profile
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+      if (cart.length === 0) {
+        router.push('/cart');
+        return;
+      }
+
+      // Check if user is logged in
+      const userStr = localStorage.getItem('aw_user');
+      if (!userStr) {
+        router.push('/cart');
+        return;
+      }
+
+      let userObj;
+      try {
+        userObj = JSON.parse(userStr);
+        if (!userObj || !userObj.loggedIn || !userObj.email) {
+          router.push('/cart');
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to parse user session:', err);
+        router.push('/cart');
+        return;
+      }
+
+      // Fetch user profile and setup state in a deferred manner
+      let active = true;
+      fetch(`/api/auth/profile?email=${encodeURIComponent(userObj.email)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!active) return;
+          const timer = setTimeout(() => {
+            setCartItems(cart);
+            if (data.success && data.user) {
+              if (!userObj.id && data.user.id) {
+                userObj.id = data.user.id;
+                localStorage.setItem('aw_user', JSON.stringify(userObj));
+              }
+              setForm({
+                fullName: data.user.fullName || userObj.name || '',
+                phone: data.user.phone || '',
+                email: data.user.email || userObj.email || '',
+                address: data.user.address || '',
+                houseNo: data.user.houseNo || '',
+                area: data.user.area || '',
+                city: data.user.city || '',
+                state: data.user.state || '',
+                pincode: data.user.pincode || '',
+              });
+            } else {
+              setForm((prev) => ({
+                ...prev,
+                email: userObj.email,
+                fullName: userObj.name || '',
+              }));
+            }
+            const savedCoupon = localStorage.getItem('aw_coupon');
+            if (savedCoupon) {
+              try {
+                setAppliedCoupon(JSON.parse(savedCoupon));
+              } catch (e) {
+                console.error(e);
+              }
+            }
+            setLoading(false);
+          }, 0);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch user profile:', err);
+          if (!active) return;
+          const timer = setTimeout(() => {
+            setCartItems(cart);
+            setForm((prev) => ({
+              ...prev,
+              email: userObj.email,
+              fullName: userObj.name || '',
+            }));
+            const savedCoupon = localStorage.getItem('aw_coupon');
+            if (savedCoupon) {
+              try {
+                setAppliedCoupon(JSON.parse(savedCoupon));
+              } catch (e) {
+                console.error(e);
+              }
+            }
+            setLoading(false);
+          }, 0);
+        });
+
+      return () => {
+        active = false;
+      };
+    }
+  }, [router]);
+
+  // Auto-fetch city, state, area on valid pincode entry
+  useEffect(() => {
+    let active = true;
+    const fetchPincodeDetails = async () => {
+      const pin = (form.pincode || '').trim();
+      if (/^\d{6}$/.test(pin)) {
+        setTimeout(() => {
+          if (active) setPincodeLoading(true);
+        }, 0);
+        try {
+          const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+          const data = await res.json();
+          if (active && data && data[0] && data[0].Status === 'Success') {
+            const postOffices = data[0].PostOffice;
+            if (postOffices && postOffices.length > 0) {
+              const info = postOffices[0];
+              const updatedFields = {
+                city: info.District || '',
+                state: info.State || '',
+                area: info.Name || '',
+              };
+              
+              setTimeout(() => {
+                if (!active) return;
+                setForm((prev) => ({
+                  ...prev,
+                  ...updatedFields,
+                }));
+
+                // Autosave to backend dynamically
+                Object.entries(updatedFields).forEach(([field, value]) => {
+                  if (value) {
+                    handleAutoSave(field, value);
+                  }
+                });
+              }, 0);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch pincode details:', err);
+        } finally {
+          setTimeout(() => {
+            if (active) setPincodeLoading(false);
+          }, 0);
+        }
+      }
+    };
+
+    fetchPincodeDetails();
+    return () => {
+      active = false;
+    };
+  }, [form.pincode, handleAutoSave]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // Calculations
@@ -295,75 +300,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod === 'COD' && !forceConfirm) {
-      setShowCodConfirm(true);
-      return;
-    }
-
     try {
       setPlacingOrder(true);
-      setShowCodConfirm(false);
-
-      if (paymentMethod === 'COD') {
-        const orderData = {
-          items: cartItems,
-          customerDetails: form,
-          paymentMethod: 'COD',
-          orderTotal: estimatedTotal,
-        };
-
-        const res = await fetch('/api/orders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(orderData),
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          setGeneratedOrderNum(data.orderNumber);
-          
-          const existingOrders = JSON.parse(localStorage.getItem('aw_orders') || '[]');
-          existingOrders.unshift({
-            orderNumber: data.orderNumber,
-            date: new Date().toISOString(),
-            items: cartItems,
-            total: estimatedTotal,
-            status: 'pending',
-            customerDetails: form,
-          });
-          localStorage.setItem('aw_orders', JSON.stringify(existingOrders));
-
-          trackEvent('action', 'purchase_complete', {
-            orderNumber: data.orderNumber,
-            items: cartItems.map(item => ({
-              productId: item.productId,
-              name: item.name,
-              price: item.price,
-              size: item.size,
-              quantity: item.quantity
-            })),
-            total: estimatedTotal,
-            paymentMethod: 'COD'
-          });
-
-          localStorage.removeItem('aw_cart');
-          localStorage.removeItem('aw_coupon');
-          window.dispatchEvent(new Event('cart-updated'));
-          window.dispatchEvent(new Event('orders-updated'));
-
-          setOrderSuccess(true);
-          setTimeout(() => {
-            router.push('/orders');
-          }, 4000);
-        } else {
-          alert(data.message || 'Failed to place order. Please try again.');
-        }
-        setPlacingOrder(false);
-        return;
-      }
 
       const payAmount = estimatedTotal;
 
@@ -790,105 +728,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* COD Error Message block */}
-          {codErrorMsg && (
-            <div className="mt-4 rounded-[2px] p-3 text-red-600 flex flex-col gap-2 transition-all duration-300 animate-fade-in">
-              <span className="text-[9.5px] font-bold uppercase tracking-wider leading-relaxed">
-                {codErrorMsg}
-              </span>
-              <p className="text-[9px] text-zinc-500 leading-relaxed font-semibold">
-                But you can use online card banking, UPI and mobile wallets. We accept Mastercard, Visa, and all major UPI payments.
-              </p>
-              
-              {/* Brand Logos & Pay Online Action */}
-              <div className="flex flex-wrap items-center justify-between gap-3 mt-2 select-none bg-white/50 p-2  rounded-[1px]">
-                <div className="flex flex-wrap items-center gap-3">
-                  <img src="/payment-icon/visa.png" alt="Visa" className="h-4 w-auto object-contain shrink-0" />
-                  <img src="/payment-icon/card.png" alt="Mastercard" className="h-4 w-auto object-contain shrink-0" />
-                  <img src="/payment-icon/phonepe.png" alt="PhonePe" className="h-4 w-auto object-contain shrink-0" />
-                  <img src="/payment-icon/google-pay.png" alt="Google Pay" className="h-4 w-auto object-contain shrink-0" />
-                  <img src="/payment-icon/paytm.png" alt="Paytm" className="h-4 w-auto object-contain shrink-0" />
-                </div>
-                
-                <button
-                  type="button"
-                  onClick={() => {
-                    handlePaymentMethodChange('CARD');
-                    // Trigger place order flow
-                    handlePlaceOrder();
-                  }}
-                  className="bg-black text-white hover:bg-zinc-900 text-[8px] tracking-widest uppercase font-bold px-3 py-1.5 rounded-[1px] transition-colors shrink-0"
-                >
-                  Pay Online
-                </button>
-              </div>
-            </div>
-          )}
 
-          {/* Payment Method */}
-          <div className={`mt-4 border-t border-zinc-100 pt-3 transition-all duration-300 ${codError ? 'animate-shake' : ''}`}>
-            <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-bold block mb-2">Payment Option</span>
-            <div className="flex flex-col gap-2">
-              {showCodOption && (
-                <label 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePaymentMethodChange('COD');
-                  }}
-                  className={`flex items-center justify-between p-3 border rounded-[1px] cursor-pointer transition-colors ${paymentMethod === 'COD' ? 'border-black bg-zinc-50' : 'border-zinc-200'}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="COD"
-                      checked={paymentMethod === 'COD'}
-                      onChange={() => {}}
-                      className="accent-black"
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold uppercase text-black">Cash on Delivery (COD)</span>
-                    </div>
-                  </div>
-                </label>
-              )}
-
-              <label 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handlePaymentMethodChange('CARD');
-                }}
-                className={`flex items-center justify-between p-3 border rounded-[1px] cursor-pointer transition-colors ${paymentMethod === 'CARD' ? 'border-black bg-zinc-50' : 'border-zinc-200'}`}
-              >
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="CARD"
-                    checked={paymentMethod === 'CARD'}
-                    onChange={() => {}}
-                    className="accent-black"
-                  />
-                  <span className="text-[10px] font-bold uppercase text-black">Card / UPI</span>
-                </div>
-                <span className="text-[9px] text-zinc-400">Instant validation</span>
-              </label>
-            </div>
-
-            {/* <button
-              type="button"
-              onClick={() => {
-                setGeneratedOrderNum('ORD-TEST-12345');
-                setOrderSuccess(true);
-                setTimeout(() => {
-                  router.push('/orders');
-                }, 4000);
-              }}
-              className="w-full text-center text-[8px] tracking-widest uppercase font-bold py-2 border border-dashed border-zinc-300 text-zinc-500 hover:text-black hover:border-black rounded-[1px] transition-colors mt-3 mb-8"
-            >
-              [Dev] Test Confetti & Success Screen
-            </button> */}
-          </div>
 
           {/* Place Order Sticky Button */}
           <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 max-w-[430px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
@@ -899,42 +739,11 @@ export default function CheckoutPage() {
             >
               {placingOrder 
                 ? 'Processing...' 
-                : paymentMethod === 'COD'
-                  ? 'Confirm COD & Place Order'
-                  : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} & Place Order`
+                : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} & Place Order`
               }
             </button>
           </div>
         </form>
-
-        {/* COD Confirmation Modal */}
-        {showCodConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
-            <div className="bg-white p-6 border border-zinc-200 shadow-2xl max-w-[360px] w-full mx-4 text-center rounded-[2px] transition-all">
-              <h3 className="text-[11px] tracking-[0.2em] uppercase font-bold text-zinc-900 mb-6 leading-relaxed">
-                Are you sure you want to continue with COD?
-              </h3>
-              <div className="space-y-2.5">
-                <button
-                  type="button"
-                  disabled={placingOrder}
-                  onClick={() => handlePlaceOrder(null, true)}
-                  className="w-full flex items-center justify-center py-3.5 bg-black text-white hover:bg-zinc-900 transition-colors text-[9px] tracking-[0.2em] uppercase font-bold rounded-[1px] disabled:bg-zinc-400"
-                >
-                  {placingOrder ? 'Processing...' : 'Place order'}
-                </button>
-                <button
-                  type="button"
-                  disabled={placingOrder}
-                  onClick={() => setShowCodConfirm(false)}
-                  className="w-full py-3 border border-zinc-200 hover:bg-zinc-50 transition-colors text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-500 rounded-[1px] disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );

@@ -20,24 +20,22 @@ export async function POST(request) {
     }
 
     // 1. Verify Razorpay payment signature
-    if (paymentMethod !== 'COD') {
-      if (razorpayOrderId && razorpayPaymentId && razorpaySignature) {
-        const secret = process.env.RAZORPAY_KEY_SECRET;
-        if (!secret) {
-          return NextResponse.json({ success: false, message: 'Razorpay key secret not configured on server' }, { status: 500 });
-        }
-
-        const generatedSignature = crypto
-          .createHmac('sha256', secret)
-          .update(razorpayOrderId + '|' + razorpayPaymentId)
-          .digest('hex');
-
-        if (generatedSignature !== razorpaySignature) {
-          return NextResponse.json({ success: false, message: 'Payment verification failed: invalid signature' }, { status: 400 });
-        }
-      } else {
-        return NextResponse.json({ success: false, message: 'Payment verification failed: missing payment identifiers' }, { status: 400 });
+    if (razorpayOrderId && razorpayPaymentId && razorpaySignature) {
+      const secret = process.env.RAZORPAY_KEY_SECRET;
+      if (!secret) {
+        return NextResponse.json({ success: false, message: 'Razorpay key secret not configured on server' }, { status: 500 });
       }
+
+      const generatedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(razorpayOrderId + '|' + razorpayPaymentId)
+        .digest('hex');
+
+      if (generatedSignature !== razorpaySignature) {
+        return NextResponse.json({ success: false, message: 'Payment verification failed: invalid signature' }, { status: 400 });
+      }
+    } else {
+      return NextResponse.json({ success: false, message: 'Payment verification failed: missing payment identifiers' }, { status: 400 });
     }
     
     // 2. Validate stock in Convex before placing order
@@ -90,12 +88,10 @@ export async function POST(request) {
         razorpayPaymentId,
         amount: orderTotal,
         currency: 'INR',
-        status: paymentMethod === 'COD' ? 'pending' : 'completed',
-        paymentMethod: paymentMethod || 'COD',
+        status: 'completed',
+        paymentMethod: 'CARD',
         paidAt: Date.now(),
         paidBy: customerDetails.fullName,
-        codCharge: paymentMethod === 'COD' ? 100 : undefined,
-        remainingCOD: paymentMethod === 'COD' ? (orderTotal - 100) : undefined,
       },
       orderTotal: orderTotal,
       status: 'pending', // Initialize as pending matching frontend expectations
@@ -113,8 +109,8 @@ export async function POST(request) {
         orderNumber: result.orderNumber,
         items,
         customerDetails,
-        paymentMethod,
-        paymentStatus: paymentMethod === 'COD' ? 'pending' : 'paid',
+        paymentMethod: 'CARD',
+        paymentStatus: 'paid',
         orderStatus: 'pending',
         orderTotal,
         _id: result.orderId,

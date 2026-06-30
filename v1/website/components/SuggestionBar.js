@@ -26,9 +26,14 @@ export default function SuggestionBar({ category, customTitle, onItemClick, high
               return pCat === normCat;
             });
           }
-          // Shuffle and pick up to 8 random items
+          // Shuffle, sort out-of-stock items to the end, and pick up to 8 random items
           const shuffled = [...filtered].sort(() => 0.5 - Math.random());
-          setProducts(shuffled.slice(0, 8));
+          const sorted = shuffled.sort((a, b) => {
+            if (a.inStock && !b.inStock) return -1;
+            if (!a.inStock && b.inStock) return 1;
+            return 0;
+          });
+          setProducts(sorted.slice(0, 8));
         }
       } catch (err) {
         console.error('Failed to fetch suggestions:', err);

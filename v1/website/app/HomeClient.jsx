@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { ShoppingBag, Search, ClipboardList, ChevronLeft, ChevronRight, ChevronDown, X, Plus } from 'lucide-react';
+import { ShoppingBag, Search, ClipboardList, ChevronLeft, ChevronRight, ChevronDown, X, Plus, Heart } from 'lucide-react';
 import { gsap } from 'gsap';
 import { getCachedVideo, getCachedImage } from '@/lib/mediaCache';
 import FallbackImage from '@/components/FallbackImage';
@@ -130,6 +130,8 @@ export default function HomeClient() {
   const [flyingItems, setFlyingItems] = useState([]);
   const [coords, setCoords] = useState({ startTop: 0, startLeft: 0, endTop: 0, endLeft: 0 });
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('Added to Bag');
+  const [wishlistIds, setWishlistIds] = useState([]);
   const [sortOpen, setSortOpen] = useState(false);
   const sortRef = useRef(null);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
@@ -148,9 +150,62 @@ export default function HomeClient() {
     if (allProducts && allProducts.length > 0 && !searchQuery) {
       const uniqueNames = Array.from(new Set(allProducts.map(p => p.name)));
       const shuffled = [...uniqueNames].sort(() => 0.5 - Math.random());
-      setTrendingTags(shuffled.slice(0, 5));
+      const timer = setTimeout(() => {
+        setTrendingTags(shuffled.slice(0, 5));
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [allProducts, searchQuery]);
+
+  // Load wishlist status on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const wishlist = JSON.parse(localStorage.getItem('aw_wishlist') || '[]');
+      const timer = setTimeout(() => {
+        setWishlistIds(wishlist);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Synchronize wishlist across pages
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleWishlistUpdated = () => {
+      const wishlist = JSON.parse(localStorage.getItem('aw_wishlist') || '[]');
+      setWishlistIds(wishlist);
+    };
+    window.addEventListener('wishlist-updated', handleWishlistUpdated);
+    window.addEventListener('storage', handleWishlistUpdated);
+    return () => {
+      window.removeEventListener('wishlist-updated', handleWishlistUpdated);
+      window.removeEventListener('storage', handleWishlistUpdated);
+    };
+  }, []);
+
+  const toggleWishlist = (itemId) => {
+    if (typeof window !== 'undefined') {
+      const wishlist = JSON.parse(localStorage.getItem('aw_wishlist') || '[]');
+      let updatedWishlist;
+      if (wishlist.includes(itemId)) {
+        updatedWishlist = wishlist.filter(id => id !== itemId);
+        setToastMessage("Removed from Wishlist");
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      } else {
+        updatedWishlist = [...wishlist, itemId];
+        setToastMessage("Added to Wishlist");
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(30);
+        }
+      }
+      setWishlistIds(updatedWishlist);
+      localStorage.setItem('aw_wishlist', JSON.stringify(updatedWishlist));
+      window.dispatchEvent(new Event('wishlist-updated'));
+    }
+  };
 
   // Intercept browser Back button when search is open to close it
   useEffect(() => {
@@ -453,7 +508,10 @@ export default function HomeClient() {
 
   // Filter products client-side - Always show all products
   useEffect(() => {
-    setProducts(allProducts);
+    const timer = setTimeout(() => {
+      setProducts(allProducts);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [allProducts]);
 
   // Highlight active category tab on scroll
@@ -573,6 +631,19 @@ export default function HomeClient() {
                 </span>
             </div>
           )}
+
+          {/* Wishlist Toggle Button */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleWishlist(product.itemId);
+            }}
+            className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/80 hover:bg-white text-zinc-700 hover:text-black flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer"
+            aria-label="Toggle wishlist"
+          >
+            <Heart className={`w-3.5 h-3.5 transition-transform duration-200 active:scale-125 ${wishlistIds.includes(product.itemId) ? 'fill-red-500 text-red-500 scale-110' : 'text-zinc-700'}`} />
+          </button>
 
           {/* Quick Add '+' Button */}
           {product.inStock && (
@@ -919,7 +990,11 @@ export default function HomeClient() {
       <main id="shop-content" className="flex-1 px-4 pb-28">
         {/* Top Seller of our Websites Section */}
         {!loading && !searchQuery && (() => {
-          const topSellers = sortedProducts.filter(p => p.isTopSeller);
+          const topSellers = sortedProducts.filter(p => p.isTopSeller).sort((a, b) => {
+            if (a.inStock && !b.inStock) return -1;
+            if (!a.inStock && b.inStock) return 1;
+            return 0;
+          });
           if (topSellers.length === 0) return null;
           return (
             <div className="mb-8 bg-zinc-50/50 p-4.5 rounded-[4px] border border-zinc-100/60 shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
@@ -993,6 +1068,10 @@ export default function HomeClient() {
                 return pCat === 'apparel' || pCat === 'apparel / clothing';
               }
               return pCat === norm;
+            }).sort((a, b) => {
+              if (a.inStock && !b.inStock) return -1;
+              if (!a.inStock && b.inStock) return 1;
+              return 0;
             });
 
             if (categoryProducts.length === 0) return null;
@@ -1139,10 +1218,13 @@ export default function HomeClient() {
             }`}
         >
           <div className="flex items-center gap-2">
-            <span className="text-[9px] tracking-[0.2em] uppercase font-bold">Added to Bag</span>
+            <span className="text-[9px] tracking-[0.2em] uppercase font-bold">{toastMessage}</span>
           </div>
-          <Link href="/cart" className="text-[9px] tracking-[0.2em] uppercase font-bold text-white border-b border-white pb-0.5 hover:opacity-85 transition-opacity">
-            View Bag &rarr;
+          <Link
+            href={toastMessage.includes("Wishlist") ? "/wishlist" : "/cart"}
+            className="text-[9px] tracking-[0.2em] uppercase font-bold text-white border-b border-white pb-0.5 hover:opacity-85 transition-opacity"
+          >
+            {toastMessage.includes("Wishlist") ? "View Wishlist \u2192" : "View Bag \u2192"}
           </Link>
         </div>
       </div>

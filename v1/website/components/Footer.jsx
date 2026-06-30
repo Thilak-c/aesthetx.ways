@@ -97,30 +97,7 @@ export default function Footer() {
         <span className="text-[32px] tracking-[0.18em] uppercase font-lovelo-black text-zinc-950/[0.04] leading-none select-none pointer-events-none">
           AesthetXways
         </span>
-
-        {/* Collaborative Logo Mark */}
-        <div className="flex items-center gap-2 mt-2.5 mb-1.5 select-none">
-          <img src="/logo_t.svg" alt="Aesthetx Ways" className="w-5 h-5 object-contain pointer-events-none" />
-          <span className="text-[10px] font-mono text-zinc-950/[0.15] pointer-events-none">×</span>
-          <a 
-            href="https://www.flowify.agency/" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="hover:opacity-85 transition-opacity flex items-center"
-          >
-            <img src="/favicon.png" alt="Flowify" className="w-10 h-10 object-contain" />
-          </a>
-        </div>
-
-        {/* Credits Link */}
-        <a 
-          href="https://www.flowify.agency/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[10px] font-bold tracking-[0.1em] font-mono text-zinc-400 hover:text-zinc-900 transition-colors mt-1 cursor-pointer"
-        >
-          Made by <span className='text-black underline'>Flowify.agency</span>
-        </a>
+        <img src="/logo_t.svg" alt="Aesthetx Ways" className="w-5 h-5 object-contain pointer-events-none mt-2.5 mb-1.5 opacity-25" />
       </div>
 
       {/* Background Watermark Logo - Centered horizontally */}
@@ -218,15 +195,7 @@ export default function Footer() {
             <span>EST. IN INDIA</span>
           </div>
           <span className="text-[7.5px] tracking-normal normal-case font-mono text-zinc-600">
-            designed for the forward path by{' '}
-            <a 
-              href="https://www.flowify.agency/" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-zinc-600 hover:text-black underline transition-colors"
-            >
-              Flowify.agency
-            </a>.
+            designed for the forward path.
           </span>
         </div>
       </div>

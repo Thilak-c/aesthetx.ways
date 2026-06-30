@@ -49,6 +49,7 @@ export const metadata = {
 
 const menuItems = [
   { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+  { label: 'Wishlist', ariaLabel: 'Go to wishlist page', link: '/wishlist' },
   { label: 'Stores', ariaLabel: 'Go to store locations page', link: '/stores' },
   { label: 'Bag', ariaLabel: 'Go to cart page', link: '/cart' },
   { label: 'Orders', ariaLabel: 'Go to orders page', link: '/orders' }

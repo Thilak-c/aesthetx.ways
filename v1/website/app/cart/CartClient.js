@@ -76,16 +76,20 @@ export default function CartClient() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
-      setCartItems(cart);
       const savedCoupon = localStorage.getItem('aw_coupon');
-      if (savedCoupon) {
-        try {
-          setAppliedCoupon(JSON.parse(savedCoupon));
-        } catch (e) {
-          console.error(e);
+      
+      const timer = setTimeout(() => {
+        setCartItems(cart);
+        if (savedCoupon) {
+          try {
+            setAppliedCoupon(JSON.parse(savedCoupon));
+          } catch (e) {
+            console.error(e);
+          }
         }
-      }
-      setLoading(false);
+        setLoading(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, []);
 
