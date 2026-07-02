@@ -10,6 +10,7 @@ const FallbackImage = forwardRef(function FallbackImage({
   hideText = false, 
   logoSize = 'w-6 h-6',
   fallbackSrc = null,
+  monochrome = false,
   onError: externalOnError,
   ...props 
 }, ref) {
@@ -50,7 +51,9 @@ const FallbackImage = forwardRef(function FallbackImage({
     }
     return (
       <div 
-        className="w-full h-full flex flex-col items-center justify-center gap-1 bg-zinc-50 select-none"
+        className={`w-full h-full flex flex-col items-center justify-center gap-1 select-none ${
+          monochrome ? 'bg-white border border-black' : 'bg-zinc-50'
+        }`}
       >
         <img 
           src="/logo_t.svg" 
@@ -59,7 +62,9 @@ const FallbackImage = forwardRef(function FallbackImage({
           style={{ filter: 'grayscale(1)' }}
         />
         {!hideText && (
-          <span className="text-[6.5px] tracking-wider uppercase font-semibold text-zinc-300 text-center leading-tight px-1">
+          <span className={`text-[6.5px] tracking-wider uppercase font-semibold text-center leading-tight px-1 ${
+            monochrome ? 'text-black font-bold' : 'text-zinc-300'
+          }`}>
             Image not available
           </span>
         )}

@@ -437,7 +437,7 @@ export default function CheckoutPage() {
   if (loading) {
     return (
       <div className="flex flex-1 flex-col bg-white justify-center items-center py-32">
-        <span className="text-[10px] tracking-widest uppercase text-zinc-400 animate-pulse">Loading checkout...</span>
+        <span className="text-xs tracking-widest uppercase text-black font-semibold animate-pulse">Loading checkout...</span>
       </div>
     );
   }
@@ -446,10 +446,10 @@ export default function CheckoutPage() {
     return (
       <div className="flex flex-col flex-1 bg-white justify-center items-center py-20 px-6 text-center animate-scale-in relative overflow-hidden min-h-[400px]">
         <Confetti />
-        <CheckCircle2 className="w-12 h-12 text-green-600 stroke-[1.5] mb-4" />
-        <h1 className="text-sm font-bold tracking-widest uppercase text-black">Your order has been confirmed</h1>
-        <span className="text-[10px] tracking-wider font-bold text-zinc-400 block mt-1">ORDER ID: {generatedOrderNum}</span>
-        <p className="text-[10px] text-zinc-500 mt-3 max-w-[280px] leading-relaxed">
+        <CheckCircle2 className="w-16 h-16 text-black stroke-[2] mb-4" />
+        <h1 className="text-base font-black tracking-widest uppercase text-black">Your order has been confirmed</h1>
+        <span className="text-xs tracking-wider font-extrabold text-black block mt-2">ORDER ID: {generatedOrderNum}</span>
+        <p className="text-xs text-black mt-4 max-w-[280px] leading-relaxed font-medium">
           Thank you for shopping with AesthetX Ways. Now we are redirecting you to our page...
         </p>
       </div>
@@ -457,31 +457,32 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1 bg-white relative pb-28">
+    <div className="flex flex-col flex-1 bg-white relative pb-32">
       {/* Sleek Top Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
-        <button onClick={() => router.back()} className="text-zinc-950 hover:text-black">
-          <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+      <header className="sticky top-0 z-40 bg-white border-b border-black px-4 py-4 flex items-center justify-between">
+        <button onClick={() => router.back()} className="text-black hover:text-black">
+          <ArrowLeft className="w-5 h-5 stroke-[3]" />
         </button>
-        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-zinc-400">Checkout</span>
-        <div className="w-4 h-4"></div>
+        <span className="text-xs tracking-[0.2em] uppercase font-black text-black">Checkout</span>
+        <div className="w-5 h-5"></div>
       </header>
 
       <main className="flex-1 px-4 py-4 overflow-y-auto">
         {/* 1. Cart Items listed first */}
-        <section className="mb-6">
-          <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-bold block mb-2">Order Items</span>
-          <div className="border border-zinc-100 rounded-[2px] p-3 flex flex-col gap-3">
+        <section className="mb-8">
+          <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-3">Order Items</span>
+          <div className="border border-black rounded-none p-4 flex flex-col gap-4">
             {cartItems.map((item, idx) => (
-              <div key={idx} className="flex gap-3 items-center py-1.5 last:border-b-0 border-b border-zinc-50">
+              <div key={idx} className="flex gap-4 items-center py-2.5 last:border-b-0 border-b border-black">
                 {/* Product Image */}
-                <div className="w-10 h-13 bg-zinc-50 border border-zinc-100 rounded-[1px] overflow-hidden shrink-0 relative">
+                <div className="w-12 h-16 bg-white border border-black rounded-none overflow-hidden shrink-0 relative">
                   <FallbackImage 
                     src={getCachedImage(item.productId, item.image)} 
                     alt={item.name} 
                     className="w-full h-full object-cover" 
                     hideText={true}
                     logoSize="w-4 h-4"
+                    monochrome={true}
                   />
                   <div className="absolute top-1 left-1 z-10 pointer-events-none opacity-20">
                     <img src="/logo_t.svg" alt="Watermark Logo" className="w-2.5 h-2.5 object-contain" />
@@ -490,16 +491,16 @@ export default function CheckoutPage() {
                 
                 {/* Details */}
                 <div className="flex-1 min-w-0">
-                  <span className="text-[9.5px] font-bold text-black uppercase block truncate">
+                  <span className="text-xs font-bold text-black uppercase block truncate">
                     {item.name}
                   </span>
-                  <span className="text-[8px] text-zinc-400 block mt-0.5 uppercase tracking-wide">
+                  <span className="text-[10px] text-black block mt-1 uppercase tracking-wide font-semibold">
                     Size: {getDisplaySize(item.size, item.sizeDisplayType)} &bull; Qty: {item.quantity}
                   </span>
                 </div>
 
                 {/* Total Item Price */}
-                <span className="text-[9.5px] font-bold text-black font-mono shrink-0">
+                <span className="text-xs font-bold text-black font-mono shrink-0">
                   ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                 </span>
               </div>
@@ -508,14 +509,14 @@ export default function CheckoutPage() {
         </section>
 
         {/* 2. Shipping details form */}
-        <form onSubmit={handlePlaceOrder} className="flex flex-col gap-3" autoComplete="off">
-          <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-bold block mb-1">Shipping Details</span>
+        <form onSubmit={handlePlaceOrder} className="flex flex-col gap-4" autoComplete="off">
+          <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-1">Shipping Details</span>
           
           {/* Group 1: Name, Phone, Email */}
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">Full Name</label>
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] uppercase tracking-widest text-black font-black">Full Name</label>
                 <input
                   type="text"
                   name="fullName"
@@ -524,12 +525,12 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                  className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
                   autoComplete="nope"
                 />
               </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">Phone</label>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] uppercase tracking-widest text-black font-black">Phone</label>
                 <input
                   type="tel"
                   name="phone"
@@ -539,13 +540,13 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                   placeholder="10-digit mobile"
-                  className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                  className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
                   autoComplete="nope"
                 />
               </div>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">Email Address</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase tracking-widest text-black font-black">Email Address</label>
               <input
                 type="email"
                 name="email"
@@ -554,15 +555,15 @@ export default function CheckoutPage() {
                 onChange={handleChange}
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="name@example.com"
-                className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
                 autoComplete="nope"
               />
             </div>
           </div>
 
           {/* Group 2: Full Address */}
-          <div className="flex flex-col gap-0.5 mt-2">
-            <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">Full Address (Road, Street)</label>
+          <div className="flex flex-col gap-1 mt-2">
+            <label className="text-[10px] uppercase tracking-widest text-black font-black">Full Address (Road, Street)</label>
             <input
               type="text"
               name="address"
@@ -571,15 +572,15 @@ export default function CheckoutPage() {
               onChange={handleChange}
               onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
               placeholder="Flat/House No, Building, Street Address"
-              className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+              className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
               autoComplete="nope"
             />
           </div>
 
           {/* Group 3: House No & Area */}
-          <div className="grid grid-cols-2 gap-3 mt-2">
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">House No. / Flat</label>
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase tracking-widest text-black font-black">House No. / Flat</label>
               <input
                 type="text"
                 name="houseNo"
@@ -588,12 +589,12 @@ export default function CheckoutPage() {
                 onChange={handleChange}
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="e.g. Flat 402"
-                className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
                 autoComplete="nope"
               />
             </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">Area / Colony Name</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase tracking-widest text-black font-black">Area / Colony Name</label>
               <input
                 type="text"
                 name="area"
@@ -602,16 +603,16 @@ export default function CheckoutPage() {
                 onChange={handleChange}
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="e.g. Sector 5, Colony"
-                className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
                 autoComplete="nope"
               />
             </div>
           </div>
 
           {/* Group 4: City, State, PIN Code */}
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            <div className="flex flex-col gap-0.5 col-span-1">
-              <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">City</label>
+          <div className="grid grid-cols-3 gap-3 mt-2">
+            <div className="flex flex-col gap-1 col-span-1">
+              <label className="text-[10px] uppercase tracking-widest text-black font-black">City</label>
               <input
                 type="text"
                 name="city"
@@ -620,12 +621,12 @@ export default function CheckoutPage() {
                 onChange={handleChange}
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="e.g. Mumbai"
-                className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
                 autoComplete="nope"
               />
             </div>
-            <div className="flex flex-col gap-0.5 col-span-1">
-              <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">State</label>
+            <div className="flex flex-col gap-1 col-span-1">
+              <label className="text-[10px] uppercase tracking-widest text-black font-black">State</label>
               <input
                 type="text"
                 name="state"
@@ -634,15 +635,15 @@ export default function CheckoutPage() {
                 onChange={handleChange}
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="e.g. MH"
-                className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
                 autoComplete="nope"
               />
             </div>
-            <div className="flex flex-col gap-0.5 col-span-1">
+            <div className="flex flex-col gap-1 col-span-1">
               <div className="flex items-center justify-between">
-                <label className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold">PIN Code</label>
+                <label className="text-[10px] uppercase tracking-widest text-black font-black">PIN Code</label>
                 {pincodeLoading && (
-                  <span className="text-[7px] text-zinc-400 font-bold animate-pulse uppercase">[checking...]</span>
+                  <span className="text-[9px] text-black font-black animate-pulse uppercase">[checking...]</span>
                 )}
               </div>
               <input
@@ -654,44 +655,44 @@ export default function CheckoutPage() {
                 onChange={handleChange}
                 onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
                 placeholder="6-digit"
-                className="border border-zinc-200 text-xs px-2.5 py-2 outline-none focus:border-black rounded-[1px] text-black"
+                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
                 autoComplete="nope"
               />
             </div>
           </div>
 
           {/* 3. Bill Summary (same as cart page) */}
-          <div className="mt-6 border-t border-zinc-100 pt-5 flex flex-col gap-3">
-            <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-bold block mb-1">Bill Summary</span>
+          <div className="mt-8 border-t border-black pt-6 flex flex-col gap-4">
+            <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-1">Bill Summary</span>
 
             {/* Item subtotal */}
-            <div className="flex justify-between items-center text-[9px] uppercase text-zinc-400">
+            <div className="flex justify-between items-center text-xs uppercase text-black font-semibold">
               <span>Items Subtotal</span>
-              <span className="font-mono text-zinc-500">₹{itemsSubtotal.toLocaleString('en-IN')}</span>
+              <span className="font-mono text-black font-bold">₹{itemsSubtotal.toLocaleString('en-IN')}</span>
             </div>
 
             {/* Shipping */}
-            <div className="flex justify-between items-center text-[9px] uppercase text-zinc-400">
+            <div className="flex justify-between items-center text-xs uppercase text-black font-semibold">
               <span>Shipping</span>
-              <span className="font-mono text-zinc-500">₹{shippingCost} fixed</span>
+              <span className="font-mono text-black font-bold">₹{shippingCost} fixed</span>
             </div>
 
             {/* Fees with Toggable Dropdown */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <div 
                 onClick={() => setShowFeeDetails(!showFeeDetails)}
-                className="flex justify-between items-center text-[9px] uppercase text-zinc-400 cursor-pointer hover:text-black transition-colors"
+                className="flex justify-between items-center text-xs uppercase text-black font-semibold cursor-pointer hover:text-black transition-colors"
               >
                 <span className="flex items-center gap-1 select-none">
                   Fees 
-                  <ChevronRight className={`w-2.5 h-2.5 text-zinc-500 transition-transform duration-300 ${showFeeDetails ? 'rotate-90' : 'rotate-0'}`} />
+                  <ChevronRight className={`w-3.5 h-3.5 text-black stroke-[3.5] transition-transform duration-300 ${showFeeDetails ? 'rotate-90' : 'rotate-0'}`} />
                 </span>
-                <span className="font-mono text-zinc-500">₹{protectPromiseFee}</span>
+                <span className="font-mono text-black font-bold">₹{protectPromiseFee}</span>
               </div>
               
               <div className={`grid transition-all duration-300 ease-in-out ${showFeeDetails ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}>
                 <div className="overflow-hidden">
-                  <div className="pl-3 py-1.5 border-l border-zinc-100 bg-zinc-50/50 rounded-[1px] flex justify-between items-center text-[8px] text-zinc-400 tracking-wider">
+                  <div className="pl-3 py-2 border-l border-black bg-white flex justify-between items-center text-[10px] text-black font-bold tracking-wider">
                     <span>Protect Promise Fee (₹9 per item × {totalItems})</span>
                     <span className="font-mono">₹{protectPromiseFee}</span>
                   </div>
@@ -700,14 +701,14 @@ export default function CheckoutPage() {
             </div>
 
             {/* Bold subtotal (Items + Shipping + Fees) */}
-            <div className="flex justify-between items-center border-t border-zinc-100 pt-3 mt-1 text-[10px] uppercase font-bold text-black">
+            <div className="flex justify-between items-center border-t border-black pt-4 mt-2 text-xs uppercase font-black text-black">
               <span>Subtotal</span>
               <span className="font-mono">₹{orderSubtotal.toLocaleString('en-IN')}</span>
             </div>
 
             {/* Free delivery discount if order >= 1000 */}
             {itemsSubtotal >= 1000 && (
-              <div className="flex justify-between items-center text-[9px] uppercase text-green-600 font-semibold tracking-wider">
+              <div className="flex justify-between items-center text-xs uppercase text-black font-black tracking-wider">
                 <span>Free Delivery Discount</span>
                 <span className="font-mono">-₹70</span>
               </div>
@@ -715,27 +716,25 @@ export default function CheckoutPage() {
 
             {/* Coupon Applied Discount row */}
             {appliedCoupon && (
-              <div className="flex justify-between items-center text-[9px] uppercase text-green-600 font-semibold tracking-wider">
+              <div className="flex justify-between items-center text-xs uppercase text-black font-black tracking-wider">
                 <span>Coupon Applied ({appliedCoupon.code})</span>
                 <span className="font-mono">-₹{couponDiscount.toLocaleString('en-IN')}</span>
               </div>
             )}
 
             {/* Final Estimated Total */}
-            <div className="flex justify-between items-center border-t border-zinc-200 pt-4 mt-2">
-              <span className="text-[11px] uppercase font-black text-black tracking-widest">Estimated Total</span>
-              <span className="text-sm font-black text-black font-mono">₹{estimatedTotal.toLocaleString('en-IN')}</span>
+            <div className="flex justify-between items-center border-t-2 border-black pt-5 mt-3">
+              <span className="text-xs uppercase font-black text-black tracking-widest">Estimated Total</span>
+              <span className="text-base font-extrabold text-black font-mono">₹{estimatedTotal.toLocaleString('en-IN')}</span>
             </div>
           </div>
 
-
-
           {/* Place Order Sticky Button */}
-          <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 max-w-[430px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+          <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-black px-4 py-4 max-w-[430px] mx-auto">
             <button
               type="submit"
               disabled={placingOrder}
-              className="w-full flex items-center justify-center text-[9px] tracking-[0.2em] uppercase font-bold py-3.5 bg-black text-white hover:bg-zinc-900 rounded-[1px] disabled:bg-zinc-400 transition-colors"
+              className="w-full flex items-center justify-center text-xs tracking-[0.25em] uppercase font-black py-4.5 bg-black text-white hover:bg-black active:bg-white active:text-black border border-black rounded-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {placingOrder 
                 ? 'Processing...' 
