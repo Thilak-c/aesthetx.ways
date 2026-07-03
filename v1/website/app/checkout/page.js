@@ -692,20 +692,18 @@ export default function CheckoutPage() {
           </div>
 
           {/* 3. Payment Options Selection */}
-          <div ref={paymentSectionRef} className={`mt-8 border-t border-black pt-6 flex flex-col gap-4 transition-all duration-500 ${paymentSectionVisible ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+          <div ref={paymentSectionRef} className="mt-8 border-t border-black pt-6 flex flex-col gap-4">
             <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-1">Select Payment Option</span>
             
             <div className="flex flex-col gap-3">
               {/* UPI Option */}
               <div 
                 onClick={() => {
-                  if (paymentSectionVisible) {
-                    setSelectedMethod('upi');
-                    setPaymentMethod('UPI');
-                  }
+                  setSelectedMethod('upi');
+                  setPaymentMethod('UPI');
                 }}
                 className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
-                  selectedMethod === 'upi' && paymentSectionVisible
+                  selectedMethod === 'upi'
                     ? 'border-black bg-zinc-50 ring-1 ring-black' 
                     : 'border-zinc-300 hover:border-black'
                 }`}
@@ -722,13 +720,11 @@ export default function CheckoutPage() {
               {/* Cards Option */}
               <div 
                 onClick={() => {
-                  if (paymentSectionVisible) {
-                    setSelectedMethod('card');
-                    setPaymentMethod('CARD');
-                  }
+                  setSelectedMethod('card');
+                  setPaymentMethod('CARD');
                 }}
                 className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
-                  selectedMethod === 'card' && paymentSectionVisible
+                  selectedMethod === 'card'
                     ? 'border-black bg-zinc-50 ring-1 ring-black' 
                     : 'border-zinc-300 hover:border-black'
                 }`}
@@ -745,13 +741,11 @@ export default function CheckoutPage() {
               {/* Net Banking Option */}
               <div 
                 onClick={() => {
-                  if (paymentSectionVisible) {
-                    setSelectedMethod('netbanking');
-                    setPaymentMethod('NETBANKING');
-                  }
+                  setSelectedMethod('netbanking');
+                  setPaymentMethod('NETBANKING');
                 }}
                 className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
-                  selectedMethod === 'netbanking' && paymentSectionVisible
+                  selectedMethod === 'netbanking'
                     ? 'border-black bg-zinc-50 ring-1 ring-black' 
                     : 'border-zinc-300 hover:border-black'
                 }`}
