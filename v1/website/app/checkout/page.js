@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -69,7 +69,36 @@ export default function CheckoutPage() {
     pincode: '',
   });
 
-  const [paymentMethod] = useState('CARD');
+  const [paymentMethod, setPaymentMethod] = useState('UPI');
+  const [selectedMethod, setSelectedMethod] = useState('upi'); // 'upi', 'card', 'netbanking'
+  const [paymentSectionVisible, setPaymentSectionVisible] = useState(false);
+  const paymentSectionRef = useRef(null);
+
+  const handleProceedToPayment = () => {
+    // Validation
+    if (!form.fullName || !form.phone || !form.email || !form.address || !form.houseNo || !form.area || !form.city || !form.state || !form.pincode) {
+      alert('Please fill in all shipping details');
+      return;
+    }
+
+    if (!/^\d{10}$/.test(form.phone)) {
+      alert('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    if (!/^\d{6}$/.test(form.pincode)) {
+      alert('Please enter a valid 6-digit PIN code');
+      return;
+    }
+
+    setPaymentSectionVisible(true);
+    
+    setTimeout(() => {
+      if (paymentSectionRef.current) {
+        paymentSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
 
   // Real-time autosave to database
   const handleAutoSave = useCallback(async (field, value) => {
@@ -413,6 +442,7 @@ export default function CheckoutPage() {
           name: form.fullName,
           email: form.email,
           contact: form.phone,
+          method: selectedMethod,
         },
         theme: {
           color: '#000000',
@@ -661,7 +691,83 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* 3. Bill Summary (same as cart page) */}
+          {/* 3. Payment Options Selection */}
+          <div ref={paymentSectionRef} className={`mt-8 border-t border-black pt-6 flex flex-col gap-4 transition-all duration-500 ${paymentSectionVisible ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+            <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-1">Select Payment Option</span>
+            
+            <div className="flex flex-col gap-3">
+              {/* UPI Option */}
+              <div 
+                onClick={() => {
+                  if (paymentSectionVisible) {
+                    setSelectedMethod('upi');
+                    setPaymentMethod('UPI');
+                  }
+                }}
+                className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
+                  selectedMethod === 'upi' && paymentSectionVisible
+                    ? 'border-black bg-zinc-50 ring-1 ring-black' 
+                    : 'border-zinc-300 hover:border-black'
+                }`}
+              >
+                <div className="flex flex-col gap-0.5 text-left">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black">UPI (GPay / PhonePe / Paytm)</span>
+                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Pay instantly using any UPI App or UPI ID</span>
+                </div>
+                <div className="w-4 h-4 rounded-full border border-black flex items-center justify-center shrink-0">
+                  {selectedMethod === 'upi' && <div className="w-2.5 h-2.5 rounded-full bg-black"></div>}
+                </div>
+              </div>
+
+              {/* Cards Option */}
+              <div 
+                onClick={() => {
+                  if (paymentSectionVisible) {
+                    setSelectedMethod('card');
+                    setPaymentMethod('CARD');
+                  }
+                }}
+                className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
+                  selectedMethod === 'card' && paymentSectionVisible
+                    ? 'border-black bg-zinc-50 ring-1 ring-black' 
+                    : 'border-zinc-300 hover:border-black'
+                }`}
+              >
+                <div className="flex flex-col gap-0.5 text-left">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black">Credit / Debit Cards</span>
+                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Visa, MasterCard, RuPay, Maestro</span>
+                </div>
+                <div className="w-4 h-4 rounded-full border border-black flex items-center justify-center shrink-0">
+                  {selectedMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-black"></div>}
+                </div>
+              </div>
+
+              {/* Net Banking Option */}
+              <div 
+                onClick={() => {
+                  if (paymentSectionVisible) {
+                    setSelectedMethod('netbanking');
+                    setPaymentMethod('NETBANKING');
+                  }
+                }}
+                className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
+                  selectedMethod === 'netbanking' && paymentSectionVisible
+                    ? 'border-black bg-zinc-50 ring-1 ring-black' 
+                    : 'border-zinc-300 hover:border-black'
+                }`}
+              >
+                <div className="flex flex-col gap-0.5 text-left">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black">Net Banking</span>
+                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Secure login for all major Indian banks</span>
+                </div>
+                <div className="w-4 h-4 rounded-full border border-black flex items-center justify-center shrink-0">
+                  {selectedMethod === 'netbanking' && <div className="w-2.5 h-2.5 rounded-full bg-black"></div>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Bill Summary (same as cart page) */}
           <div className="mt-8 border-t border-black pt-6 flex flex-col gap-4">
             <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-1">Bill Summary</span>
 
@@ -731,16 +837,26 @@ export default function CheckoutPage() {
 
           {/* Place Order Sticky Button */}
           <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-black px-4 py-4 max-w-[430px] mx-auto">
-            <button
-              type="submit"
-              disabled={placingOrder}
-              className="w-full flex items-center justify-center text-xs tracking-[0.25em] uppercase font-black py-4.5 bg-black text-white hover:bg-black active:bg-white active:text-black border border-black rounded-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {placingOrder 
-                ? 'Processing...' 
-                : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} & Place Order`
-              }
-            </button>
+            {paymentSectionVisible ? (
+              <button
+                type="submit"
+                disabled={placingOrder}
+                className="w-full flex items-center justify-center text-xs tracking-[0.25em] uppercase font-black py-4.5 bg-black text-white hover:bg-black active:bg-white active:text-black border border-black rounded-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {placingOrder 
+                  ? 'Processing...' 
+                  : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} via ${selectedMethod === 'upi' ? 'UPI' : selectedMethod === 'card' ? 'Card' : 'Net Banking'}`
+                }
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleProceedToPayment}
+                className="w-full flex items-center justify-center text-xs tracking-[0.25em] uppercase font-black py-4.5 bg-black text-white hover:bg-black active:bg-white active:text-black border border-black rounded-none transition-all"
+              >
+                Proceed to Payment
+              </button>
+            )}
           </div>
         </form>
       </main>

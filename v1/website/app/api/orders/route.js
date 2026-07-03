@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { convexClient } from '@/lib/convex';
 import crypto from 'crypto';
+import { sendNewOrderAdminNotification } from '@/lib/email';
 
 export async function POST(request) {
   try {
@@ -89,7 +90,7 @@ export async function POST(request) {
         amount: orderTotal,
         currency: 'INR',
         status: 'completed',
-        paymentMethod: 'CARD',
+        paymentMethod: paymentMethod || 'CARD',
         paidAt: Date.now(),
         paidBy: customerDetails.fullName,
       },
@@ -99,6 +100,40 @@ export async function POST(request) {
     
     if (!result || !result.success) {
       return NextResponse.json({ success: false, message: result?.message || 'Failed to place order' }, { status: 400 });
+    }
+
+    // Trigger admin notification email
+    try {
+      await sendNewOrderAdminNotification({
+        orderNumber: result.orderNumber,
+        items: items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          image: item.image || '',
+          quantity: Number(item.quantity),
+          size: item.size,
+        })),
+        shippingDetails: {
+          fullName: customerDetails.fullName,
+          email: customerDetails.email,
+          phone: customerDetails.phone,
+          flatNo: '',
+          area: '',
+          landmark: '',
+          address: customerDetails.address,
+          city: customerDetails.city,
+          state: customerDetails.state,
+          pincode: customerDetails.pincode,
+          country: 'India',
+        },
+        paymentDetails: {
+          razorpayPaymentId,
+        },
+        orderTotal: orderTotal,
+      });
+    } catch (emailError) {
+      console.error('Failed to send admin order notification email:', emailError);
     }
     
     return NextResponse.json({ 
