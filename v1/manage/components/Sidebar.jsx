@@ -28,6 +28,7 @@ import toast from "react-hot-toast";
 const mainNavItems = [
   { href: "/website/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/website/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/website/billing", label: "Billing Desk", icon: Receipt },
   { href: "/website/add-product", label: "Add Product", icon: Package },
   { href: "/website/products", label: "All Products", icon: Package },
 ];
@@ -35,7 +36,6 @@ const mainNavItems = [
 const dropdownNavItems = [
   { href: "/website/banners", label: "Hero Banners", icon: Image },
   { href: "/website/coupons", label: "Coupons", icon: Tag },
-  { href: "/website/Bill-offline", label: "Bill Offline", icon: Receipt },
   { href: "/website/whatsapp", label: "WhatsApp Console", icon: MessageCircle },
   { href: "/website/history", label: "History", icon: History },
   { href: "/website/shiprocket", label: "Shiprocket", icon: Truck },

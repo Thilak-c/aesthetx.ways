@@ -249,7 +249,7 @@ export default function WebsiteOrdersPage() {
       <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 bg-white flex-1 min-w-0 w-full overflow-hidden">
         <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3 font-mono">Order Locations (Cities)</h3>
         <div className="h-[140px] w-full font-mono text-[10px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart key={`${statusFilter}-${debouncedSearch}`} data={cityData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
               <XAxis dataKey="name" stroke="#a1a1aa" fontSize={9} tickLine={false} axisLine={false} dy={5} />
@@ -280,7 +280,7 @@ export default function WebsiteOrdersPage() {
       <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 bg-white flex-1 min-w-0 w-full overflow-hidden">
         <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3 font-mono">Top Products (Units Sold)</h3>
         <div className="h-[140px] w-full font-mono text-[10px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart key={`${statusFilter}-${debouncedSearch}`} data={productData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
               <XAxis dataKey="name" stroke="#a1a1aa" fontSize={8} tickLine={false} axisLine={false} dy={5} tickFormatter={(name) => name.length > 8 ? name.substring(0, 8) + ".." : name} />
@@ -310,7 +310,7 @@ export default function WebsiteOrdersPage() {
       <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 bg-white flex-1 min-w-0 w-full overflow-hidden">
         <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3 font-mono">Order Trend (Lifetime)</h3>
         <div className="h-[140px] w-full font-mono text-[10px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart key={`${statusFilter}-${debouncedSearch}`} data={trendData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
               <defs>
                 <linearGradient id="orderTrendColor" x1="0" y1="0" x2="0" y2="1">

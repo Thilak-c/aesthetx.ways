@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Sidebar from "@/components/Sidebar";
@@ -55,8 +56,11 @@ const SIZE_MAP = {
 };
 
 export default function BillingPage() {
-    // POS Layout & Search States
-    const [searchQuery, setSearchQuery] = useState("");
+    const router = useRouter();
+    useEffect(() => {
+        router.replace("/website/billing");
+    }, [router]);
+    return null;
     const [viewMode, setViewMode] = useState("grid"); // "grid" or "table"
     const [cart, setCart] = useState([]); 
     const [customerInfo, setCustomerInfo] = useState({ name: "", phone: "" });

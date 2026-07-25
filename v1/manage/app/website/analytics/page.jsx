@@ -136,7 +136,7 @@ export default function AnalyticsDashboardPage() {
     return (
       <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white min-w-0 overflow-hidden">
         <div className="h-[180px] sm:h-[200px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart key={period} data={data} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
               <defs>
                 <linearGradient id="funnelColor" x1="0" y1="0" x2="0" y2="1">
@@ -260,7 +260,7 @@ export default function AnalyticsDashboardPage() {
     return (
       <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white min-w-0 overflow-hidden">
         <div className="h-[180px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart key={period} data={data} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
               <defs>
                 <linearGradient id="hourlyColor" x1="0" y1="0" x2="0" y2="1">
@@ -358,7 +358,7 @@ export default function AnalyticsDashboardPage() {
       <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 font-mono text-xs bg-white flex-1 min-w-0 w-full overflow-hidden">
         {/* Recharts Pie Donut Chart */}
         <div className="relative w-[110px] h-[110px] shrink-0 flex items-center justify-center">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <PieChart key={period} id={chartId}>
               <Pie
                 id={`pie-${chartId}`}
@@ -459,7 +459,7 @@ export default function AnalyticsDashboardPage() {
     return (
       <div className="border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white flex-1 min-w-0 w-full overflow-hidden">
         <div className="h-[140px] w-full font-mono text-[10px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart key={period} id={chartId} data={data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
               <XAxis 
@@ -555,7 +555,7 @@ export default function AnalyticsDashboardPage() {
     return (
       <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white max-h-[450px] overflow-y-auto pr-2 min-w-0 overflow-hidden">
         <div style={{ height: `${chartHeight}px` }} className="w-full font-mono text-[10px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart 
               key={period}
               data={data} 
@@ -657,7 +657,7 @@ export default function AnalyticsDashboardPage() {
     return (
       <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white max-h-[450px] overflow-y-auto pr-2 min-w-0 overflow-hidden">
         <div style={{ height: `${chartHeight}px` }} className="w-full font-mono text-[10px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart 
               key={period}
               data={data} 
@@ -784,7 +784,7 @@ export default function AnalyticsDashboardPage() {
     return (
       <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white min-w-0 overflow-hidden">
         <div className="h-[180px] sm:h-[200px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart key={period} data={data} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
               <defs>
                 <linearGradient id="retentionColor" x1="0" y1="0" x2="0" y2="1">
@@ -885,7 +885,7 @@ export default function AnalyticsDashboardPage() {
     return (
       <div className="w-full border border-zinc-100 rounded-sm p-3 sm:p-4 mt-2 bg-white max-h-[300px] overflow-y-auto pr-2 min-w-0 overflow-hidden">
         <div style={{ height: `${chartHeight}px` }} className="w-full font-mono text-[10px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart 
               key={period}
               data={data} 
