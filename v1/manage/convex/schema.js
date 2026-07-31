@@ -626,4 +626,18 @@ export default defineSchema({
     .index("by_order", ["orderNumber"])
     .index("by_razorpay", ["razorpayPaymentId"])
     .index("by_created", ["createdAt"]),
+
+  // Billing Products table for quick billing-only items
+  billingProducts: defineTable({
+    itemId: v.string(),
+    name: v.string(),
+    price: v.float64(),
+    category: v.optional(v.string()),
+    isDeleted: v.optional(v.boolean()),
+    createdAt: v.string(),
+    createdBy: v.optional(v.string()),
+    updatedAt: v.optional(v.string()),
+  })
+    .index("by_deleted", ["isDeleted"])
+    .index("by_createdAt", ["createdAt"]),
 });

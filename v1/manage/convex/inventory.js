@@ -351,7 +351,7 @@ export const createWebsitePOSBill = mutation({
       productName: v.string(),
       productImage: v.optional(v.string()),
       itemId: v.string(),
-      size: v.string(),
+      size: v.optional(v.string()),
       price: v.float64(),
       quantity: v.number(),
       sizeDisplayType: v.optional(v.string()),

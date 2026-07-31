@@ -12,6 +12,7 @@ import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as backup from "../backup.js";
 import type * as banners from "../banners.js";
+import type * as billingProducts from "../billingProducts.js";
 import type * as coupons from "../coupons.js";
 import type * as crons from "../crons.js";
 import type * as inventory from "../inventory.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   backup: typeof backup;
   banners: typeof banners;
+  billingProducts: typeof billingProducts;
   coupons: typeof coupons;
   crons: typeof crons;
   inventory: typeof inventory;

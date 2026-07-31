@@ -26,11 +26,11 @@ import {
 import toast from "react-hot-toast";
 
 const mainNavItems = [
-  { href: "/website/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/website/orders", label: "Orders", icon: ShoppingCart },
   { href: "/website/billing", label: "Billing Desk", icon: Receipt },
   { href: "/website/add-product", label: "Add Product", icon: Package },
   { href: "/website/products", label: "All Products", icon: Package },
+  { href: "/website/analytics", label: "Analytics", icon: BarChart2 },
 ];
 
 const dropdownNavItems = [

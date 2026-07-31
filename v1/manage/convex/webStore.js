@@ -3,14 +3,17 @@ import { v } from "convex/values";
 
 const nowIso = () => new Date().toISOString();
 
-// OPTIMIZED: Added pagination
+// OPTIMIZED: Added pagination and filters out deleted/hidden products
 export const getAllProducts = query({
   args: {
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.query("products")
-      .filter(q => q.neq(q.field("isDeleted"), true))
+      .filter(q => q.and(
+        q.neq(q.field("isDeleted"), true),
+        q.neq(q.field("isHidden"), true)
+      ))
       .order("desc")
       .take(args.limit || 100);
   },
@@ -19,9 +22,15 @@ export const getAllProducts = query({
 export const getProductByItemId = query({
   args: { itemId: v.string() },
   handler: async (ctx, { itemId }) => {
-    return await ctx.db.query("products")
+    const product = await ctx.db.query("products")
       .withIndex("by_itemId", q => q.eq("itemId", itemId))
       .first();
+
+    if (!product || product.isDeleted || product.isHidden) {
+      return null;
+    }
+
+    return product;
   },
 });
 

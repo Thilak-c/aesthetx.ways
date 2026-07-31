@@ -18,7 +18,9 @@ import {
   IndianRupee,
   Layers,
   RefreshCw,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -72,6 +74,21 @@ export default function WebsiteProducts() {
   const products = useQuery(api.products.getProductsForWebsiteList);
   const updateProductFull = useMutation(api.products.updateProductFull);
   const deleteProduct = useMutation(api.products.deleteProduct);
+  const toggleHideProduct = useMutation(api.products.toggleHideProduct);
+
+  const handleToggleHide = async (p, e) => {
+    if (e) e.stopPropagation();
+    try {
+      const res = await toggleHideProduct({ productId: p._id });
+      if (res.isHidden) {
+        toast.success(`"${p.name}" is now HIDDEN from the website.`);
+      } else {
+        toast.success(`"${p.name}" is now VISIBLE on the website.`);
+      }
+    } catch (err) {
+      toast.error(err.message || "Failed to change product visibility.");
+    }
+  };
 
   let filtered = products || [];
   if (search) {
@@ -110,6 +127,8 @@ export default function WebsiteProducts() {
   if (filter === "in") filtered = filtered.filter((p) => (p.currentStock || p.totalAvailable || 0) > 10);
   if (filter === "low") filtered = filtered.filter((p) => (p.currentStock || p.totalAvailable || 0) > 0 && (p.currentStock || p.totalAvailable || 0) <= 10);
   if (filter === "out") filtered = filtered.filter((p) => (p.currentStock || p.totalAvailable || 0) === 0);
+  if (filter === "hidden") filtered = filtered.filter((p) => p.isHidden);
+  if (filter === "visible") filtered = filtered.filter((p) => !p.isHidden);
 
   // Apply sorting options
   filtered = [...filtered].sort((a, b) => {
@@ -425,6 +444,8 @@ export default function WebsiteProducts() {
                 <div className="flex gap-4 items-center">
                   {[
                     { id: "all", label: "All Items" },
+                    { id: "visible", label: "Visible" },
+                    { id: "hidden", label: "Hidden" },
                     { id: "in", label: "Healthy" },
                     { id: "low", label: "Low" },
                     { id: "out", label: "Depleted" }
@@ -531,17 +552,24 @@ export default function WebsiteProducts() {
                                     )}
                                   </div>
                                   <div>
-                                    <span 
-                                      className="font-bold text-zinc-950 hover:underline cursor-pointer text-xs"
-                                      onClick={() => handleEdit(p)}
-                                    >
-                                      {p.name}
-                                    </span>
-                                    {p.isTopSeller && (
-                                      <span className="ml-2 px-1.5 py-0.5 rounded-sm bg-amber-50 text-amber-700 text-[8px] font-bold border border-amber-200 uppercase tracking-wider">
-                                        Top Seller
+                                    <div className="flex items-center gap-1.5">
+                                      <span 
+                                        className="font-bold text-zinc-950 hover:underline cursor-pointer text-xs"
+                                        onClick={() => handleEdit(p)}
+                                      >
+                                        {p.name}
                                       </span>
-                                    )}
+                                      {p.isHidden && (
+                                        <span className="px-1.5 py-0.2 rounded-xs bg-purple-50 text-purple-700 text-[8px] font-bold font-mono border border-purple-200 uppercase tracking-wider">
+                                          Hidden
+                                        </span>
+                                      )}
+                                      {p.isTopSeller && (
+                                        <span className="px-1.5 py-0.5 rounded-sm bg-amber-50 text-amber-700 text-[8px] font-bold border border-amber-200 uppercase tracking-wider">
+                                          Top Seller
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </td>
@@ -578,17 +606,39 @@ export default function WebsiteProducts() {
 
                               {/* Status dot */}
                               <td className="px-4 py-3 text-center">
-                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${
-                                  isOutOfStock ? "text-red-600" : isLowStock ? "text-amber-600" : "text-emerald-600"
-                                }`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${isOutOfStock ? "bg-red-500" : isLowStock ? "bg-amber-500" : "bg-emerald-500"}`} />
-                                  <span>{isOutOfStock ? "Depleted" : isLowStock ? "Low" : "In Stock"}</span>
-                                </span>
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${
+                                    isOutOfStock ? "text-red-600" : isLowStock ? "text-amber-600" : "text-emerald-600"
+                                  }`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${isOutOfStock ? "bg-red-500" : isLowStock ? "bg-amber-500" : "bg-emerald-500"}`} />
+                                    <span>{isOutOfStock ? "Depleted" : isLowStock ? "Low" : "In Stock"}</span>
+                                  </span>
+                                  {p.isHidden ? (
+                                    <span className="text-[9px] font-mono text-purple-700 font-bold flex items-center gap-0.5 bg-purple-50 px-1 py-0.2 rounded-xs border border-purple-200">
+                                      <EyeOff size={9} /> Hidden
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9px] font-mono text-emerald-700 font-bold flex items-center gap-0.5 bg-emerald-50 px-1 py-0.2 rounded-xs border border-emerald-200">
+                                      <Eye size={9} /> Visible
+                                    </span>
+                                  )}
+                                </div>
                               </td>
 
                               {/* Actions */}
                               <td className="px-4 py-3 text-right">
                                 <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    onClick={(e) => handleToggleHide(p, e)}
+                                    className={`p-1.5 rounded-sm transition-colors cursor-pointer border ${
+                                      p.isHidden
+                                        ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                                        : "bg-zinc-50 text-zinc-600 border-zinc-200 hover:bg-zinc-100 hover:text-zinc-950"
+                                    }`}
+                                    title={p.isHidden ? "Unhide product on website" : "Hide product from website"}
+                                  >
+                                    {p.isHidden ? <EyeOff className="w-3.5 h-3.5 text-purple-600" /> : <Eye className="w-3.5 h-3.5 text-zinc-500" />}
+                                  </button>
                                   <button
                                     onClick={() => handleEdit(p)}
                                     disabled={loadingProduct}
@@ -633,8 +683,11 @@ export default function WebsiteProducts() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
-                                <p className="font-bold text-zinc-950 text-xs truncate cursor-pointer hover:underline" onClick={() => handleEdit(p)}>
-                                  {p.name}
+                                <p className="font-bold text-zinc-950 text-xs truncate cursor-pointer hover:underline flex items-center gap-1.5" onClick={() => handleEdit(p)}>
+                                  <span>{p.name}</span>
+                                  {p.isHidden && (
+                                    <span className="px-1 py-0.2 bg-purple-50 text-purple-700 text-[8px] font-mono rounded-xs border border-purple-200">Hidden</span>
+                                  )}
                                 </p>
                                 <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-zinc-400 font-mono">
                                   <span>{p.itemId}</span>
@@ -653,6 +706,15 @@ export default function WebsiteProducts() {
                                 {isOutOfStock ? "Depleted" : isLowStock ? "Low" : "In Stock"} ({stockVal})
                               </span>
                               <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => handleToggleHide(p, e)}
+                                  className={`p-1 rounded-sm border ${
+                                    p.isHidden ? "bg-purple-50 text-purple-700 border-purple-200" : "bg-zinc-50 text-zinc-500 border-zinc-200"
+                                  }`}
+                                  title={p.isHidden ? "Unhide product" : "Hide product"}
+                                >
+                                  {p.isHidden ? <EyeOff className="w-3.5 h-3.5 text-purple-600" /> : <Eye className="w-3.5 h-3.5 text-zinc-500" />}
+                                </button>
                                 <button onClick={() => handleEdit(p)} disabled={loadingProduct} className="p-1 text-zinc-400 hover:text-zinc-950 cursor-pointer disabled:opacity-50"><Edit2 className="w-3.5 h-3.5" /></button>
                                 <button onClick={() => handleDelete(p)} className="p-1 text-zinc-400 hover:text-red-600 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
                               </div>

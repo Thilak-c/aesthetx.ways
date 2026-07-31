@@ -50,7 +50,7 @@ export default function LoginPage() {
         }));
 
         toast.success("Welcome to Website Store Inventory!");
-        router.push("/website/analytics");
+        router.push("/website/orders");
       } else {
         toast.error("Invalid credentials");
         setIsLoading(false);

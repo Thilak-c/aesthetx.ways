@@ -154,7 +154,7 @@ export const getProductByItemId = query({
     const product = await ctx.db
       .query("products")
       .withIndex("by_itemId", (q) => q.eq("itemId", itemId))
-      .filter((q) => q.neq(q.field("isDeleted"), true))
+      .filter((q) => q.and(q.neq(q.field("isDeleted"), true), q.neq(q.field("isHidden"), true)))
       .first();
     
     return product || null;
@@ -2272,7 +2272,27 @@ export const getProductsForWebsiteList = query({
       totalAvailable: p.totalAvailable || p.currentStock || 0,
       sizeDisplayType: p.sizeDisplayType || "alpha",
       isTopSeller: p.isTopSeller,
+      isHidden: p.isHidden || false,
     }));
+  },
+});
+
+// Toggle product visibility (hide / unhide) on the website
+export const toggleHideProduct = mutation({
+  args: {
+    productId: v.id("products"),
+  },
+  handler: async (ctx, { productId }) => {
+    const product = await ctx.db.get(productId);
+    if (!product) throw new Error("Product not found");
+
+    const newHiddenState = !product.isHidden;
+    await ctx.db.patch(productId, {
+      isHidden: newHiddenState,
+      updatedAt: nowIso(),
+    });
+
+    return { success: true, isHidden: newHiddenState };
   },
 });
 

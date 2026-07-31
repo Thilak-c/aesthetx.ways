@@ -67,6 +67,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import WhatsAppRecoveryModal from "@/components/WhatsAppRecoveryModal";
 
@@ -189,8 +190,14 @@ export default function NewBillingPage() {
   const [currentTime, setCurrentTime] = useState("");
 
   // Navigation Tabs & Billing History States
-  const [activeTab, setActiveTab] = useState("billing"); // "billing" | "history" | "settings"
+  const [activeTab, setActiveTab] = useState("billing"); // "billing" | "history" | "billing_products" | "settings"
   const [historySearchQuery, setHistorySearchQuery] = useState("");
+
+  // Quick Billing Product Form & Edit State (Asking Name & Price only)
+  const [newBillingProductForm, setNewBillingProductForm] = useState({ name: "", price: "" });
+  const [editingBillingProduct, setEditingBillingProduct] = useState(null);
+  const [isSubmittingBillingProduct, setIsSubmittingBillingProduct] = useState(false);
+  const [billingProductSearchQuery, setBillingProductSearchQuery] = useState("");
 
   // Load valid credentials from environment or defaults
   const VALID_CREDENTIALS = (() => {
@@ -393,6 +400,105 @@ export default function NewBillingPage() {
   const createBill = useMutation(api.inventory.createWebsitePOSBill);
   const billsHistory = useQuery(api.inventory.getBillingHistory, { limit: 100 }) || [];
 
+  // Billing Products Queries & Mutations (Dedicated billing DB)
+  const billingProductsData = useQuery(api.billingProducts.getBillingProducts, {}) || [];
+  const createBillingProductMutation = useMutation(api.billingProducts.createBillingProduct);
+  const updateBillingProductMutation = useMutation(api.billingProducts.updateBillingProduct);
+  const deleteBillingProductMutation = useMutation(api.billingProducts.deleteBillingProduct);
+
+  // Handler to Create or Update Billing Product (Asking Name & Price only)
+  const handleSaveBillingProduct = async (e) => {
+    e.preventDefault();
+    if (!newBillingProductForm.name.trim()) {
+      toast.error("Please enter product name");
+      return;
+    }
+    const numPrice = parseFloat(newBillingProductForm.price);
+    if (isNaN(numPrice) || numPrice < 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+
+    setIsSubmittingBillingProduct(true);
+    try {
+      if (editingBillingProduct) {
+        await updateBillingProductMutation({
+          id: editingBillingProduct._id,
+          name: newBillingProductForm.name,
+          price: numPrice,
+        });
+        toast.success(`Updated "${newBillingProductForm.name}" successfully!`);
+        setEditingBillingProduct(null);
+      } else {
+        await createBillingProductMutation({
+          name: newBillingProductForm.name,
+          price: numPrice,
+          createdBy: activeCashier?.name || "Admin",
+        });
+        toast.success(`Added "${newBillingProductForm.name}" to Billing Products!`);
+      }
+      setNewBillingProductForm({ name: "", price: "" });
+    } catch (err) {
+      toast.error(err.message || "Failed to save billing product");
+    } finally {
+      setIsSubmittingBillingProduct(false);
+    }
+  };
+
+  const handleStartEditBillingProduct = (bp) => {
+    setEditingBillingProduct(bp);
+    setNewBillingProductForm({ name: bp.name, price: bp.price.toString() });
+  };
+
+  const handleCancelEditBillingProduct = () => {
+    setEditingBillingProduct(null);
+    setNewBillingProductForm({ name: "", price: "" });
+  };
+
+  const handleDeleteBillingProduct = async (bpId, bpName) => {
+    if (!confirm(`Are you sure you want to delete "${bpName}"?`)) return;
+    try {
+      await deleteBillingProductMutation({ id: bpId });
+      toast.success(`Deleted "${bpName}"`);
+      if (editingBillingProduct?._id === bpId) {
+        handleCancelEditBillingProduct();
+      }
+    } catch (err) {
+      toast.error(err.message || "Failed to delete product");
+    }
+  };
+
+  // Handle adding custom billing product directly to cart (no size needed)
+  const handleAddBillingProductToCart = (product, e) => {
+    if (e) e.stopPropagation();
+    const cartKey = `bp-${product._id}`;
+    const existingIndex = cart.findIndex((item) => item.cartKey === cartKey);
+
+    if (existingIndex > -1) {
+      const updatedCart = [...cart];
+      updatedCart[existingIndex].quantity += 1;
+      setCart(updatedCart);
+      toast.success(`Updated ${product.name} qty`, { duration: 1500 });
+    } else {
+      setCart([
+        ...cart,
+        {
+          cartKey,
+          productId: product._id,
+          productName: product.name,
+          productImage: null,
+          itemId: product.itemId || "BP-0001",
+          size: "",
+          price: product.price || 0,
+          quantity: 1,
+          maxStock: 9999,
+          isBillingProduct: true,
+        }
+      ]);
+      toast.success(`Added ${product.name} to cart`, { duration: 1500 });
+    }
+  };
+
   // Filter billing history
   const filteredBills = billsHistory.filter((bill) => {
     const query = historySearchQuery.toLowerCase();
@@ -401,6 +507,16 @@ export default function NewBillingPage() {
       bill.customerName?.toLowerCase().includes(query) ||
       bill.customerPhone?.toLowerCase().includes(query) ||
       bill.createdBy?.toLowerCase().includes(query)
+    );
+  });
+
+  // Filter custom billing products tab list
+  const filteredBillingProductsList = billingProductsData.filter((bp) => {
+    const query = billingProductSearchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return (
+      bp.name?.toLowerCase().includes(query) ||
+      bp.itemId?.toLowerCase().includes(query)
     );
   });
 
@@ -421,8 +537,23 @@ export default function NewBillingPage() {
     setBillNumber(generated);
   }, []);
 
-  // Filter products by search query
-  const filteredProducts = (products || []).filter((product) => {
+  // Combine main website catalog products and quick billing products for the main POS Billing tab
+  const allProducts = [
+    ...(products || []),
+    ...(billingProductsData || []).map((bp) => ({
+      _id: bp._id,
+      itemId: bp.itemId,
+      name: bp.name,
+      price: bp.price,
+      category: bp.category || "Quick Billing",
+      isBillingProduct: true,
+      availableSizes: ["Standard"],
+      sizeStock: { Standard: 9999 },
+    })),
+  ];
+
+  // Filter combined products by search query
+  const filteredProducts = allProducts.filter((product) => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
     return (
@@ -648,7 +779,7 @@ export default function NewBillingPage() {
                   <td class="align-left">${idx + 1}</td>
                   <td class="align-left">
                     ${item.productName || item.name} 
-                    <br/><span style="font-size: 9px; opacity: 0.8; font-family: monospace;">Size: ${item.size}</span>
+                    ${item.size && item.size !== "Standard" ? `<br/><span style="font-size: 9px; opacity: 0.8; font-family: monospace;">Size: ${item.size}</span>` : ''}
                   </td>
                   <td class="align-center">${item.quantity}</td>
                   <td class="align-right font-mono">₹${(item.price * item.quantity).toFixed(2)}</td>
@@ -736,7 +867,7 @@ export default function NewBillingPage() {
       }));
 
       const result = await createBill({
-        billNumber: String(billNumber),
+        billNumber: String(Math.floor(Number(billNumber) || 100000)),
         items: cleanItems,
         customerName: customerInfo.name || undefined,
         customerPhone: customerInfo.phone || undefined,
@@ -982,6 +1113,18 @@ export default function NewBillingPage() {
                 <History size={13} />
                 <span>Bill History ({billsHistory.length})</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab("billing_products")}
+                className={`px-3 py-1 rounded-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === "billing_products"
+                    ? "bg-white text-zinc-950 shadow-xs font-semibold"
+                    : "text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
+                <Package size={13} />
+                <span>Billing Products ({billingProductsData.length})</span>
+              </button>
             </div>
           </div>
         </header>
@@ -1055,10 +1198,15 @@ export default function NewBillingPage() {
                         {/* Collapsed Compact Row Header */}
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="w-2 h-2 rounded-full bg-zinc-900 shrink-0" />
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${product.isBillingProduct ? "bg-purple-600" : "bg-zinc-900"}`} />
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-sans font-bold text-xs text-zinc-950 truncate">
-                                {product.name}
+                              <h3 className="font-sans font-bold text-xs text-zinc-950 truncate flex items-center gap-2">
+                                <span>{product.name}</span>
+                                {product.isBillingProduct && (
+                                  <span className="px-1.5 py-0.2 bg-purple-100 text-purple-800 text-[9px] font-mono rounded-xs font-bold border border-purple-200">
+                                    Quick Item
+                                  </span>
+                                )}
                               </h3>
                               <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
                                 <span>ID: {product.itemId || "N/A"}</span>
@@ -1068,29 +1216,41 @@ export default function NewBillingPage() {
                           </div>
 
                           <div className="flex items-center gap-3 shrink-0">
-                            {/* Stock status pill */}
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-xs border ${
-                              hasStock
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : "bg-red-50 text-red-700 border-red-200"
-                            }`}>
-                              {hasStock ? `${totalStock} in stock` : "Out of Stock"}
-                            </span>
+                            {/* Stock status pill / Quick Item badge */}
+                            {product.isBillingProduct ? (
+                              <button
+                                onClick={(e) => handleAddBillingProductToCart(product, e)}
+                                className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-xs text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                              >
+                                <Plus size={12} />
+                                <span>Add to Bill</span>
+                              </button>
+                            ) : (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-xs border ${
+                                hasStock
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : "bg-red-50 text-red-700 border-red-200"
+                              }`}>
+                                {hasStock ? `${totalStock} in stock` : "Out of Stock"}
+                              </span>
+                            )}
 
                             {/* Price */}
                             <span className="font-bold text-sm text-zinc-950">
                               ₹{product.price}
                             </span>
 
-                            <div className="text-zinc-400">
-                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                            </div>
+                            {!product.isBillingProduct && (
+                              <div className="text-zinc-400">
+                                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        {/* Expanded State: Reveals Product Image & Inline Sizes */}
+                        {/* Expanded State: Reveals Product Image & Inline Sizes (Main store products only) */}
                         <AnimatePresence>
-                          {isExpanded && (
+                          {isExpanded && !product.isBillingProduct && (
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: "auto" }}
@@ -1470,6 +1630,185 @@ export default function NewBillingPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Quick Billing Products Management (Asking Name & Price) */}
+        {activeTab === "billing_products" && (
+          <div className="flex-1 p-4 overflow-y-auto bg-zinc-50/50 font-mono">
+            <div className="max-w-6xl mx-auto space-y-6">
+              {/* Header Info */}
+              <div className="bg-white p-4 rounded-xs border border-zinc-150 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-sm font-bold text-zinc-950 font-sans tracking-tight flex items-center gap-2">
+                    <Package size={16} className="text-purple-600" />
+                    <span>Quick Billing Products Management</span>
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Add products directly to the billing section asking only Name and Price.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-mono">
+                  <span className="px-2.5 py-1 bg-purple-50 text-purple-700 font-bold rounded-xs border border-purple-200">
+                    {billingProductsData.length} Quick Products
+                  </span>
+                </div>
+              </div>
+
+              {/* Form & List Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Card: Add / Edit Product Form */}
+                <div className="bg-white p-5 rounded-xs border border-zinc-150 shadow-2xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-150">
+                    <h3 className="font-sans font-bold text-sm text-zinc-900 flex items-center gap-2">
+                      <Plus size={14} className="text-purple-600" />
+                      <span>{editingBillingProduct ? "Edit Billing Product" : "Add Billing Product"}</span>
+                    </h3>
+                    {editingBillingProduct && (
+                      <button
+                        type="button"
+                        onClick={handleCancelEditBillingProduct}
+                        className="text-[10px] text-zinc-400 hover:text-zinc-600 hover:underline cursor-pointer"
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                  </div>
+
+                  <form onSubmit={handleSaveBillingProduct} className="space-y-4 text-xs">
+                    {/* Product Name Input */}
+                    <div>
+                      <label className="text-[10px] font-bold text-zinc-600 uppercase block mb-1.5">
+                        Product Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Gift Box Packaging, Alteration, Belt..."
+                        value={newBillingProductForm.name}
+                        onChange={(e) => setNewBillingProductForm({ ...newBillingProductForm, name: e.target.value })}
+                        className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xs text-zinc-900 font-medium focus:bg-white focus:outline-none focus:border-purple-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Price Input */}
+                    <div>
+                      <label className="text-[10px] font-bold text-zinc-600 uppercase block mb-1.5">
+                        Price (₹) <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">₹</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          required
+                          placeholder="0.00"
+                          value={newBillingProductForm.price}
+                          onChange={(e) => setNewBillingProductForm({ ...newBillingProductForm, price: e.target.value })}
+                          className="w-full pl-7 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xs text-zinc-900 font-bold focus:bg-white focus:outline-none focus:border-purple-600 transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={isSubmittingBillingProduct}
+                        className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xs font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+                      >
+                        {isSubmittingBillingProduct ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin" />
+                            <span>Saving Product...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save size={14} />
+                            <span>{editingBillingProduct ? "Update Product" : "Save to Billing Section"}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Right Card: Products Table / List */}
+                <div className="lg:col-span-2 bg-white rounded-xs border border-zinc-150 shadow-2xs overflow-hidden flex flex-col">
+                  {/* List Header Search */}
+                  <div className="p-3 bg-zinc-50 border-b border-zinc-150 flex items-center justify-between gap-3">
+                    <div className="relative flex-1 max-w-sm">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                      <input
+                        type="text"
+                        placeholder="Search quick products by name or Item ID..."
+                        value={billingProductSearchQuery}
+                        onChange={(e) => setBillingProductSearchQuery(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 bg-white border border-zinc-200 rounded-xs text-xs font-mono text-zinc-900 focus:outline-none focus:border-purple-400"
+                      />
+                    </div>
+                    <div className="text-[11px] text-zinc-500 font-mono">
+                      Showing <span className="font-bold text-zinc-900">{filteredBillingProductsList.length}</span> items
+                    </div>
+                  </div>
+
+                  {/* Products Table */}
+                  <div className="flex-1 overflow-y-auto">
+                    <table className="w-full text-left font-mono text-xs">
+                      <thead className="bg-zinc-100/70 border-b border-zinc-150 text-[10px] uppercase text-zinc-500">
+                        <tr>
+                          <th className="p-3">Item ID</th>
+                          <th className="p-3">Product Name</th>
+                          <th className="p-3">Price</th>
+                          <th className="p-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100">
+                        {filteredBillingProductsList.length === 0 ? (
+                          <tr>
+                            <td colSpan="4" className="py-12 text-center text-zinc-400">
+                              No billing products found. Use the form to add a product asking only Name & Price!
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredBillingProductsList.map((bp) => (
+                            <tr key={bp._id} className="hover:bg-zinc-50/70 transition-colors">
+                              <td className="p-3 text-zinc-500 font-bold">{bp.itemId}</td>
+                              <td className="p-3">
+                                <span className="font-sans font-bold text-zinc-950">{bp.name}</span>
+                                <span className="ml-2 px-1.5 py-0.2 bg-purple-50 text-purple-700 text-[9px] rounded-xs border border-purple-200">
+                                  Quick Item
+                                </span>
+                              </td>
+                              <td className="p-3 font-bold text-zinc-950">₹{bp.price.toFixed(2)}</td>
+                              <td className="p-3 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => handleStartEditBillingProduct(bp)}
+                                    className="p-1 text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
+                                    title="Edit Product"
+                                  >
+                                    <Edit2 size={13} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteBillingProduct(bp._id, bp.name)}
+                                    className="p-1 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
+                                    title="Delete Product"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
