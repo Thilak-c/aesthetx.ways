@@ -43,13 +43,7 @@ export default function CartClient() {
   const [couponError, setCouponError] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [shakeCoupon, setShakeCoupon] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authStep, setAuthStep] = useState('email'); // 'email' or 'otp'
-  const [authEmail, setAuthEmail] = useState('');
-  const [authOtp, setAuthOtp] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
-  const [shakeModal, setShakeModal] = useState(false);
+
   const [deletingItems, setDeletingItems] = useState([]);
   const [bagExiting, setBagExiting] = useState(false);
   const [animateNewBag, setAnimateNewBag] = useState(false);
@@ -223,16 +217,6 @@ export default function CartClient() {
     }
   };
 
-  const triggerModalShake = () => {
-    setShakeModal(true);
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([80, 50, 80]); // double pulse warning
-    }
-    setTimeout(() => {
-      setShakeModal(false);
-    }, 400);
-  };
-
   const handleProceedToCheckout = (e) => {
     e.preventDefault();
 
@@ -248,97 +232,7 @@ export default function CartClient() {
       total: estimatedTotal
     });
 
-    const userStr = localStorage.getItem('aw_user');
-    if (userStr) {
-      try {
-        const userObj = JSON.parse(userStr);
-        if (userObj && userObj.email && userObj.loggedIn) {
-          router.push('/checkout');
-          return;
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    // Open auth modal if not logged in
-    setShowAuthModal(true);
-  };
-
-  const sendVerificationOtp = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    if (!authEmail) {
-      setAuthError('Email is required.');
-      return;
-    }
-    setAuthLoading(true);
-    try {
-      const res = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: authEmail }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAuthStep('otp');
-      } else {
-        setAuthError(data.message || 'Failed to send OTP.');
-        triggerModalShake();
-      }
-    } catch (err) {
-      setAuthError('An error occurred. Please try again.');
-      triggerModalShake();
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const verifyOtpCode = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    if (!authOtp) {
-      setAuthError('Verification code is required.');
-      return;
-    }
-    setAuthLoading(true);
-    try {
-      const res = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: authEmail, otp: authOtp }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        const userSession = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          loggedIn: true,
-        };
-        localStorage.setItem('aw_user', JSON.stringify(userSession));
-        
-        // Show success confirmation state inside the popup
-        setAuthStep('success');
-        setAuthLoading(false);
-        
-        setTimeout(() => {
-          setShowAuthModal(false);
-          setAuthStep('email');
-          setAuthEmail('');
-          setAuthOtp('');
-          setAuthError('');
-          router.push('/checkout');
-        }, 1500);
-      } else {
-        setAuthError(data.message || 'Invalid verification code.');
-        triggerModalShake();
-        setAuthLoading(false);
-      }
-    } catch (err) {
-      setAuthError('An error occurred. Please try again.');
-      triggerModalShake();
-      setAuthLoading(false);
-    }
+    router.push('/checkout');
   };
 
   if (loading) {
@@ -401,7 +295,7 @@ export default function CartClient() {
             </Link>
           </div>
         ) : (
-          <div className="flex flex-col gap-">
+          <div className="flex flex-col gap-4">
             {cartItems.map((item, idx) => {
               const itemKey = `${item.productId}-${item.size}`;
               const isDeleting = deletingItems.includes(itemKey);
@@ -546,7 +440,7 @@ export default function CartClient() {
             })()}
 
             {/* Price Calculations */}
-            <div className=" pt-5 flex flex-col gap-">
+            <div className="pt-5 flex flex-col gap-3">
               {/* Item subtotal */}
               <div className="flex justify-between items-center text-xs uppercase font-bold text-zinc-900">
                 <span>Items Subtotal</span>
@@ -683,142 +577,6 @@ export default function CartClient() {
           >
             Proceed to Checkout
           </button>
-        </div>
-      )}
-
-      {/* Premium OTP Auth Modal */}
-      {showAuthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs custom-fade-in">
-          <style>{`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes slideUpFade {
-              from { transform: translateY(12px) scale(0.98); opacity: 0; }
-              to { transform: translateY(0) scale(1); opacity: 1; }
-            }
-            .custom-fade-in {
-              animation: fadeIn 0.2s ease-out forwards;
-            }
-            .custom-slide-up-fade {
-              animation: slideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-          `}</style>
-          <div className="bg-white w-full max-w-[320px] border border-zinc-200 p-6 flex flex-col gap-4 relative shadow-2xl rounded-[2px] custom-slide-up-fade">
-            
-            {/* Close Button */}
-            <button 
-              onClick={() => {
-                setShowAuthModal(false);
-                setAuthStep('email');
-                setAuthEmail('');
-                setAuthOtp('');
-                setAuthError('');
-              }} 
-              className="absolute top-4 right-4 text-zinc-400 hover:text-black transition-colors"
-            >
-              <span className="text-[10px] uppercase font-bold tracking-widest">[close]</span>
-            </button>
-
-            <div className={shakeModal ? 'animate-shake' : ''}>
-              {authStep === 'success' ? (
-                <div className="flex flex-col items-center justify-center py-6 text-center animate-scale-in">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border border-emerald-500 mb-3">
-                    <svg className="w-4 h-4 text-emerald-500 stroke-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                  <h3 className="font-lovelo-black text-base tracking-wider text-black">VERIFIED</h3>
-                  <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold mt-1">Redirecting to checkout...</span>
-                </div>
-              ) : authStep === 'email' ? (
-                <form onSubmit={sendVerificationOtp} className="flex flex-col gap-3.5">
-                  <div className="flex flex-col gap-2 mt-2 mb-1 items-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <img src="/logo_t.svg" alt="Aesthetx Ways Logo" className="w-6 h-6 object-contain shrink-0" />
-                      <span className="font-lovelo-black text-base tracking-wider text-black leading-none pt-0.5">AESTHETX WAYS</span>
-                    </div>
-                    <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold text-center">Verify your email to proceed</span>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 mt-2">
-                    <label className="text-xs uppercase tracking-wider text-zinc-900 font-black">Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      value={authEmail}
-                      onChange={(e) => setAuthEmail(e.target.value)}
-                      placeholder="ENTER YOUR EMAIL"
-                      className="border-b-2 border-zinc-200 focus-within:border-black bg-transparent text-xs font-bold tracking-wider py-2 outline-none text-black placeholder-zinc-400"
-                    />
-                  </div>
-
-                  {authError && (
-                    <span className="text-[10px] text-red-600 tracking-wider font-bold">{authError}</span>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full flex items-center justify-center text-xs tracking-[0.2em] uppercase font-black py-3.5 bg-black text-white hover:bg-zinc-900 rounded-xs disabled:bg-zinc-400 transition-colors mt-2 cursor-pointer shadow-xs"
-                  >
-                    {authLoading ? 'Sending...' : 'Send Verification Code'}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={verifyOtpCode} className="flex flex-col gap-3.5">
-                  <div className="flex flex-col gap-2 mt-2 mb-1 items-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <img src="/logo_t.svg" alt="Aesthetx Ways Logo" className="w-6 h-6 object-contain shrink-0" />
-                      <span className="font-lovelo-black text-base tracking-wider text-black leading-none pt-0.5">AESTHETX WAYS</span>
-                    </div>
-                    <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold text-center">Verification code sent to {authEmail}</span>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 mt-2">
-                    <label className="text-xs uppercase tracking-wider text-zinc-900 font-black">6-Digit Code</label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={6}
-                      value={authOtp}
-                      onChange={(e) => setAuthOtp(e.target.value)}
-                      placeholder="ENTER CODE"
-                      className="border-b-2 border-zinc-200 focus-within:border-black bg-transparent text-sm font-mono font-bold tracking-[0.25em] py-2 text-center outline-none text-black placeholder-zinc-400 uppercase"
-                    />
-                  </div>
-
-                  {authError && (
-                    <span className="text-[10px] text-red-600 tracking-wider font-bold">{authError}</span>
-                  )}
-
-                  <div className="flex flex-col gap-2 mt-2">
-                    <button
-                      type="submit"
-                      disabled={authLoading}
-                      className="w-full flex items-center justify-center text-xs tracking-[0.2em] uppercase font-black py-3.5 bg-black text-white hover:bg-zinc-900 rounded-xs disabled:bg-zinc-400 transition-colors cursor-pointer shadow-xs"
-                    >
-                      {authLoading ? 'Verifying...' : 'Verify & Continue'}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthStep('email');
-                        setAuthOtp('');
-                        setAuthError('');
-                      }}
-                      className="text-xs uppercase tracking-widest font-bold text-zinc-500 hover:text-black transition-colors py-1.5 mt-1 text-center cursor-pointer"
-                    >
-                      Back to email
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-
-          </div>
         </div>
       )}
     </div>
