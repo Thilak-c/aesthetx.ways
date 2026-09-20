@@ -1,0 +1,24 @@
+{
+  "branches": {
+    "patna": {
+      "gstin": "10AAACA0000A1Z5",
+      "id": "patna",
+      "name": "Patna Branch",
+      "phone": "+91 70337 69997",
+      "storeAddress": "Kankarbagh Colony More, Ghrounda, Patna, Bihar 800001",
+      "storeName": "AESTHETX WAYS (PATNA)",
+      "upiId": "8008439762@ptsbi"
+    },
+    "gaya": {
+      "gstin": "10AAACA0000A1Z5",
+      "id": "gaya",
+      "name": "Gaya Branch",
+      "phone": "+91 70337 69997",
+      "storeAddress": "Gaya Railway Station Campus Rd, Gol Bagicha, Gaya, Bihar 823002",
+      "storeName": "AESTHETX WAYS (GAYA)",
+      "upiId": "8008439762@ptsbi"
+    }
+  },
+  "activeBranch": "patna",
+  "updatedAt": "2026-09-20T21:42:12.037Z"
+}

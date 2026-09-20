@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Sidebar from "@/components/Sidebar";
 import { BarcodeInput } from "@/components/Barcode";
+import QRCode from "qrcode";
 import {
   Search,
   Plus,
@@ -63,6 +64,7 @@ import {
   FileCheck,
   Save,
   MapPin,
+  MoreVertical,
   FileText as ReceiptIcon
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -86,7 +88,8 @@ const STORE_BRANCHES = {
     storeName: "AESTHETX WAYS (PATNA)",
     storeAddress: "Kankarbagh Colony More, Ghrounda, Patna, Bihar 800001",
     phone: "+91 70337 69997",
-    gstin: "10AAACA0000A1Z5"
+    gstin: "10AAACA0000A1Z5",
+    upiId: "8008439762@ptsbi"
   },
   gaya: {
     id: "gaya",
@@ -94,7 +97,8 @@ const STORE_BRANCHES = {
     storeName: "AESTHETX WAYS (GAYA)",
     storeAddress: "Gaya Railway Station Campus Rd, Gol Bagicha, Gaya, Bihar 823002",
     phone: "+91 70337 69997",
-    gstin: "10AAACA0000A1Z5"
+    gstin: "10AAACA0000A1Z5",
+    upiId: "8008439762@ptsbi"
   }
 };
 
@@ -104,6 +108,7 @@ const DEFAULT_STORE_SETTINGS = {
   storeAddress: "Kankarbagh Colony More, Ghrounda, Patna, Bihar 800001",
   gstin: "10AAACA0000A1Z5",
   phone: "+91 70337 69997",
+  upiId: "8008439762@ptsbi",
   thankYouMessage: "Thank you for shopping with us..!!",
   websiteUrl: "aesthetxways.com"
 };
@@ -113,8 +118,19 @@ export default function NewBillingPage() {
   const [isInsysAuth, setIsInsysAuth] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Store Branch Selection State ("patna" | "gaya")
+  // Store Branch Selection State & Multi-Location Management
+  const [branches, setBranches] = useState(STORE_BRANCHES);
   const [activeBranch, setActiveBranch] = useState("patna");
+  const [editingBranchId, setEditingBranchId] = useState("patna");
+  const [showAddLocation, setShowAddLocation] = useState(false);
+  const [newLocationForm, setNewLocationForm] = useState({
+    name: "",
+    storeName: "",
+    storeAddress: "",
+    phone: "+91 70337 69997",
+    gstin: "10AAACA0000A1Z5",
+    upiId: "8008439762@ptsbi"
+  });
 
   // Registered Cashier & Staff Users
   const [registeredUsers, setRegisteredUsers] = useState(DEFAULT_CASHIERS);
@@ -123,6 +139,43 @@ export default function NewBillingPage() {
 
   // Store Billing & Thermal Receipt Settings State
   const [storeSettings, setStoreSettings] = useState(DEFAULT_STORE_SETTINGS);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [previewQrDataUrl, setPreviewQrDataUrl] = useState("");
+
+  // Generate live thermal receipt QR code for Settings modal preview based on currently editing location
+  useEffect(() => {
+    if (!showSettingsModal) return;
+    const targetBranch = branches[editingBranchId] || branches.patna || DEFAULT_STORE_SETTINGS;
+    const activeUpiId = targetBranch.upiId || storeSettings?.upiId || "8008439762@ptsbi";
+    const storeTitle = targetBranch.storeName || storeSettings?.storeName || "Aesthetx Ways";
+    const upiPayload = `upi://pay?pa=${activeUpiId}&pn=${encodeURIComponent(storeTitle)}&am=1978.20&cu=INR&tn=Sample%20Bill`;
+
+    QRCode.toDataURL(upiPayload, {
+      margin: 1,
+      width: 160,
+      errorCorrectionLevel: "H",
+    })
+      .then((url) => setPreviewQrDataUrl(url))
+      .catch((err) => console.error("Error generating preview QR", err));
+  }, [showSettingsModal, editingBranchId, branches, storeSettings?.upiId, storeSettings?.storeName]);
+
+  // Header More Options Dropdown State
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef(null);
+  const saveTimeoutRef = useRef(null);
+
+  // Close three dots more menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
+        setShowMoreMenu(false);
+      }
+    };
+    if (showMoreMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMoreMenu]);
 
   // PIN Lock & Authentication State
   const [selectedUserForPin, setSelectedUserForPin] = useState(DEFAULT_CASHIERS[0]);
@@ -216,17 +269,8 @@ export default function NewBillingPage() {
 
   // Auth & Saved Role / Users / Store Settings verification
   useEffect(() => {
-    const authData = localStorage.getItem("insys_auth");
-    if (authData) {
-      try {
-        const parsed = JSON.parse(authData);
-        if (parsed.isLoggedIn && parsed.storeType) {
-          setIsInsysAuth(true);
-        }
-      } catch (e) {
-        console.error("Error parsing insys_auth", e);
-      }
-    }
+    // Always require PIN whenever billing desk opens or reloads (do not auto-authenticate from admin panel)
+    setIsInsysAuth(false);
 
     const savedRole = localStorage.getItem("pos_user_role");
     if (savedRole === "user" || savedRole === "admin") {
@@ -254,10 +298,25 @@ export default function NewBillingPage() {
       localStorage.setItem("pos_registered_users", JSON.stringify(DEFAULT_CASHIERS));
     }
 
+    const savedBranches = localStorage.getItem("pos_branches");
+    let currentBranches = STORE_BRANCHES;
+    if (savedBranches) {
+      try {
+        const parsed = JSON.parse(savedBranches);
+        if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+          currentBranches = { ...STORE_BRANCHES, ...parsed };
+          setBranches(currentBranches);
+        }
+      } catch (e) {
+        console.error("Failed to parse saved branches", e);
+      }
+    }
+
     const savedBranch = localStorage.getItem("pos_active_branch");
-    const initialBranchKey = (savedBranch === "gaya" || savedBranch === "patna") ? savedBranch : "patna";
+    const initialBranchKey = (savedBranch && currentBranches[savedBranch]) ? savedBranch : "patna";
     setActiveBranch(initialBranchKey);
-    const branchInfo = STORE_BRANCHES[initialBranchKey] || STORE_BRANCHES.patna;
+    setEditingBranchId(initialBranchKey);
+    const branchInfo = currentBranches[initialBranchKey] || currentBranches.patna;
 
     const savedStoreSettings = localStorage.getItem("pos_store_settings");
     if (savedStoreSettings) {
@@ -265,9 +324,11 @@ export default function NewBillingPage() {
         const parsed = JSON.parse(savedStoreSettings);
         if (parsed && typeof parsed === "object") {
           const merged = { ...DEFAULT_STORE_SETTINGS, ...parsed };
-          merged.storeAddress = branchInfo.storeAddress;
-          merged.storeName = branchInfo.storeName;
-          merged.phone = "+91 70337 69997";
+          merged.storeAddress = branchInfo.storeAddress || merged.storeAddress;
+          merged.storeName = branchInfo.storeName || merged.storeName;
+          merged.phone = branchInfo.phone || merged.phone || "+91 70337 69997";
+          merged.gstin = branchInfo.gstin || merged.gstin || "10AAACA0000A1Z5";
+          merged.upiId = branchInfo.upiId || merged.upiId || "8008439762@ptsbi";
           setStoreSettings(merged);
           localStorage.setItem("pos_store_settings", JSON.stringify(merged));
         }
@@ -275,33 +336,153 @@ export default function NewBillingPage() {
         console.error("Failed to parse store settings", e);
       }
     } else {
-      const initialSettings = { ...DEFAULT_STORE_SETTINGS, storeName: branchInfo.storeName, storeAddress: branchInfo.storeAddress };
+      const initialSettings = {
+        ...DEFAULT_STORE_SETTINGS,
+        storeName: branchInfo.storeName,
+        storeAddress: branchInfo.storeAddress,
+        phone: branchInfo.phone || "+91 70337 69997",
+        gstin: branchInfo.gstin || "10AAACA0000A1Z5",
+        upiId: branchInfo.upiId || "8008439762@ptsbi"
+      };
       setStoreSettings(initialSettings);
       localStorage.setItem("pos_store_settings", JSON.stringify(initialSettings));
     }
 
+    // Auto-fetch saved branches and location fields from server so nothing has to be re-entered
+    fetch("/api/pos-settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data?.branches && Object.keys(data.branches).length > 0) {
+          setBranches((prev) => {
+            const merged = { ...STORE_BRANCHES, ...prev, ...data.branches };
+            localStorage.setItem("pos_branches", JSON.stringify(merged));
+            return merged;
+          });
+          const branchKey = data.activeBranch || initialBranchKey || "patna";
+          const activeInfo = data.branches[branchKey] || data.branches.patna;
+          if (activeInfo) {
+            setStoreSettings((prev) => {
+              const updated = {
+                ...prev,
+                storeName: activeInfo.storeName || prev.storeName,
+                storeAddress: activeInfo.storeAddress || prev.storeAddress,
+                phone: activeInfo.phone || prev.phone,
+                gstin: activeInfo.gstin || prev.gstin,
+                upiId: activeInfo.upiId || prev.upiId
+              };
+              localStorage.setItem("pos_store_settings", JSON.stringify(updated));
+              return updated;
+            });
+          }
+        }
+      })
+      .catch((err) => console.error("Error fetching POS settings from server", err));
+
     setAuthChecked(true);
   }, []);
 
-  // Handle switching store branches (Patna vs Gaya)
+  // Handle switching store branches (Patna, Gaya, or any added location)
   const handleBranchChange = (branchId) => {
     setActiveBranch(branchId);
+    setEditingBranchId(branchId);
     localStorage.setItem("pos_active_branch", branchId);
-    const branchInfo = STORE_BRANCHES[branchId] || STORE_BRANCHES.patna;
+    const branchInfo = branches[branchId] || STORE_BRANCHES.patna;
     const updatedSettings = {
       ...storeSettings,
       storeName: branchInfo.storeName,
-      storeAddress: branchInfo.storeAddress
+      storeAddress: branchInfo.storeAddress,
+      phone: branchInfo.phone || storeSettings.phone,
+      gstin: branchInfo.gstin || storeSettings.gstin,
+      upiId: branchInfo.upiId || storeSettings.upiId || "8008439762@ptsbi"
     };
     setStoreSettings(updatedSettings);
     localStorage.setItem("pos_store_settings", JSON.stringify(updatedSettings));
-    toast.success(`Switched POS to ${branchInfo.storeName}`);
+    saveBranchesToServer(branches, branchId);
+  };
+
+  // Update specific field for currently edited branch
+  const updateBranchField = (branchId, field, value) => {
+    let latestBranches;
+    setBranches((prev) => {
+      const current = prev[branchId] || STORE_BRANCHES[branchId] || {};
+      const updated = {
+        ...prev,
+        [branchId]: {
+          ...current,
+          [field]: value
+        }
+      };
+      latestBranches = updated;
+      localStorage.setItem("pos_branches", JSON.stringify(updated));
+      return updated;
+    });
+
+    if (branchId === activeBranch) {
+      setStoreSettings((prev) => {
+        const updated = {
+          ...prev,
+          [field]: value
+        };
+        localStorage.setItem("pos_store_settings", JSON.stringify(updated));
+        return updated;
+      });
+    }
+
+    // Debounced automatic server sync on any keystroke
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      if (latestBranches) {
+        saveBranchesToServer(latestBranches, activeBranch);
+      }
+    }, 800);
+  };
+
+  // Add a new branch / location
+  const handleAddNewLocation = (e) => {
+    e.preventDefault();
+    const locName = newLocationForm.name.trim();
+    if (!locName) {
+      toast.error("Please enter a location name (e.g. Ranchi)");
+      return;
+    }
+
+    const locKey = locName.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    if (branches[locKey]) {
+      toast.error(`A location for "${locName}" already exists`);
+      return;
+    }
+
+    const newBranch = {
+      id: locKey,
+      name: locName.endsWith("Branch") ? locName : `${locName} Branch`,
+      storeName: newLocationForm.storeName.trim() || `AESTHETX WAYS (${locName.toUpperCase()})`,
+      storeAddress: newLocationForm.storeAddress.trim() || `${locName}, Bihar`,
+      phone: newLocationForm.phone.trim() || storeSettings.phone || "+91 70337 69997",
+      gstin: newLocationForm.gstin.trim() || storeSettings.gstin || "10AAACA0000A1Z5",
+      upiId: newLocationForm.upiId.trim() || storeSettings.upiId || "8008439762@ptsbi"
+    };
+
+    const updatedBranches = { ...branches, [locKey]: newBranch };
+    setBranches(updatedBranches);
+    localStorage.setItem("pos_branches", JSON.stringify(updatedBranches));
+    setEditingBranchId(locKey);
+    setShowAddLocation(false);
+    setNewLocationForm({
+      name: "",
+      storeName: "",
+      storeAddress: "",
+      phone: storeSettings.phone || "+91 70337 69997",
+      gstin: storeSettings.gstin || "10AAACA0000A1Z5",
+      upiId: storeSettings.upiId || "8008439762@ptsbi"
+    });
+    toast.success(`Created ${newBranch.name}!`);
   };
 
   // Handle PIN Verification Submission (Just PIN!)
-  const handleVerifyPinSubmit = (e) => {
-    e.preventDefault();
-    const trimmedPin = enteredPin.trim();
+  const verifyPin = (pinToVerify) => {
+    const trimmedPin = (pinToVerify !== undefined ? pinToVerify : enteredPin).trim();
     if (!trimmedPin) {
       toast.error("Please enter Security PIN code");
       return;
@@ -309,8 +490,8 @@ export default function NewBillingPage() {
 
     setIsVerifyingPin(true);
     setTimeout(() => {
-      // Check if PIN matches an admin master PIN ("1234", "8008439762", "aesthetx123", "7033769997")
-      const isAdminMasterPin = ["1234", "8008439762", "aesthetx123", "7033769997"].includes(trimmedPin);
+      // Check if PIN matches an admin master PIN ("1234", "8008439762", "aesthetx123", "7033769997", "7033")
+      const isAdminMasterPin = ["1234", "8008439762", "aesthetx123", "7033769997", "7033"].includes(trimmedPin);
 
       // Check if PIN matches any registered cashier user account
       const matchedUser = registeredUsers.find((u) => u.pin === trimmedPin);
@@ -346,9 +527,15 @@ export default function NewBillingPage() {
         }
       } else {
         toast.error("Invalid Security PIN Code");
+        setEnteredPin("");
       }
       setIsVerifyingPin(false);
-    }, 400);
+    }, 300);
+  };
+
+  const handleVerifyPinSubmit = (e) => {
+    if (e) e.preventDefault();
+    verifyPin(enteredPin);
   };
 
   // Lock Terminal Handler
@@ -358,10 +545,30 @@ export default function NewBillingPage() {
     toast.success("Terminal Locked. Enter PIN to unlock.");
   };
 
-  // Save registered users helper
-  const saveUsersToStorage = (updatedUsers) => {
+  // Save registered users helper to Convex Cloud + Server API + LocalStorage
+  const saveUsersToStorage = async (updatedUsers) => {
     setRegisteredUsers(updatedUsers);
     localStorage.setItem("pos_registered_users", JSON.stringify(updatedUsers));
+
+    // 1. Save to Convex Cloud Database
+    try {
+      if (savePosUsersMutation) {
+        await savePosUsersMutation({ usersJson: JSON.stringify(updatedUsers) });
+      }
+    } catch (e) {
+      console.error("Failed to save staff users to Convex Cloud", e);
+    }
+
+    // 2. Save to Server Disk API
+    try {
+      await fetch("/api/pos-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ users: updatedUsers })
+      });
+    } catch (e) {
+      console.error("Failed to save staff users to server API", e);
+    }
   };
 
   // Delete Cashier User
@@ -398,13 +605,271 @@ export default function NewBillingPage() {
   // Convex Queries & Mutations
   const products = useQuery(api.inventory.getWebsiteProductsForBilling, {});
   const createBill = useMutation(api.inventory.createWebsitePOSBill);
-  const billsHistory = useQuery(api.inventory.getBillingHistory, { limit: 100 }) || [];
+  const billsHistory = useQuery(api.inventory.getBillingHistory, { limit: 500 }) || [];
+  const onlineOrders = useQuery(api.orders.getAllOrders, { limit: 500 }) || [];
+  const allUsers = useQuery(api.users.getAllUsers, {}) || [];
+  const cloudPosUsers = useQuery(api.siteSettings.getPosUsers, {});
+  const savePosUsersMutation = useMutation(api.siteSettings.savePosUsers);
+
+  // Sync Cloud POS Staff Users
+  useEffect(() => {
+    if (cloudPosUsers && Array.isArray(cloudPosUsers) && cloudPosUsers.length > 0) {
+      setRegisteredUsers(cloudPosUsers);
+      localStorage.setItem("pos_registered_users", JSON.stringify(cloudPosUsers));
+    }
+  }, [cloudPosUsers]);
+
+  // Customer Lookup & Match States for POS Cart
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const customerDropdownRef = useRef(null);
+  const [showPreviousOrders, setShowPreviousOrders] = useState(false);
+  const [hoveredBill, setHoveredBill] = useState(null);
+  const previousOrdersRef = useRef(null);
+
+  // Close customer dropdown & previous orders on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target)) {
+        setShowCustomerDropdown(false);
+      }
+      if (previousOrdersRef.current && !previousOrdersRef.current.contains(e.target)) {
+        setShowPreviousOrders(false);
+        setHoveredBill(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Aggregated Customer Directory (POS Bills + Online Orders + Registered Users)
+  const customerDirectory = useMemo(() => {
+    const map = new Map();
+
+    const normalizePhone = (p) => {
+      if (!p) return "";
+      const digits = String(p).replace(/\D/g, "");
+      return digits.length > 10 ? digits.slice(-10) : digits;
+    };
+
+    // 1. Process POS Bills History
+    (billsHistory || []).forEach((bill) => {
+      const phone = normalizePhone(bill.customerPhone);
+      if (!phone || phone.length < 5) return;
+      const amount = Number(bill.total) || 0;
+      const name = (bill.customerName || "").trim();
+      const date = bill.createdAt ? new Date(bill.createdAt).getTime() : 0;
+
+      if (!map.has(phone)) {
+        map.set(phone, {
+          phone,
+          name: name || "Customer",
+          purchasesCount: 1,
+          totalWorth: amount,
+          lastPurchaseDate: date,
+        });
+      } else {
+        const item = map.get(phone);
+        item.purchasesCount += 1;
+        item.totalWorth += amount;
+        if (name && (item.name === "Customer" || !item.name || date > item.lastPurchaseDate)) {
+          item.name = name;
+        }
+        if (date > (item.lastPurchaseDate || 0)) {
+          item.lastPurchaseDate = date;
+        }
+      }
+    });
+
+    // 2. Process Online Store Orders
+    (onlineOrders || []).forEach((order) => {
+      const phone = normalizePhone(order.shippingDetails?.phone || order.phone);
+      if (!phone || phone.length < 5) return;
+      const amount = Number(order.paymentDetails?.amount || order.orderTotal || order.total || 0);
+      const name = (order.shippingDetails?.fullName || order.customerName || "").trim();
+      const date = order._creationTime || (order.createdAt ? new Date(order.createdAt).getTime() : 0);
+
+      if (!map.has(phone)) {
+        map.set(phone, {
+          phone,
+          name: name || "Customer",
+          purchasesCount: 1,
+          totalWorth: amount,
+          lastPurchaseDate: date,
+        });
+      } else {
+        const item = map.get(phone);
+        item.purchasesCount += 1;
+        item.totalWorth += amount;
+        if (name && (item.name === "Customer" || !item.name)) {
+          item.name = name;
+        }
+        if (date > (item.lastPurchaseDate || 0)) {
+          item.lastPurchaseDate = date;
+          if (name) item.name = name;
+        }
+      }
+    });
+
+    // 3. Process Registered Web Users
+    (allUsers || []).forEach((user) => {
+      const phone = normalizePhone(user.phoneNumber);
+      if (!phone || phone.length < 5) return;
+      const name = (user.name || "").trim();
+
+      if (!map.has(phone)) {
+        map.set(phone, {
+          phone,
+          name: name || "Customer",
+          purchasesCount: 0,
+          totalWorth: 0,
+          lastPurchaseDate: 0,
+        });
+      } else {
+        const item = map.get(phone);
+        if (name && (item.name === "Customer" || !item.name)) {
+          item.name = name;
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  }, [billsHistory, onlineOrders, allUsers]);
+
+  // Top 5 matching customers matching the typed phone number
+  const matchingCustomers = useMemo(() => {
+    const rawDigits = (customerInfo.phone || "").replace(/\D/g, "");
+    if (!rawDigits) return [];
+
+    return customerDirectory
+      .filter((c) => {
+        return c.phone.includes(rawDigits) || (c.name && c.name.toLowerCase().includes(customerInfo.phone.toLowerCase()));
+      })
+      .sort((a, b) => {
+        // Priority 1: Prefix match on phone
+        const aStarts = a.phone.startsWith(rawDigits);
+        const bStarts = b.phone.startsWith(rawDigits);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+
+        // Priority 2: Frequent buyers (highest purchases count first)
+        if (b.purchasesCount !== a.purchasesCount) {
+          return b.purchasesCount - a.purchasesCount;
+        }
+
+        // Priority 3: Highest total spent / total worth
+        return b.totalWorth - a.totalWorth;
+      })
+      .slice(0, 5);
+  }, [customerDirectory, customerInfo.phone]);
+
+  // Detected matching customer profile for the current phone
+  const activeCustomerProfile = useMemo(() => {
+    const rawDigits = (customerInfo.phone || "").replace(/\D/g, "");
+    if (rawDigits.length !== 10) return null;
+    return customerDirectory.find((c) => c.phone === rawDigits) || null;
+  }, [customerDirectory, customerInfo.phone]);
+
+  // Get all previous bills & orders for the active customer
+  const activeCustomerOrders = useMemo(() => {
+    const rawDigits = (customerInfo.phone || "").replace(/\D/g, "");
+    if (!rawDigits || rawDigits.length < 5) return [];
+
+    const normalizePhone = (p) => {
+      if (!p) return "";
+      const digits = String(p).replace(/\D/g, "");
+      return digits.length > 10 ? digits.slice(-10) : digits;
+    };
+
+    const target10 = rawDigits.length > 10 ? rawDigits.slice(-10) : rawDigits;
+    const results = [];
+
+    // 1. In-store POS Bills
+    (billsHistory || []).forEach((bill) => {
+      const p = normalizePhone(bill.customerPhone);
+      if (p && p.includes(target10)) {
+        const d = bill.createdAt ? new Date(bill.createdAt) : null;
+        results.push({
+          id: bill._id || bill.billNumber || Math.random().toString(),
+          type: "pos",
+          typeLabel: "Store POS",
+          billNumber: bill.billNumber,
+          date: d,
+          dateStr: d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent",
+          total: Number(bill.total) || 0,
+          subtotal: Number(bill.subtotal) || Number(bill.total) || 0,
+          discountAmount: Number(bill.discountAmount) || 0,
+          tax: Number(bill.tax) || 0,
+          paymentMethod: bill.paymentMethod || "cash",
+          customerName: bill.customerName || "Customer",
+          customerPhone: bill.customerPhone,
+          items: (bill.items || []).map((it) => ({
+            name: it.productName || "Item",
+            price: Number(it.price) || 0,
+            quantity: Number(it.quantity) || 1,
+            size: it.size || "",
+            image: it.productImage || "",
+            itemId: it.itemId || it.productId || "",
+          })),
+        });
+      }
+    });
+
+    // 2. Online Store Orders
+    (onlineOrders || []).forEach((order) => {
+      const p = normalizePhone(order.shippingDetails?.phone || order.phone);
+      if (p && p.includes(target10)) {
+        const d = order.createdAt ? new Date(order.createdAt) : order._creationTime ? new Date(order._creationTime) : null;
+        results.push({
+          id: order._id || order.orderNumber || Math.random().toString(),
+          type: "online",
+          typeLabel: "Web Order",
+          billNumber: order.orderNumber,
+          date: d,
+          dateStr: d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent",
+          total: Number(order.paymentDetails?.amount || order.orderTotal || order.total || 0),
+          subtotal: Number(order.subtotal || order.paymentDetails?.amount || 0),
+          discountAmount: Number(order.discountAmount || 0),
+          tax: 0,
+          paymentMethod: order.paymentDetails?.paymentMethod || "online",
+          customerName: order.shippingDetails?.fullName || "Customer",
+          customerPhone: order.shippingDetails?.phone || "",
+          items: (order.items || []).map((it) => ({
+            name: it.name || "Item",
+            price: Number(it.price) || 0,
+            quantity: Number(it.quantity) || 1,
+            size: it.size || "",
+            image: it.image || "",
+            itemId: it.productId || "",
+          })),
+        });
+      }
+    });
+
+    return results.sort((a, b) => {
+      const tA = a.date ? a.date.getTime() : 0;
+      const tB = b.date ? b.date.getTime() : 0;
+      return tB - tA;
+    });
+  }, [billsHistory, onlineOrders, customerInfo.phone]);
 
   // Billing Products Queries & Mutations (Dedicated billing DB)
   const billingProductsData = useQuery(api.billingProducts.getBillingProducts, {}) || [];
   const createBillingProductMutation = useMutation(api.billingProducts.createBillingProduct);
   const updateBillingProductMutation = useMutation(api.billingProducts.updateBillingProduct);
   const deleteBillingProductMutation = useMutation(api.billingProducts.deleteBillingProduct);
+
+  // POS Location & Store Settings Server Persistence
+  const saveBranchesToServer = async (branchesToSave, currentActiveBranch) => {
+    try {
+      await fetch("/api/pos-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ branches: branchesToSave, activeBranch: currentActiveBranch })
+      });
+    } catch (e) {
+      console.error("Failed to save branch settings to server", e);
+    }
+  };
 
   // Handler to Create or Update Billing Product (Asking Name & Price only)
   const handleSaveBillingProduct = async (e) => {
@@ -478,7 +943,6 @@ export default function NewBillingPage() {
       const updatedCart = [...cart];
       updatedCart[existingIndex].quantity += 1;
       setCart(updatedCart);
-      toast.success(`Updated ${product.name} qty`, { duration: 1500 });
     } else {
       setCart([
         ...cart,
@@ -495,7 +959,6 @@ export default function NewBillingPage() {
           isBillingProduct: true,
         }
       ]);
-      toast.success(`Added ${product.name} to cart`, { duration: 1500 });
     }
   };
 
@@ -537,9 +1000,11 @@ export default function NewBillingPage() {
     setBillNumber(generated);
   }, []);
 
-  // Combine main website catalog products and quick billing products for the main POS Billing tab
+  // Combine quick billing products and main website catalog products for the main POS Billing tab
+  // Requirements:
+  // 1. Put Quick Items ON TOP of website items.
+  // 2. If an item is completely out of stock, push it to the very bottom.
   const allProducts = [
-    ...(products || []),
     ...(billingProductsData || []).map((bp) => ({
       _id: bp._id,
       itemId: bp.itemId,
@@ -549,19 +1014,51 @@ export default function NewBillingPage() {
       isBillingProduct: true,
       availableSizes: ["Standard"],
       sizeStock: { Standard: 9999 },
+      totalAvailable: 9999,
+      currentStock: 9999,
     })),
+    ...(products || []),
   ];
 
-  // Filter combined products by search query
-  const filteredProducts = allProducts.filter((product) => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
-    return (
-      product.name?.toLowerCase().includes(query) ||
-      product.itemId?.toLowerCase().includes(query) ||
-      product.category?.toLowerCase().includes(query)
-    );
-  });
+  // Helper to calculate total stock count for sorting
+  const getProductStockCount = (product) => {
+    if (product.isBillingProduct) return 9999;
+    if (product.sizeStock && typeof product.sizeStock === "object") {
+      const vals = Object.values(product.sizeStock);
+      if (vals.length > 0) {
+        return vals.reduce((sum, qty) => sum + (Number(qty) || 0), 0);
+      }
+    }
+    return Number(product.totalAvailable ?? product.currentStock ?? 0);
+  };
+
+  // Filter combined products by search query and sort
+  const filteredProducts = allProducts
+    .filter((product) => {
+      const query = searchQuery.toLowerCase().trim();
+      if (!query) return true;
+      return (
+        product.name?.toLowerCase().includes(query) ||
+        product.itemId?.toLowerCase().includes(query) ||
+        product.category?.toLowerCase().includes(query)
+      );
+    })
+    .sort((a, b) => {
+      const aStock = getProductStockCount(a);
+      const bStock = getProductStockCount(b);
+      const aOutOfStock = aStock <= 0;
+      const bOutOfStock = bStock <= 0;
+
+      // 1. Completely out of stock products go to the very bottom
+      if (aOutOfStock && !bOutOfStock) return 1;
+      if (!aOutOfStock && bOutOfStock) return -1;
+
+      // 2. Both in stock (or both out of stock): Quick items go on top of website items
+      if (a.isBillingProduct && !b.isBillingProduct) return -1;
+      if (!a.isBillingProduct && b.isBillingProduct) return 1;
+
+      return 0;
+    });
 
   // Handle adding product with specific size directly to cart
   const handleAddToCart = (product, size, e) => {
@@ -584,7 +1081,6 @@ export default function NewBillingPage() {
       const updatedCart = [...cart];
       updatedCart[existingIndex].quantity += 1;
       setCart(updatedCart);
-      toast.success(`Updated ${product.name} (${size}) qty`, { duration: 1500 });
     } else {
       setCart([
         ...cart,
@@ -601,7 +1097,6 @@ export default function NewBillingPage() {
           sizeDisplayType: product.sizeDisplayType || "letter"
         }
       ]);
-      toast.success(`Added ${product.name} (${size}) to cart`, { duration: 1500 });
     }
   };
 
@@ -686,6 +1181,90 @@ export default function NewBillingPage() {
     const storePhone = storeSettings?.phone || "+91 70337 69997";
     const thankMsg = storeSettings?.thankYouMessage || "Thank you for shopping with us..!!";
     const siteUrl = storeSettings?.websiteUrl || "aesthetxways.com";
+
+    // Dynamic UPI QR Code Generation (only when UPI payment method is selected)
+    const isUpiPayment = String(activeBillData.paymentMethod || "").toLowerCase() === "upi";
+    const billFinalAmount = Number(activeBillData.total ?? activeBillData.grandTotal ?? 0);
+    const upiAmountStr = billFinalAmount.toFixed(2);
+    const upiId = storeSettings?.upiId || "8008439762@ptsbi";
+    const payeeName = encodeURIComponent(storeTitle || "Aesthetx Ways");
+    const upiNote = encodeURIComponent(`Bill ${activeBillData.billNumber || ""}`.trim());
+    const upiPayload = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${upiAmountStr}&cu=INR&tn=${upiNote}`;
+
+    let upiQrDataUrl = "";
+    if (isUpiPayment) {
+      try {
+        if (typeof document !== "undefined") {
+          const canvas = document.createElement("canvas");
+          await QRCode.toCanvas(canvas, upiPayload, {
+            margin: 1,
+            width: 240,
+            errorCorrectionLevel: "H",
+            color: {
+              dark: "#000000",
+              light: "#ffffff",
+            },
+          });
+
+          const ctx = canvas.getContext("2d");
+          const size = canvas.width;
+
+          const logoImg = new Image();
+          logoImg.crossOrigin = "anonymous";
+          logoImg.src = "/logo_t.svg";
+
+          await new Promise((resolve) => {
+            if (logoImg.complete && logoImg.naturalWidth !== 0) {
+              resolve();
+            } else {
+              logoImg.onload = resolve;
+              logoImg.onerror = resolve;
+              setTimeout(resolve, 300);
+            }
+          });
+
+          if (logoImg.width > 0) {
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const radius = Math.floor(size * 0.125);
+
+            // Clean white circular background (no black boundary)
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.clip(); // circular clipping path
+
+            // Draw logo centered inside the circle
+            const pad = 3;
+            const logoW = (radius * 2) - pad * 2;
+            const aspect = (logoImg.naturalHeight || logoImg.height || 327) / (logoImg.naturalWidth || logoImg.width || 425);
+            const logoH = logoW * aspect;
+            const logoX = centerX - logoW / 2;
+            const logoY = centerY - logoH / 2;
+            ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+            ctx.restore();
+          }
+
+          upiQrDataUrl = canvas.toDataURL("image/png");
+        }
+      } catch (qrErr) {
+        console.error("Failed to generate canvas QR with logo:", qrErr);
+      }
+
+      if (!upiQrDataUrl) {
+        try {
+          upiQrDataUrl = await QRCode.toDataURL(upiPayload, {
+            margin: 1,
+            width: 180,
+            errorCorrectionLevel: "H",
+          });
+        } catch (err) {
+          upiQrDataUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&ecc=H&data=${encodeURIComponent(upiPayload)}`;
+        }
+      }
+    }
 
     const content = `
       <!DOCTYPE html>
@@ -809,10 +1388,31 @@ export default function NewBillingPage() {
               </tr>` : ''}
               <tr class="grand-total-row">
                 <td colspan="2" style="text-align: right; font-weight: 900; font-size: 14px; padding-top: 6px; border-top: 1.5px dashed #000;">Grand Total</td>
-                <td style="text-align: right; font-weight: 900; font-size: 14px; padding-top: 6px; border-top: 1.5px dashed #000;" class="font-mono">₹${(activeBillData.total || activeBillData.grandTotal).toFixed(2)}</td>
+                <td style="text-align: right; font-weight: 900; font-size: 14px; padding-top: 6px; border-top: 1.5px dashed #000;" class="font-mono">₹${billFinalAmount.toFixed(2)}</td>
               </tr>
             </table>
           </div>
+
+          <!-- Dynamic UPI QR Code Section (only when UPI payment method is selected) -->
+          ${isUpiPayment ? `
+          <div style="text-align: center; margin: 8px 0 6px 0; border-bottom: 1.5px dashed #000; padding-bottom: 8px;">
+            <div style="font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;">
+              SCAN TO PAY VIA UPI
+            </div>
+            <div style="position: relative; display: inline-block; background: #fff;">
+              <img src="${upiQrDataUrl}" alt="Scan to Pay via UPI" style="width: 125px; height: 125px; display: block; margin: 0 auto;" />
+              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; background: #fff; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px; box-sizing: border-box;">
+                <img src="/logo_t.svg" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; display: block; margin: 0 auto;" />
+              </div>
+            </div>
+            <div style="font-size: 13px; font-weight: 900; font-family: monospace; margin-top: 4px;">
+              ₹${billFinalAmount.toFixed(2)}
+            </div>
+            <div style="font-size: 9px; font-weight: 700; color: #222; font-family: monospace; margin-top: 2px; letter-spacing: 0.5px;">
+              UPI ID: ${upiId}
+            </div>
+          </div>
+          ` : ''}
 
           <div class="receipt-footer">
             <div class="payment-badge">
@@ -932,18 +1532,9 @@ export default function NewBillingPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-sm bg-white rounded-xs border border-zinc-200 p-6 shadow-xl font-mono text-xs"
+            // className="w-full max-w-sm bg-white rounded-xs border border-zinc-200 p-6 shadow-xl font-mono text-xs"
           >
-            {/* Header / Logo */}
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-zinc-950 text-white rounded-xs flex items-center justify-center mx-auto mb-3 shadow-sm">
-                <Lock size={22} />
-              </div>
-              <h2 className="font-sans font-bold text-lg text-zinc-950">POS Terminal Locked</h2>
-              <p className="text-xs text-zinc-500 mt-1">
-                Enter your security PIN code to unlock
-              </p>
-            </div>
+        
 
             {/* PIN Verification Form (Only PIN!) */}
             <form onSubmit={handleVerifyPinSubmit} className="space-y-4 text-xs">
@@ -958,9 +1549,15 @@ export default function NewBillingPage() {
                     maxLength={10}
                     required
                     autoFocus
-                    placeholder="Enter PIN (e.g. 1234 or 0000)..."
+                    placeholder="Enter PIN"
                     value={enteredPin}
-                    onChange={(e) => setEnteredPin(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEnteredPin(val);
+                      if (val.trim().length === 4) {
+                        verifyPin(val);
+                      }
+                    }}
                     className="w-full pl-9 pr-9 py-2 bg-zinc-50 border border-zinc-200 rounded-xs text-zinc-900 font-bold text-center tracking-widest text-sm focus:bg-white focus:outline-none focus:border-zinc-900 transition-colors"
                   />
                   <button
@@ -971,35 +1568,16 @@ export default function NewBillingPage() {
                     {showPinCode ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isVerifyingPin}
-                className="w-full py-2.5 bg-zinc-950 hover:bg-zinc-800 text-white rounded-xs text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center justify-center gap-2 mt-2"
-              >
-                {isVerifyingPin ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
+                {isVerifyingPin && (
+                  <div className="flex items-center justify-center gap-1.5 text-zinc-500 text-[11px] font-mono mt-2.5 animate-pulse">
+                    <RefreshCw size={12} className="animate-spin text-zinc-700" />
                     <span>Verifying PIN...</span>
-                  </>
-                ) : (
-                  <>
-                    <Unlock size={14} />
-                    <span>UNLOCK TERMINAL</span>
-                  </>
+                  </div>
                 )}
-              </button>
+              </div>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-zinc-150 space-y-1 text-[10px] text-zinc-400 text-center">
-              <p>
-                <span className="font-bold text-zinc-700">Admin PIN:</span> 1234 (Full Access)
-              </p>
-              <p>
-                <span className="font-bold text-zinc-700">Cashier PIN:</span> 0000 / 1111 (Generate Bills Only)
-              </p>
-            </div>
+      
           </motion.div>
         </div>
       </div>
@@ -1013,118 +1591,141 @@ export default function NewBillingPage() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Header Bar with RBAC & Active Cashier Switcher */}
-        <header className="bg-white border-b border-zinc-150 px-4 py-3 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold text-zinc-900 font-sans tracking-tight">POS Billing Desk</h1>
-                {userRole === "admin" ? (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-mono font-bold border border-emerald-200 flex items-center gap-1">
-                    <Shield size={10} />
-                    <span>ADMIN</span>
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[9px] font-mono font-bold border border-blue-200 flex items-center gap-1">
-                    <UserCheck2 size={10} />
-                    <span>CASHIER</span>
-                  </span>
-                )}
-              </div>
-              <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
-                Terminal #{billNumber}
-              </p>
-            </div>
+        {/* Top Header Bar */}
+        <header className="bg-white border-b border-zinc-150 px-4 py-2.5 flex items-center justify-between shrink-0">
+          {/* Store Switcher: Patna vs Gaya + Any Added Locations */}
+          <div className="flex items-center p-0.5 bg-zinc-100 rounded-md border border-zinc-200 font-mono text-xs">
+            {Object.entries(branches).map(([bId, bData]) => {
+              const displayName = (bData.name || bId).replace(/\s*Branch\s*/i, "");
+              const isSelected = activeBranch === bId;
+              return (
+                <button
+                  key={bId}
+                  type="button"
+                  onClick={() => handleBranchChange(bId)}
+                  className={`px-3 py-1.5 rounded-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isSelected
+                      ? "bg-zinc-950 text-white shadow-xs"
+                      : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50"
+                  }`}
+                  title={`${bData.name || bId} Store`}
+                >
+                  <MapPin size={12} className={isSelected ? "text-emerald-400" : "text-zinc-400"} />
+                  <span>{displayName}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Store Branch Switcher (Patna vs Gaya) */}
-            <div className="flex items-center p-0.5 bg-zinc-100 rounded-xs border border-zinc-200 font-mono text-xs">
+          {/* Right Side: desk, History, Product tabs + Three dots menu */}
+          <div className="flex items-center gap-2.5">
+            {/* Tab Switcher: desk vs History vs Product */}
+            <div className="flex items-center p-0.5 bg-zinc-100 rounded-md border border-zinc-200 font-mono text-xs">
               <button
-                onClick={() => handleBranchChange("patna")}
-                className={`px-2.5 py-1 rounded-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                  activeBranch === "patna"
-                    ? "bg-zinc-950 text-white shadow-xs"
-                    : "text-zinc-500 hover:text-zinc-800"
-                }`}
-                title="Patna Store Branch"
-              >
-                <MapPin size={11} />
-                <span>Patna Store</span>
-              </button>
-              <button
-                onClick={() => handleBranchChange("gaya")}
-                className={`px-2.5 py-1 rounded-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                  activeBranch === "gaya"
-                    ? "bg-zinc-950 text-white shadow-xs"
-                    : "text-zinc-500 hover:text-zinc-800"
-                }`}
-                title="Gaya Store Branch (Waves)"
-              >
-                <MapPin size={11} />
-                <span>Gaya Store</span>
-              </button>
-            </div>
-
-            {/* Lock Terminal Button */}
-            <button
-              onClick={handleLockTerminal}
-              className="px-2.5 py-1 bg-zinc-100 hover:bg-red-50 hover:text-red-700 text-zinc-700 rounded-xs text-xs font-mono font-bold border border-zinc-200 hover:border-red-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-              title="Lock Terminal & Re-enter PIN"
-            >
-              <Lock size={12} />
-              <span>Lock</span>
-            </button>
-
-            {/* Admin User Management Button (Admin Only) */}
-            {userRole === "admin" && (
-              <button
-                onClick={() => setShowUserModal(true)}
-                className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-xs text-xs font-mono font-bold border border-zinc-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                title="Manage Cashier Users"
-              >
-                <Users size={13} className="text-zinc-600" />
-                <span>Manage Users ({registeredUsers.length})</span>
-              </button>
-            )}
-
-            {/* Tab Switcher: Billing Desk vs History vs Settings */}
-            <div className="flex items-center p-0.5 bg-zinc-100 rounded-xs border border-zinc-200 font-mono text-xs">
-              <button
+                type="button"
                 onClick={() => setActiveTab("billing")}
-                className={`px-3 py-1 rounded-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeTab === "billing"
-                    ? "bg-white text-zinc-950 shadow-xs font-semibold"
+                    ? "bg-white text-zinc-950 shadow-xs font-bold"
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
                 <ShoppingCart size={13} />
-                <span>Billing Desk</span>
+                <span>desk</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab("history")}
-                className={`px-3 py-1 rounded-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeTab === "history"
-                    ? "bg-white text-zinc-950 shadow-xs font-semibold"
+                    ? "bg-white text-zinc-950 shadow-xs font-bold"
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
                 <History size={13} />
-                <span>Bill History ({billsHistory.length})</span>
+                <span>History</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab("billing_products")}
-                className={`px-3 py-1 rounded-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeTab === "billing_products"
-                    ? "bg-white text-zinc-950 shadow-xs font-semibold"
+                    ? "bg-white text-zinc-950 shadow-xs font-bold"
                     : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
                 <Package size={13} />
-                <span>Billing Products ({billingProductsData.length})</span>
+                <span>Product</span>
               </button>
+            </div>
+
+            {/* Three Dots Menu Button & Dropdown */}
+            <div className="relative" ref={moreMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowMoreMenu((prev) => !prev)}
+                className={`p-1.5 rounded-md border transition-all cursor-pointer flex items-center justify-center ${
+                  showMoreMenu
+                    ? "bg-zinc-200 border-zinc-300 text-zinc-950 shadow-inner"
+                    : "bg-white hover:bg-zinc-100 border-zinc-200 text-zinc-700 shadow-2xs"
+                }`}
+                title="Options"
+                aria-label="More Options"
+              >
+                <MoreVertical size={16} />
+              </button>
+
+              <AnimatePresence>
+                {showMoreMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute right-0 mt-1.5 w-44 bg-white rounded-md border border-zinc-200 shadow-lg py-1 z-50 font-mono text-xs"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMoreMenu(false);
+                        setShowUserModal(true);
+                      }}
+                      className="w-full px-3 py-2 flex items-center gap-2 text-left text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950 transition-colors cursor-pointer"
+                    >
+                      <Users size={14} className="text-zinc-500" />
+                      <span className="font-semibold">Manage User</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMoreMenu(false);
+                        setShowSettingsModal(true);
+                      }}
+                      className="w-full px-3 py-2 flex items-center gap-2 text-left text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950 transition-colors cursor-pointer"
+                    >
+                      <Settings size={14} className="text-zinc-500" />
+                      <span className="font-semibold">Settings</span>
+                    </button>
+
+                    <div className="my-1 border-t border-zinc-150" />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMoreMenu(false);
+                        handleLockTerminal();
+                      }}
+                      className="w-full px-3 py-2 flex items-center gap-2 text-left text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <Lock size={14} className="text-red-500" />
+                      <span className="font-semibold">Lock</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>
@@ -1187,45 +1788,51 @@ export default function NewBillingPage() {
                     return (
                       <div
                         key={product._id}
-                        onMouseEnter={() => setExpandedProductId(product._id)}
-                        onClick={() => setExpandedProductId(isExpanded ? null : product._id)}
-                        className={`bg-white border rounded-xs transition-all duration-200 overflow-hidden font-mono text-xs cursor-pointer ${
-                          isExpanded
-                            ? "border-zinc-900 shadow-md ring-1 ring-zinc-900/10 p-3 bg-white"
-                            : "border-zinc-200 hover:border-zinc-400 p-2.5 hover:bg-zinc-50/60"
+                        onMouseEnter={() => {
+                          if (!product.isBillingProduct) {
+                            setExpandedProductId(product._id);
+                          }
+                        }}
+                        onClick={(e) => {
+                          if (product.isBillingProduct) {
+                            handleAddBillingProductToCart(product, e);
+                          } else {
+                            setExpandedProductId(isExpanded ? null : product._id);
+                          }
+                        }}
+                        className={` rounded-xs transition-all duration-150 font-mono text-xs cursor-pointer select-none ${
+                          product.isBillingProduct
+                            ? "hover:border hover:border-amber-400 hover:bg-amber-100/20 p-2.5 active:scale-[0.99] shadow-2xs"
+                            : isExpanded
+                            ? "bg-white border-zinc-900 shadow-md ring-1 ring-zinc-900/10 p-3"
+                            : "bg-white border-zinc-200 hover:border-zinc-400 p-2.5 hover:bg-zinc-50/60"
                         } ${!hasStock ? "opacity-60 bg-zinc-50" : ""}`}
                       >
                         {/* Collapsed Compact Row Header */}
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className={`w-2 h-2 rounded-full shrink-0 ${product.isBillingProduct ? "bg-purple-600" : "bg-zinc-900"}`} />
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${product.isBillingProduct ? "bg-amber-400 shadow-xs" : "bg-zinc-900"}`} />
                             <div className="flex-1 min-w-0">
                               <h3 className="font-sans font-bold text-xs text-zinc-950 truncate flex items-center gap-2">
                                 <span>{product.name}</span>
                                 {product.isBillingProduct && (
-                                  <span className="px-1.5 py-0.2 bg-purple-100 text-purple-800 text-[9px] font-mono rounded-xs font-bold border border-purple-200">
-                                    Quick Item
+                                  <span className=" text-[20px] font-mono rounded-xs font-bold ">
+                                    ⚡
                                   </span>
                                 )}
                               </h3>
-                              <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
-                                <span>ID: {product.itemId || "N/A"}</span>
-                                {product.category && <span>• {product.category}</span>}
-                              </div>
+                              {!product.isBillingProduct && (
+                                <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
+                                  <span>ID: {product.itemId || "N/A"}</span>
+                                  {product.category && <span>• {product.category}</span>}
+                                </div>
+                              )}
                             </div>
                           </div>
 
                           <div className="flex items-center gap-3 shrink-0">
-                            {/* Stock status pill / Quick Item badge */}
-                            {product.isBillingProduct ? (
-                              <button
-                                onClick={(e) => handleAddBillingProductToCart(product, e)}
-                                className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-xs text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
-                              >
-                                <Plus size={12} />
-                                <span>Add to Bill</span>
-                              </button>
-                            ) : (
+                            {/* Stock status pill for website products only */}
+                            {!product.isBillingProduct && (
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-xs border ${
                                 hasStock
                                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -1312,11 +1919,11 @@ export default function NewBillingPage() {
               </div>
             </div>
 
-            {/* Right Column: Live Shopping Cart & Billing Calculation */}
-            <div className="w-80 md:w-96 bg-white border-l border-zinc-150 flex flex-col shrink-0">
-              <div className="p-3 border-b border-zinc-150 bg-zinc-50/50 flex items-center justify-between shrink-0">
+            {/* Right Column: Live Shopping Cart & Billing Calculation (Expanded by 20%) */}
+            <div className="w-96 md:w-[450px] lg:w-[490px] xl:w-[530px] bg-white border-l border-zinc-150 flex flex-col shrink-0">
+              <div className="p-3.5 border-b border-zinc-150 bg-zinc-50/50 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
-                  <ShoppingCart size={15} className="text-zinc-700" />
+                  <ShoppingCart size={16} className="text-zinc-800" />
                   <h2 className="text-xs font-bold text-zinc-900 uppercase font-mono tracking-wider">
                     Order Cart ({cart.length})
                   </h2>
@@ -1324,7 +1931,7 @@ export default function NewBillingPage() {
                 {cart.length > 0 && (
                   <button
                     onClick={() => setCart([])}
-                    className="text-[10px] font-mono text-red-600 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-[10px] font-mono text-red-600 hover:underline flex items-center gap-1 cursor-pointer font-bold"
                   >
                     <Trash2 size={12} />
                     <span>Clear Cart</span>
@@ -1332,44 +1939,401 @@ export default function NewBillingPage() {
                 )}
               </div>
 
-              {/* Customer Phone & Name Input */}
-              <div className="p-3 border-b border-zinc-150 bg-white grid grid-cols-2 gap-2 text-xs font-mono shrink-0">
-                <div>
-                  <label className="text-[10px] text-zinc-500 font-semibold uppercase block mb-1">
-                    Customer Phone <span className="text-red-500 font-bold">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                    <input
-                      type="tel"
-                      maxLength={10}
-                      required
-                      placeholder="10 digit phone *"
-                      value={customerInfo.phone}
-                      onChange={(e) => {
-                        const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
-                        setCustomerInfo({ ...customerInfo, phone: digitsOnly });
-                      }}
-                      className="w-full pl-7 pr-2 py-1 bg-zinc-50 border border-zinc-200 rounded-xs text-[11px] text-zinc-900 focus:outline-none focus:border-zinc-400 font-bold font-mono"
-                    />
+              {/* Customer Phone & Name Input with Top 5 Match Dropdown */}
+              <div ref={customerDropdownRef} className="p-3.5 border-b border-zinc-150 bg-white relative text-xs font-mono shrink-0">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-zinc-600 font-bold uppercase block mb-1">
+                      Customer Phone <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        required
+                        placeholder="10 digit phone *"
+                        value={customerInfo.phone}
+                        onFocus={() => {
+                          if (customerInfo.phone.replace(/\D/g, "").length > 0) {
+                            setShowCustomerDropdown(true);
+                          }
+                        }}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setCustomerInfo({ ...customerInfo, phone: digitsOnly });
+                          setShowCustomerDropdown(true);
+                        }}
+                        className="w-full pl-7 pr-2.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-xs text-xs text-zinc-900 focus:outline-none focus:border-zinc-500 focus:bg-white font-bold font-mono transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-zinc-600 font-bold uppercase block mb-1">
+                      Customer Name <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <div className="relative">
+                      <User size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Full name *"
+                        value={customerInfo.name}
+                        onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+                        className="w-full pl-7 pr-2.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-xs text-xs text-zinc-900 focus:outline-none focus:border-zinc-500 focus:bg-white font-bold transition-colors"
+                      />
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="text-[10px] text-zinc-500 font-semibold uppercase block mb-1">
-                    Customer Name <span className="text-red-500 font-bold">*</span>
-                  </label>
-                  <div className="relative">
-                    <User size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Full name *"
-                      value={customerInfo.name}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                      className="w-full pl-7 pr-2 py-1 bg-zinc-50 border border-zinc-200 rounded-xs text-[11px] text-zinc-900 focus:outline-none focus:border-zinc-400 font-bold"
-                    />
+
+                {/* Active Customer Recognized Banner with View Previous Orders Button */}
+                {activeCustomerProfile && (
+                  <div className="mt-2 py-1.5 rounded text-[10px] font-mono flex items-center justify-between gap-2 text-zinc-900 animate-in fade-in duration-150 ">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowPreviousOrders((prev) => !prev);
+                          setShowCustomerDropdown(false);
+                        }}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-[10px] font-mono transition-all border border-zinc-900 cursor-pointer shadow-xs active:scale-95 shrink-0"
+                      >
+                        <History size={11} className="text-amber-400" />
+                        <span>previous orders</span>
+                        <motion.div
+                          animate={{ rotate: showPreviousOrders ? 180 : 0 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <ChevronDown size={11} />
+                        </motion.div>
+                      </button>
+                 
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="px-1.5 py-0 rounded font-bold text-zinc-600 ">
+                        {activeCustomerProfile.purchasesCount} {activeCustomerProfile.purchasesCount === 1 ? "purchase" : "purchases"}
+                      </span>
+                      <span className="px-1.5 py-0 rounded font-bold text-emerald-700 ">
+                        ₹{activeCustomerProfile.totalWorth.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} total worth
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Animated Previous Orders & Bills Dropdown with Nested Hover Items */}
+                <AnimatePresence>
+                  {showPreviousOrders && (
+                    <motion.div
+                      ref={previousOrdersRef}
+                      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="absolute left-3 right-3 top-[calc(100%-2px)] z-50 bg-white border border-zinc-300 rounded-lg shadow-2xl text-xs font-mono"
+                    >
+                      {/* Header */}
+                      <div className="bg-zinc-900 px-3 py-2 flex items-center justify-between text-[10px] font-mono text-zinc-200 rounded-t-lg">
+                        <div className="flex items-center gap-1.5 font-bold tracking-wider uppercase text-white">
+                          <History size={12} className="text-amber-400" />
+                          <span>Previous Orders ({activeCustomerOrders.length})</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowPreviousOrders(false);
+                            setHoveredBill(null);
+                          }}
+                          className="text-zinc-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded"
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+
+                      {/* Orders / Bills List */}
+                      {activeCustomerOrders.length > 0 ? (
+                        <div className="divide-y divide-zinc-100 max-h-[340px] overflow-y-auto relative rounded-b-lg">
+                          {activeCustomerOrders.map((bill) => {
+                            const isHovered = hoveredBill?.id === bill.id;
+
+                            return (
+                              <div
+                                key={bill.id}
+                                onMouseEnter={() => setHoveredBill(bill)}
+                                className={`p-3 transition-all cursor-pointer relative group ${
+                                  isHovered ? "bg-amber-50/90" : "hover:bg-zinc-50/90"
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  {/* Left: Bill #, Date, Badges */}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-bold text-zinc-950 text-xs">
+                                        #{bill.billNumber}
+                                      </span>
+                                      <span
+                                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded  ${
+                                          bill.type === "pos"
+                                            ? "text-amber-900 "
+                                            : " text-blue-900 "
+                                        }`}
+                                      >
+                                        {bill.typeLabel}
+                                      </span>
+                                      <span className="text-[9px] uppercase font-bold text-zinc-500 bg-zinc-100 px-1.5 py-0.2 rounded">
+                                        {bill.paymentMethod}
+                                      </span>
+                                    </div>
+                                    <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 mt-1">
+                                      <Clock size={11} className="text-zinc-400" />
+                                      <span>{bill.dateStr}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Right: Items count, Total amount, Hover indicator */}
+                                  <div className="text-right shrink-0">
+                                    <div className="text-xs font-bold text-zinc-950 font-mono">
+                                      ₹{bill.total.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                    </div>
+                                    <div className="text-[10px] text-zinc-600 font-bold mt-0.5 flex items-center justify-end gap-1">
+                                      <span>{bill.items.length} {bill.items.length === 1 ? "item" : "items"}</span>
+                                      <ChevronRight size={12} className={`text-zinc-400 transition-transform ${isHovered ? "translate-x-0.5 text-zinc-900" : ""}`} />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="mt-1.5 pt-1.5 border-t border-zinc-100 flex items-center justify-between text-[9px] text-zinc-500 font-mono">
+                                  {/* <span className="text-zinc-400">Hover to view items preview</span> */}
+                                  {bill.discountAmount > 0 && (
+                                    <span className="text-emerald-600 font-bold">
+                                      Saved ₹{bill.discountAmount.toFixed(0)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-zinc-500 text-[11px] font-mono">
+                          No previous orders found for this customer.
+                        </div>
+                      )}
+
+                      {/* Floating Nested Dropdown for Hovered Bill Items */}
+                      <AnimatePresence>
+                        {hoveredBill && (
+                          <motion.div
+                            initial={{ opacity: 0, x: 12, scale: 0.96 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 12, scale: 0.96 }}
+                            transition={{ duration: 0.16, ease: "easeOut" }}
+                            onMouseEnter={() => setHoveredBill(hoveredBill)}
+                            onMouseLeave={() => setHoveredBill(null)}
+                            className="absolute right-full mr-2 top-0 w-80 sm:w-88 bg-white border border-zinc-300 rounded-lg shadow-2xl overflow-hidden z-60 font-mono"
+                          >
+                            {/* Flyout Header */}
+                            <div className="bg-zinc-900 p-2.5 flex items-center justify-between text-[10px] text-zinc-200">
+                              <div className="flex items-center gap-1.5">
+                                <Package size={13} className="text-amber-400" />
+                                <span className="font-bold text-white uppercase tracking-wider">
+                                  Bill #{hoveredBill.billNumber}
+                                </span>
+                              </div>
+                              <span className="bg-white/10 text-zinc-200 px-1.5 py-0.2 rounded text-[9px] font-bold">
+                                {hoveredBill.items.length} {hoveredBill.items.length === 1 ? "Item" : "Items"}
+                              </span>
+                            </div>
+
+                            {/* Flyout Items List */}
+                            <div className="divide-y divide-zinc-100 max-h-[260px] overflow-y-auto p-1 bg-zinc-50/50">
+                              {hoveredBill.items.length > 0 ? (
+                                hoveredBill.items.map((it, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="p-2 bg-white rounded flex items-center justify-between gap-2.5 my-1 border border-zinc-100"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      {it.image ? (
+                                        <img
+                                          src={it.image}
+                                          alt={it.name}
+                                          className="w-8 h-8 rounded object-cover border border-zinc-200 shrink-0"
+                                        />
+                                      ) : (
+                                        <div className="w-8 h-8 rounded bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-400 shrink-0">
+                                          <ShoppingBag size={14} />
+                                        </div>
+                                      )}
+                                      <div className="min-w-0">
+                                        <p className="text-[11px] font-bold text-zinc-900 truncate">
+                                          {it.name}
+                                        </p>
+                                        <div className="flex items-center gap-1.5 text-[9px] text-zinc-500 mt-0.5">
+                                          {it.size && (
+                                            <span className="bg-zinc-100 border border-zinc-200 px-1 rounded font-bold text-zinc-700">
+                                              Size: {it.size}
+                                            </span>
+                                          )}
+                                          <span>Qty: {it.quantity}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="text-right shrink-0">
+                                      <p className="text-[11px] font-bold text-zinc-900">
+                                        ₹{(it.price * it.quantity).toLocaleString("en-IN")}
+                                      </p>
+                                      {it.quantity > 1 && (
+                                        <p className="text-[9px] text-zinc-400">
+                                          ₹{it.price} each
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="p-3 text-center text-zinc-400 text-[10px]">
+                                  No item details recorded
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Flyout Summary Footer */}
+                            <div className="bg-white p-2.5 border-t border-zinc-200 text-[10px] space-y-1">
+                              <div className="flex justify-between text-zinc-500">
+                                <span>Subtotal</span>
+                                <span>₹{hoveredBill.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                              </div>
+                              {hoveredBill.discountAmount > 0 && (
+                                <div className="flex justify-between text-emerald-600 font-medium">
+                                  <span>Discount</span>
+                                  <span>-₹{hoveredBill.discountAmount.toFixed(2)}</span>
+                                </div>
+                              )}
+                              {hoveredBill.tax > 0 && (
+                                <div className="flex justify-between text-zinc-500">
+                                  <span>Tax / GST</span>
+                                  <span>₹{hoveredBill.tax.toFixed(2)}</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between font-bold text-zinc-950 pt-1 border-t border-zinc-100 text-xs">
+                                <span>Total Paid</span>
+                                <span>₹{hoveredBill.total.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="text-[9px] text-zinc-400 pt-0.5 flex items-center justify-between">
+                                <span>Method: {hoveredBill.paymentMethod?.toUpperCase()}</span>
+                                <span>{hoveredBill.dateStr}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Top 5 Matching Customers Dropdown */}
+                {showCustomerDropdown && (customerInfo.phone || "").replace(/\D/g, "").length > 0 && (
+                  <div className="absolute left-3 right-3 top-[calc(100%-2px)] z-50 bg-white border border-zinc-300 rounded-lg shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="bg-zinc-900 px-3 py-1.5 flex items-center justify-between text-[10px] font-mono text-zinc-200">
+                      <div className="flex items-center gap-1.5 font-bold tracking-wider uppercase text-white">
+                        <Users size={12} />
+                        <span>Matching Customers ({matchingCustomers.length})</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowCustomerDropdown(false)}
+                        className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+
+                    {matchingCustomers.length > 0 ? (
+                      <div className="divide-y divide-zinc-100 max-h-[300px] overflow-y-auto">
+                        {matchingCustomers.map((cust, idx) => {
+                          const typedDigits = (customerInfo.phone || "").replace(/\D/g, "");
+                          const phoneStr = cust.phone;
+                          const matchIdx = phoneStr.indexOf(typedDigits);
+
+                          return (
+                            <div
+                              key={cust.phone + idx}
+                              onClick={() => {
+                                setCustomerInfo({
+                                  phone: cust.phone,
+                                  name: cust.name && cust.name !== "Customer" ? cust.name : customerInfo.name
+                                });
+                                setShowCustomerDropdown(false);
+                                toast.success(`Selected: ${cust.name || "Customer"} (${cust.phone})`, {
+                                  icon: "👤",
+                                  duration: 2000
+                                });
+                              }}
+                              className="p-2.5 hover:bg-amber-50/80 transition-all cursor-pointer flex items-center justify-between gap-3 group"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                
+                                <div className="min-w-0">
+                                  <div className="text-xs font-bold text-zinc-900 truncate flex items-center gap-1.5">
+                                    <span>{cust.name || "Customer"}</span>
+                                    {cust.purchasesCount >= 3 && (
+                                      <span className="text-[9px] bg-amber-100 text-amber-900 border border-amber-300 font-bold px-1 rounded">
+                                        Frequent
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] font-mono text-zinc-500 flex items-center gap-1 mt-0.5">
+                                    <Phone size={10} className="text-zinc-400 shrink-0" />
+                                    <span>
+                                      {matchIdx !== -1 ? (
+                                        <>
+                                          {phoneStr.slice(0, matchIdx)}
+                                          <span className="font-black text-amber-800 bg-amber-200/90 px-0.5 rounded">
+                                            {phoneStr.slice(matchIdx, matchIdx + typedDigits.length)}
+                                          </span>
+                                          {phoneStr.slice(matchIdx + typedDigits.length)}
+                                        </>
+                                      ) : (
+                                        phoneStr
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0 text-right">
+                                <div className="flex flex-col items-end gap-1">
+                                  {/* Times customer has bought */}
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5  rounded text-[10px] font-bold font-mono">
+                                    {/* <ShoppingBag size={10} /> */}
+                                    <span>
+                                      {cust.purchasesCount} {cust.purchasesCount === 1 ? "time" : "times"} bought
+                                    </span>
+                                  </span>
+
+                                  {/* Total worth amount */}
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5  rounded text-[10px] font-bold font-mono">
+                                    <span>
+                                      ₹{cust.totalWorth.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} total worth
+                                    </span>
+                                  </span>
+                                </div>
+                                <ChevronRight size={14} className="text-zinc-400 group-hover:text-zinc-800 group-hover:translate-x-0.5 transition-all ml-1 shrink-0" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-3 text-center text-zinc-500 text-[11px] font-mono">
+                        No previous customers matching &ldquo;{(customerInfo.phone || "").replace(/\D/g, "")}&rdquo;
+                      </div>
+                    )}
+               
+                  </div>
+                )}
               </div>
 
               {/* Cart Items List */}
@@ -1388,40 +2352,46 @@ export default function NewBillingPage() {
                       <div className="flex-1 min-w-0 pr-2">
                         <h4 className="font-sans font-medium text-zinc-900 truncate">{item.productName}</h4>
                         <div className="flex items-center gap-2 text-[10px] text-zinc-500 mt-0.5">
-                          <span className="px-1 bg-zinc-100 border border-zinc-200 rounded-xs font-bold text-zinc-800">
-                            Size: {item.size}
-                          </span>
+                          {item.isBillingProduct || !item.size ? (
+                            <span className="px-1.5 py-0.2 bg-amber-100 border border-amber-300 rounded-xs font-bold text-amber-900 text-[9px]">
+                              Quick Item
+                            </span>
+                          ) : (
+                            <span className="px-1 bg-zinc-100 border border-zinc-200 rounded-xs font-bold text-zinc-800">
+                              Size: {item.size}
+                            </span>
+                          )}
                           <span>₹{item.price} each</span>
                         </div>
                       </div>
 
                       {/* Quantity Controls */}
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <div className="flex items-center border border-zinc-200 rounded-xs bg-zinc-50">
                           <button
                             onClick={() => updateQuantity(item.cartKey, -1)}
-                            className="p-1 hover:bg-zinc-200 text-zinc-700 cursor-pointer"
+                            className="w-6 h-6 flex items-center justify-center hover:bg-zinc-200 text-zinc-700 cursor-pointer transition-colors"
                           >
                             <Minus size={11} />
                           </button>
-                          <span className="w-6 text-center font-bold text-zinc-900 text-[11px]">
+                          <span className="w-7 text-center font-bold text-zinc-900 text-xs">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.cartKey, 1)}
-                            className="p-1 hover:bg-zinc-200 text-zinc-700 cursor-pointer"
+                            className="w-6 h-6 flex items-center justify-center hover:bg-zinc-200 text-zinc-700 cursor-pointer transition-colors"
                           >
                             <Plus size={11} />
                           </button>
                         </div>
-                        <span className="w-14 text-right font-bold text-zinc-900 text-[11px]">
+                        <span className="w-16 text-right font-bold text-zinc-950 text-xs font-mono">
                           ₹{(item.price * item.quantity).toFixed(2)}
                         </span>
                         <button
                           onClick={() => removeFromCart(item.cartKey)}
                           className="p-1 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
                         >
-                          <X size={13} />
+                          <X size={14} />
                         </button>
                       </div>
                     </div>
@@ -1430,36 +2400,70 @@ export default function NewBillingPage() {
               </div>
 
               {/* Discount & Payment Method Controls */}
-              <div className="p-3 border-t border-zinc-150 bg-zinc-50/50 space-y-2.5 shrink-0 font-mono text-xs">
+              <div className="p-3.5 border-t border-zinc-150 bg-zinc-50/50 space-y-3 shrink-0 font-mono text-xs">
                 {/* Discount % (Admin Only Control) */}
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-600 text-[11px] flex items-center gap-1">
+                <div className="flex items-center justify-between text-xs gap-2">
+                  <span className="text-zinc-600 text-[11px] flex items-center gap-1 shrink-0">
                     <span>Discount:</span>
                     {userRole === "user" && <span className="text-[9px] text-zinc-400">(Admin only)</span>}
                   </span>
-                  <div className="flex items-center gap-1">
-                    {[0, 5, 10, 15, 20].map((d) => (
+                  <div className="flex items-center gap-1 flex-wrap justify-end">
+                    {[0, 5, 10, 20].map((d) => (
                       <button
                         key={d}
+                        type="button"
                         disabled={userRole !== "admin"}
                         onClick={() => setDiscount(d)}
-                        className={`px-1.5 py-0.5 rounded-xs text-[10px] border transition-all ${
-                          effectiveDiscount === d
+                        className={`px-1.5 py-0.5 rounded-xs text-[10px] border transition-all cursor-pointer ${
+                          effectiveDiscount === d && [0, 5, 10, 20].includes(discount)
                             ? "bg-zinc-900 text-white border-zinc-900 font-bold"
                             : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300"
-                        } ${userRole !== "admin" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                        } ${userRole !== "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
                         {d === 0 ? "None" : `${d}%`}
                       </button>
                     ))}
+
+                    {/* Custom Discount Input Field */}
+                    <div className="flex items-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="any"
+                        placeholder="Custom"
+                        disabled={userRole !== "admin"}
+                        value={![0, 5, 10, 20].includes(discount) && discount > 0 ? discount : ""}
+                        onChange={(e) => {
+                          const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                          if (!isNaN(val) && val >= 0 && val <= 100) {
+                            setDiscount(val);
+                          }
+                        }}
+                        className={`w-14 px-1 py-0.5 rounded-xs text-[10px] border text-center font-mono focus:outline-none focus:border-zinc-900 transition-all ${
+                          ![0, 5, 10, 20].includes(discount) && discount > 0
+                            ? "bg-zinc-900 text-white border-zinc-900 font-bold placeholder:text-zinc-400"
+                            : "bg-white text-zinc-800 border-zinc-200 hover:border-zinc-300 placeholder:text-zinc-400"
+                        } ${userRole !== "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
+                      />
+                      <span className="text-[10px] text-zinc-400 ml-0.5 font-mono">%</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Payment Method Selector */}
                 <div>
-                  <span className="text-zinc-600 text-[10px] font-semibold uppercase block mb-1">
-                    Payment Method
-                  </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-zinc-600 text-[10px] font-semibold uppercase">
+                      Payment Method
+                    </span>
+                    {paymentMethod === "upi" && (
+                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-xs flex items-center gap-1">
+                        <QrCode size={10} />
+                        QR on Print: Active
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-4 gap-1 text-[10px]">
                     {[
                       { id: "cash", label: "CASH" },
@@ -1469,6 +2473,7 @@ export default function NewBillingPage() {
                     ].map((pm) => (
                       <button
                         key={pm.id}
+                        type="button"
                         onClick={() => setPaymentMethod(pm.id)}
                         className={`py-1 rounded-xs border font-bold transition-all text-center cursor-pointer ${
                           paymentMethod === pm.id
@@ -1643,7 +2648,7 @@ export default function NewBillingPage() {
               <div className="bg-white p-4 rounded-xs border border-zinc-150 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-sm font-bold text-zinc-950 font-sans tracking-tight flex items-center gap-2">
-                    <Package size={16} className="text-purple-600" />
+                    <Package size={16} className="text-amber-500" />
                     <span>Quick Billing Products Management</span>
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">
@@ -1651,7 +2656,7 @@ export default function NewBillingPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-mono">
-                  <span className="px-2.5 py-1 bg-purple-50 text-purple-700 font-bold rounded-xs border border-purple-200">
+                  <span className="px-2.5 py-1 bg-amber-50 text-amber-900 font-bold rounded-xs border border-amber-300">
                     {billingProductsData.length} Quick Products
                   </span>
                 </div>
@@ -1663,7 +2668,7 @@ export default function NewBillingPage() {
                 <div className="bg-white p-5 rounded-xs border border-zinc-150 shadow-2xs space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-150">
                     <h3 className="font-sans font-bold text-sm text-zinc-900 flex items-center gap-2">
-                      <Plus size={14} className="text-purple-600" />
+                      <Plus size={14} className="text-amber-500" />
                       <span>{editingBillingProduct ? "Edit Billing Product" : "Add Billing Product"}</span>
                     </h3>
                     {editingBillingProduct && (
@@ -1689,7 +2694,7 @@ export default function NewBillingPage() {
                         placeholder="e.g. Gift Box Packaging, Alteration, Belt..."
                         value={newBillingProductForm.name}
                         onChange={(e) => setNewBillingProductForm({ ...newBillingProductForm, name: e.target.value })}
-                        className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xs text-zinc-900 font-medium focus:bg-white focus:outline-none focus:border-purple-600 transition-colors"
+                        className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xs text-zinc-900 font-medium focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400 transition-colors"
                       />
                     </div>
 
@@ -1708,7 +2713,7 @@ export default function NewBillingPage() {
                           placeholder="0.00"
                           value={newBillingProductForm.price}
                           onChange={(e) => setNewBillingProductForm({ ...newBillingProductForm, price: e.target.value })}
-                          className="w-full pl-7 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xs text-zinc-900 font-bold focus:bg-white focus:outline-none focus:border-purple-600 transition-colors"
+                          className="w-full pl-7 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xs text-zinc-900 font-bold focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400 transition-colors"
                         />
                       </div>
                     </div>
@@ -1718,7 +2723,7 @@ export default function NewBillingPage() {
                       <button
                         type="submit"
                         disabled={isSubmittingBillingProduct}
-                        className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xs font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+                        className="w-full py-2.5 bg-amber-400 hover:bg-amber-500 text-zinc-950 rounded-xs font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs border border-amber-500/30"
                       >
                         {isSubmittingBillingProduct ? (
                           <>
@@ -1747,7 +2752,7 @@ export default function NewBillingPage() {
                         placeholder="Search quick products by name or Item ID..."
                         value={billingProductSearchQuery}
                         onChange={(e) => setBillingProductSearchQuery(e.target.value)}
-                        className="w-full pl-8 pr-3 py-1.5 bg-white border border-zinc-200 rounded-xs text-xs font-mono text-zinc-900 focus:outline-none focus:border-purple-400"
+                        className="w-full pl-8 pr-3 py-1.5 bg-white border border-zinc-200 rounded-xs text-xs font-mono text-zinc-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-400"
                       />
                     </div>
                     <div className="text-[11px] text-zinc-500 font-mono">
@@ -1779,7 +2784,7 @@ export default function NewBillingPage() {
                               <td className="p-3 text-zinc-500 font-bold">{bp.itemId}</td>
                               <td className="p-3">
                                 <span className="font-sans font-bold text-zinc-950">{bp.name}</span>
-                                <span className="ml-2 px-1.5 py-0.2 bg-purple-50 text-purple-700 text-[9px] rounded-xs border border-purple-200">
+                                <span className="ml-2 px-1.5 py-0.2 bg-amber-100 text-amber-900 text-[9px] rounded-xs border border-amber-300 font-bold">
                                   Quick Item
                                 </span>
                               </td>
@@ -1818,7 +2823,7 @@ export default function NewBillingPage() {
 
       {/* Admin User & Cashier Management Modal */}
       <AnimatePresence>
-        {showUserModal && userRole === "admin" && (
+        {showUserModal && (
           <div className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -1850,7 +2855,7 @@ export default function NewBillingPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Ramesh Singh"
+                    placeholder="Enter name"
                     value={newUserForm.name}
                     onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
                     className="w-full px-2.5 py-1 bg-white border border-zinc-200 rounded-xs text-zinc-900 focus:outline-none focus:border-zinc-400 font-bold"
@@ -1874,7 +2879,7 @@ export default function NewBillingPage() {
                       type="password"
                       required
                       maxLength={10}
-                      placeholder="e.g. 5555"
+                      placeholder="Pin"
                       value={newUserForm.pin}
                       onChange={(e) => setNewUserForm({ ...newUserForm, pin: e.target.value })}
                       className="w-full px-2.5 py-1 bg-white border border-zinc-200 rounded-xs text-zinc-900 focus:outline-none focus:border-zinc-400 font-bold font-mono"
@@ -1942,6 +2947,412 @@ export default function NewBillingPage() {
                   Done & Close
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Settings Modal: Bill Preview on Left, Editable Fields on Right */}
+      <AnimatePresence>
+        {showSettingsModal && (
+          <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="bg-white rounded-lg border border-zinc-200 shadow-2xl max-w-4xl w-full my-auto overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              {/* Modal Top Header */}
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-150 bg-zinc-50/70 shrink-0">
+                <div className="flex items-center gap-2.5">
+            
+                  <div>
+                    <h3 className="font-sans font-bold text-sm text-zinc-950">Store & Thermal Receipt Settings</h3>
+                
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSettingsModal(false)}
+                  className="text-zinc-400 hover:text-zinc-800 p-1.5 rounded-md hover:bg-zinc-200/60 transition-all cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Body: 2 Columns */}
+              {(() => {
+                const currentEditingBranch = branches[editingBranchId] || branches.patna || DEFAULT_STORE_SETTINGS;
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-5 p-5 flex-1 min-h-0 overflow-y-auto">
+                    {/* Left Column: Live Thermal Bill Preview */}
+                    <div className="md:col-span-5 flex flex-col">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[11px] font-mono font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <ReceiptIcon size={13} className="text-zinc-500" />
+                          <span>Preview: {currentEditingBranch.name || editingBranchId.toUpperCase()}</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold border border-emerald-200">
+                          80mm Thermal
+                        </span>
+                      </div>
+
+                      <div className="bg-zinc-100 rounded-md border border-zinc-200 p-3 flex-1 flex justify-center items-start overflow-y-auto max-h-[520px]">
+                        {/* Realistic Thermal Paper Container */}
+                        <div className="w-full max-w-[270px] bg-white rounded-xs shadow-md p-3.5 text-zinc-950 font-sans border-t-4 border-zinc-900 text-xs select-none">
+                          {/* Brand Header */}
+                          <div className="text-center">
+                            <img
+                              src="/logo_t.svg"
+                              alt="Logo"
+                              className="w-16 h-auto mx-auto mb-1.5 block"
+                            />
+                            <h4 className="font-black text-[13px] uppercase tracking-wider text-zinc-950">
+                              {currentEditingBranch.storeName || "AESTHETX WAYS"}
+                            </h4>
+                            <p className="text-[10px] font-bold text-zinc-700 leading-tight mt-1 px-1">
+                              {currentEditingBranch.storeAddress || "Kankarbagh Colony More, Patna, Bihar"}
+                            </p>
+                            <p className="text-[9px] font-bold text-zinc-600 mt-0.5">
+                              Support: {currentEditingBranch.phone || storeSettings.phone || "+91 70337 69997"}
+                            </p>
+                            <p className="text-[9px] font-black font-mono text-zinc-900 mt-0.5">
+                              GSTIN: {currentEditingBranch.gstin || storeSettings.gstin || "10AAACA0000A1Z5"}
+                            </p>
+                          </div>
+
+                          {/* Dashed Divider */}
+                          <div className="my-2 border-b border-dashed border-zinc-400" />
+
+                          {/* Meta Information */}
+                          <div className="space-y-0.5 text-[10px] font-mono font-bold text-zinc-700">
+                            <div className="flex justify-between">
+                              <span>Date:</span>
+                              <span>21/09/2026 14:32</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Bill No.:</span>
+                              <span className="text-zinc-950">#AW-98421</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Customer:</span>
+                              <span className="text-zinc-950">Walk-in Guest</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Partner:</span>
+                              <span>{activeCashier?.name || "Staff"}</span>
+                            </div>
+                          </div>
+
+                          {/* Dashed Divider */}
+                          <div className="my-2 border-b border-dashed border-zinc-400" />
+
+                          {/* Sample Items Table */}
+                          <div className="text-[10px]">
+                            <div className="flex justify-between font-black uppercase text-zinc-900 border-b border-dashed border-zinc-400 pb-1 mb-1 font-mono">
+                              <span>Item</span>
+                              <span>Qty</span>
+                              <span>Amt</span>
+                            </div>
+                            <div className="space-y-1 font-medium">
+                              <div className="flex justify-between items-start">
+                                <div className="max-w-[150px] leading-tight">
+                                  <span className="font-bold">Oversized Tee</span>
+                                  <div className="text-[9px] text-zinc-500 font-mono">Size: L</div>
+                                </div>
+                                <span className="font-mono">1</span>
+                                <span className="font-mono font-bold">₹899.00</span>
+                              </div>
+                              <div className="flex justify-between items-start">
+                                <div className="max-w-[150px] leading-tight">
+                                  <span className="font-bold">Relaxed Cargo</span>
+                                  <div className="text-[9px] text-zinc-500 font-mono">Size: 32</div>
+                                </div>
+                                <span className="font-mono">1</span>
+                                <span className="font-mono font-bold">₹1,299.00</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Dashed Divider */}
+                          <div className="my-2 border-b border-dashed border-zinc-400" />
+
+                          {/* Bill Calculation */}
+                          <div className="space-y-0.5 text-[10px] font-bold">
+                            <div className="flex justify-between text-zinc-600">
+                              <span>Total Qty: 2</span>
+                              <span>Subtotal: ₹2,198.00</span>
+                            </div>
+                            <div className="flex justify-between text-emerald-700">
+                              <span>Discount (10%):</span>
+                              <span>-₹219.80</span>
+                            </div>
+                            <div className="flex justify-between text-[13px] font-black text-zinc-950 border-t border-dashed border-zinc-400 pt-1 mt-1 font-mono">
+                              <span>Grand Total:</span>
+                              <span>₹1,978.20</span>
+                            </div>
+                          </div>
+
+                          {/* Dashed Divider */}
+                          <div className="my-2 border-b border-dashed border-zinc-400" />
+
+                          {/* Dynamic UPI QR Code Preview */}
+                          <div className="text-center my-1.5">
+                            <div className="text-[9px] font-black tracking-wider uppercase text-zinc-900 mb-1">
+                              SCAN TO PAY VIA UPI
+                            </div>
+                            <div className="relative inline-block bg-white p-1 rounded-xs border border-zinc-200">
+                              {previewQrDataUrl ? (
+                                <img
+                                  src={previewQrDataUrl}
+                                  alt="Scan to Pay via UPI"
+                                  className="w-24 h-24 block mx-auto"
+                                />
+                              ) : (
+                                <div className="w-24 h-24 bg-zinc-100 flex items-center justify-center text-[10px] font-mono text-zinc-400">
+                                  QR Code
+                                </div>
+                              )}
+                              {/* Circular Logo in center of QR */}
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full flex items-center justify-center p-0.5 overflow-hidden shadow-2xs">
+                                <img src="/logo_t.svg" alt="Logo" className="w-full h-full object-contain" />
+                              </div>
+                            </div>
+                            <div className="text-xs font-black font-mono mt-1 text-zinc-950">
+                              ₹1,978.20
+                            </div>
+                            <div className="text-[9px] font-bold font-mono text-zinc-700 mt-0.5 break-all">
+                              UPI ID: {currentEditingBranch.upiId || storeSettings.upiId || "8008439762@ptsbi"}
+                            </div>
+                          </div>
+
+                          {/* Dashed Divider */}
+                          <div className="my-2 border-b border-dashed border-zinc-400" />
+
+                          {/* Receipt Footer */}
+                          <div className="text-center pt-0.5">
+                            <div className="inline-block border border-zinc-950 px-2.5 py-0.5 text-[9px] font-black tracking-widest uppercase rounded-xs mb-1">
+                              PAID VIA UPI
+                            </div>
+                            <p className="text-[10px] font-bold italic text-zinc-800 leading-tight">
+                              "{storeSettings.thankYouMessage || "Thank you for shopping with us..!!"}"
+                            </p>
+                            <p className="text-[9px] font-bold text-zinc-600 mt-1 uppercase tracking-wider">
+                              Visit Our Store Online<br />
+                              <span className="font-mono text-zinc-950">{storeSettings.websiteUrl || "aesthetxways.com"}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Location Switcher & Editable Fields */}
+                    <div className="md:col-span-7 flex flex-col justify-between">
+                      {/* Location Switcher: Gaya vs Patna (Same as Navbar) */}
+                      <div className="flex items-center p-0.5 bg-zinc-100 rounded-md border border-zinc-200 font-mono text-xs mb-3 w-fit">
+                        <button
+                          type="button"
+                          onClick={() => setEditingBranchId("gaya")}
+                          className={`px-3 py-1.5 rounded-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                            editingBranchId === "gaya"
+                              ? "bg-zinc-950 text-white shadow-xs"
+                              : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50"
+                          }`}
+                          title="Gaya Store"
+                        >
+                          <MapPin size={12} className={editingBranchId === "gaya" ? "text-emerald-400" : "text-zinc-400"} />
+                          <span>Gaya</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingBranchId("patna")}
+                          className={`px-3 py-1.5 rounded-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                            editingBranchId === "patna"
+                              ? "bg-zinc-950 text-white shadow-xs"
+                              : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50"
+                          }`}
+                          title="Patna Store"
+                        >
+                          <MapPin size={12} className={editingBranchId === "patna" ? "text-emerald-400" : "text-zinc-400"} />
+                          <span>Patna</span>
+                        </button>
+                      </div>
+
+                      {/* Edit Location Fields */}
+                      <form
+                        onSubmit={async (e) => {
+                          e.preventDefault();
+                          localStorage.setItem("pos_branches", JSON.stringify(branches));
+                          const activeBranchInfo = branches[activeBranch] || branches.patna;
+                          const merged = {
+                            ...storeSettings,
+                            storeName: activeBranchInfo.storeName,
+                            storeAddress: activeBranchInfo.storeAddress,
+                            phone: activeBranchInfo.phone,
+                            gstin: activeBranchInfo.gstin,
+                            upiId: activeBranchInfo.upiId,
+                          };
+                          setStoreSettings(merged);
+                          localStorage.setItem("pos_store_settings", JSON.stringify(merged));
+                          await saveBranchesToServer(branches, activeBranch);
+                          setShowSettingsModal(false);
+                          toast.success("Saved Location & Store Settings to Server!");
+                        }}
+                        className="space-y-3 font-sans"
+                      >
+                          <div className="grid grid-cols-2 gap-2.5">
+                            {/* Location Display Name */}
+                            <div>
+                              <label className="block text-[11px] font-bold text-zinc-700 mb-1 uppercase tracking-wider">
+                                Location Name
+                              </label>
+                              <input
+                                type="text"
+                                value={currentEditingBranch.name || ""}
+                                onChange={(e) => updateBranchField(editingBranchId, "name", e.target.value)}
+                                placeholder="e.g. Patna Branch"
+                                className="w-full px-3 py-1.5 border border-zinc-200 rounded-md text-xs font-mono font-medium focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 focus:outline-none transition-all"
+                              />
+                            </div>
+
+                            {/* Store / Brand Name on Bill */}
+                            <div>
+                              <label className="block text-[11px] font-bold text-zinc-700 mb-1 uppercase tracking-wider">
+                                Store Name on Bill
+                              </label>
+                              <input
+                                type="text"
+                                value={currentEditingBranch.storeName || ""}
+                                onChange={(e) => updateBranchField(editingBranchId, "storeName", e.target.value)}
+                                placeholder="e.g. AESTHETX WAYS (PATNA)"
+                                className="w-full px-3 py-1.5 border border-zinc-200 rounded-md text-xs font-mono font-medium focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 focus:outline-none transition-all"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Store Location / Address */}
+                          <div>
+                            <label className="block text-[11px] font-bold text-zinc-700 mb-1 uppercase tracking-wider">
+                              Location Address ({currentEditingBranch.name || editingBranchId})
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={currentEditingBranch.storeAddress || ""}
+                              onChange={(e) => updateBranchField(editingBranchId, "storeAddress", e.target.value)}
+                              placeholder="e.g. Kankarbagh Colony More, Ghrounda, Patna, Bihar 800001"
+                              className="w-full px-3 py-1.5 border border-zinc-200 rounded-md text-xs font-mono font-medium focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 focus:outline-none transition-all resize-none"
+                            />
+                          </div>
+
+                          {/* UPI ID Field for this location */}
+                          <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-md space-y-1">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-[11px] font-bold text-zinc-900 uppercase tracking-wider">
+                                UPI ID for {currentEditingBranch.name || editingBranchId}
+                              </label>
+                              <span className="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-xs border border-emerald-200">
+                                Dynamic QR
+                              </span>
+                            </div>
+                            <input
+                              type="text"
+                              value={currentEditingBranch.upiId || ""}
+                              onChange={(e) => updateBranchField(editingBranchId, "upiId", e.target.value)}
+                              placeholder="e.g. 8008439762@ptsbi"
+                              className="w-full px-3 py-1.5 bg-white border border-zinc-200 rounded-md text-xs font-mono font-bold focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 focus:outline-none transition-all text-zinc-900"
+                            />
+                            <p className="text-[10px] text-zinc-500 font-sans">
+                              Dynamic QR printed for bills at this location will receive payments here.
+                            </p>
+                          </div>
+
+                          {/* Support Phone & GSTIN */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-bold text-zinc-700 mb-1 uppercase tracking-wider">
+                                Support Phone
+                              </label>
+                              <input
+                                type="text"
+                                value={currentEditingBranch.phone || storeSettings.phone || ""}
+                                onChange={(e) => updateBranchField(editingBranchId, "phone", e.target.value)}
+                                placeholder="e.g. +91 70337 69997"
+                                className="w-full px-3 py-1.5 border border-zinc-200 rounded-md text-xs font-mono font-medium focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 focus:outline-none transition-all"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-zinc-700 mb-1 uppercase tracking-wider">
+                                GSTIN
+                              </label>
+                              <input
+                                type="text"
+                                value={currentEditingBranch.gstin || storeSettings.gstin || ""}
+                                onChange={(e) => updateBranchField(editingBranchId, "gstin", e.target.value)}
+                                placeholder="e.g. 10AAACA0000A1Z5"
+                                className="w-full px-3 py-1.5 border border-zinc-200 rounded-md text-xs font-mono font-medium focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 focus:outline-none transition-all"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Thank You Note & Website URL */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-bold text-zinc-700 mb-1 uppercase tracking-wider">
+                                Thank You Note (Footer)
+                              </label>
+                              <input
+                                type="text"
+                                value={storeSettings.thankYouMessage || ""}
+                                onChange={(e) => setStoreSettings({ ...storeSettings, thankYouMessage: e.target.value })}
+                                placeholder="e.g. Thank you for shopping with us..!!"
+                                className="w-full px-3 py-1.5 border border-zinc-200 rounded-md text-xs font-mono font-medium focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 focus:outline-none transition-all"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-zinc-700 mb-1 uppercase tracking-wider">
+                                Website URL
+                              </label>
+                              <input
+                                type="text"
+                                value={storeSettings.websiteUrl || ""}
+                                onChange={(e) => setStoreSettings({ ...storeSettings, websiteUrl: e.target.value })}
+                                placeholder="e.g. aesthetxways.com"
+                                className="w-full px-3 py-1.5 border border-zinc-200 rounded-md text-xs font-mono font-medium focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 focus:outline-none transition-all"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Bottom Action Buttons */}
+                          <div className="pt-3 flex items-center justify-between border-t border-zinc-150 mt-3">
+                            <Link
+                              href="/website/settings"
+                              className="text-xs text-zinc-500 hover:text-zinc-950 underline flex items-center gap-1 font-mono font-medium"
+                            >
+                              <span>Full Website Settings</span>
+                              <ArrowRight size={12} />
+                            </Link>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setShowSettingsModal(false)}
+                                className="px-3.5 py-1.5 border border-zinc-200 hover:bg-zinc-100 rounded-md text-xs font-mono font-medium text-zinc-700 transition-all cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="px-5 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-white rounded-md text-xs font-mono font-bold transition-all shadow-xs cursor-pointer"
+                              >
+                                Save Settings
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  );
+              })()}
             </motion.div>
           </div>
         )}
