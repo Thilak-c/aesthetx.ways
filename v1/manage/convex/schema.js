@@ -286,7 +286,7 @@ export default defineSchema({
   // Active Sessions table for tracking current user sessions
   activeSessions: defineTable({
     sessionId: v.string(),
-    userId: v.optional(v.id("users")),
+    userId: v.optional(v.any()),
     
     // Current state
     currentPage: v.string(),

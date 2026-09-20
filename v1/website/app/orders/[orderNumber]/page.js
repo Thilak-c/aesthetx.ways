@@ -44,8 +44,21 @@ export default function OrderDetailsPage({ params }) {
       const foundOrder = storedOrders.find(o => o.orderNumber === orderNumber);
       if (foundOrder) {
         setOrder(foundOrder);
+        setLoading(false);
+      } else {
+        // Fallback: fetch from API lookup
+        fetch(`/api/orders/lookup?query=${encodeURIComponent(orderNumber)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.orders && data.orders.length > 0) {
+              setOrder(data.orders[0]);
+              storedOrders.unshift(data.orders[0]);
+              localStorage.setItem('aw_orders', JSON.stringify(storedOrders));
+            }
+          })
+          .catch((err) => console.error('Failed to load order from API:', err))
+          .finally(() => setLoading(false));
       }
-      setLoading(false);
     }
   }, [orderNumber]);
 

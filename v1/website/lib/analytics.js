@@ -135,7 +135,13 @@ export async function trackEvent(activityType, actionType = undefined, actionDat
       try {
         const userObj = JSON.parse(userStr);
         if (userObj && userObj.loggedIn && userObj.id) {
-          userId = userObj.id; // Convex User ID (valid id("users") type)
+          // Convex user IDs start with 'ph7'. If an order ID ('m97...') was stored, clean it up
+          if (typeof userObj.id === 'string' && userObj.id.startsWith('m97')) {
+            delete userObj.id;
+            localStorage.setItem('aw_user', JSON.stringify(userObj));
+          } else {
+            userId = userObj.id;
+          }
         }
       } catch (_) {}
     }

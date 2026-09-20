@@ -7,7 +7,9 @@ export function middleware(request) {
   if (
     pathname.startsWith('/api') &&
     pathname !== '/api/checkout/create-razorpay-order' &&
-    pathname !== '/api/auth/profile'
+    pathname !== '/api/auth/profile' &&
+    pathname !== '/api/auth/phone-lookup' &&
+    pathname !== '/api/orders/lookup'
   ) {
     // 1. Validate API Access Key
     const apiKey = request.headers.get('x-api-key');

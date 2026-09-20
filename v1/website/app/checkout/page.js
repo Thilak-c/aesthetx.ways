@@ -31,6 +31,13 @@ const getDisplaySize = (size, sizeDisplayType) => {
   return size;
 };
 
+const formatPrice = (amount) => {
+  return `₹${Number(amount || 0).toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     if (window.Razorpay) {
@@ -53,8 +60,14 @@ export default function CheckoutPage() {
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [generatedOrderNum, setGeneratedOrderNum] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponInput, setCouponInput] = useState('');
+  const [couponError, setCouponError] = useState('');
   const [showFeeDetails, setShowFeeDetails] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [phoneLookupLoading, setPhoneLookupLoading] = useState(false);
+  const [returningCustomerFound, setReturningCustomerFound] = useState(false);
+  const [returningCustomerName, setReturningCustomerName] = useState('');
+  const lastLookedUpPhoneRef = useRef('');
 
   // Form Fields
   const [form, setForm] = useState({
@@ -75,14 +88,15 @@ export default function CheckoutPage() {
   const paymentSectionRef = useRef(null);
 
   const handleProceedToPayment = () => {
-    // Validation
-    if (!form.fullName || !form.phone || !form.email || !form.address || !form.houseNo || !form.area || !form.city || !form.state || !form.pincode) {
-      alert('Please fill in all shipping details');
+    const cleanPhone = (form.phone || '').replace(/\D/g, '').slice(-10);
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      alert('Please enter a valid 10-digit mobile number');
       return;
     }
 
-    if (!/^\d{10}$/.test(form.phone)) {
-      alert('Please enter a valid 10-digit phone number');
+    // Validation
+    if (!form.fullName || !form.email || !form.address || !form.houseNo || !form.area || !form.city || !form.state || !form.pincode) {
+      alert('Please fill in all shipping details');
       return;
     }
 
@@ -102,35 +116,38 @@ export default function CheckoutPage() {
 
   // Real-time autosave to database
   const handleAutoSave = useCallback(async (field, value) => {
+    let emailToUse = '';
     const userStr = localStorage.getItem('aw_user');
-    if (!userStr) return;
-    try {
-      const userObj = JSON.parse(userStr);
-      if (!userObj || !userObj.email) return;
+    if (userStr) {
+      try {
+        const userObj = JSON.parse(userStr);
+        if (userObj && userObj.email) {
+          emailToUse = userObj.email;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    if (!emailToUse && form.email) {
+      emailToUse = form.email;
+    }
+    if (!emailToUse) return;
 
-      const res = await fetch('/api/auth/update-profile', {
+    try {
+      await fetch('/api/auth/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: userObj.email,
+          email: emailToUse,
           updates: { [field]: value },
         }),
       });
-
-      const data = await res.json();
-      if (data.success) {
-        // Sync local storage if name changed
-        if (field === 'fullName') {
-          userObj.name = value;
-          localStorage.setItem('aw_user', JSON.stringify(userObj));
-        }
-      }
     } catch (err) {
       console.error('Autosave error:', err);
     }
-  }, []);
+  }, [form.email]);
 
-  // Load cart, verify session, and fetch user profile
+  // Load cart and check for existing session
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
@@ -138,96 +155,115 @@ export default function CheckoutPage() {
         router.push('/cart');
         return;
       }
+      setCartItems(cart);
 
-      // Check if user is logged in
-      const userStr = localStorage.getItem('aw_user');
-      if (!userStr) {
-        router.push('/cart');
-        return;
-      }
-
-      let userObj;
-      try {
-        userObj = JSON.parse(userStr);
-        if (!userObj || !userObj.loggedIn || !userObj.email) {
-          router.push('/cart');
-          return;
+      const savedCoupon = localStorage.getItem('aw_coupon');
+      if (savedCoupon) {
+        try {
+          setAppliedCoupon(JSON.parse(savedCoupon));
+        } catch (e) {
+          console.error(e);
         }
-      } catch (err) {
-        console.error('Failed to parse user session:', err);
-        router.push('/cart');
-        return;
       }
 
-      // Fetch user profile and setup state in a deferred manner
-      let active = true;
-      fetch(`/api/auth/profile?email=${encodeURIComponent(userObj.email)}`)
+      // Check if user session already exists in localStorage
+      const userStr = localStorage.getItem('aw_user');
+      if (userStr) {
+        try {
+          const userObj = JSON.parse(userStr);
+          if (userObj) {
+            setForm((prev) => ({
+              ...prev,
+              fullName: userObj.name || prev.fullName,
+              email: userObj.email || prev.email,
+              phone: userObj.phone || prev.phone,
+            }));
+
+            if (userObj.email) {
+              fetch(`/api/auth/profile?email=${encodeURIComponent(userObj.email)}`)
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.success && data.user) {
+                    setForm((prev) => ({
+                      ...prev,
+                      fullName: data.user.fullName || prev.fullName,
+                      phone: data.user.phone || prev.phone,
+                      email: data.user.email || prev.email,
+                      address: data.user.address || prev.address,
+                      houseNo: data.user.houseNo || prev.houseNo,
+                      area: data.user.area || prev.area,
+                      city: data.user.city || prev.city,
+                      state: data.user.state || prev.state,
+                      pincode: data.user.pincode || prev.pincode,
+                    }));
+                  }
+                })
+                .catch((e) => console.error('Failed to load profile:', e));
+            }
+          }
+        } catch (err) {
+          console.error('Failed to parse user session:', err);
+        }
+      }
+
+      setLoading(false);
+    }
+  }, [router]);
+
+  // Live phone number profile lookup for returning customers
+  useEffect(() => {
+    let active = true;
+    const cleanPhone = (form.phone || '').replace(/\D/g, '').slice(-10);
+
+    if (cleanPhone.length === 10 && cleanPhone !== lastLookedUpPhoneRef.current) {
+      lastLookedUpPhoneRef.current = cleanPhone;
+      setPhoneLookupLoading(true);
+
+      fetch(`/api/auth/phone-lookup?phone=${cleanPhone}`)
         .then((res) => res.json())
         .then((data) => {
           if (!active) return;
-          const timer = setTimeout(() => {
-            setCartItems(cart);
-            if (data.success && data.user) {
-              if (!userObj.id && data.user.id) {
-                userObj.id = data.user.id;
-                localStorage.setItem('aw_user', JSON.stringify(userObj));
-              }
-              setForm({
-                fullName: data.user.fullName || userObj.name || '',
-                phone: data.user.phone || '',
-                email: data.user.email || userObj.email || '',
-                address: data.user.address || '',
-                houseNo: data.user.houseNo || '',
-                area: data.user.area || '',
-                city: data.user.city || '',
-                state: data.user.state || '',
-                pincode: data.user.pincode || '',
-              });
-            } else {
-              setForm((prev) => ({
-                ...prev,
-                email: userObj.email,
-                fullName: userObj.name || '',
-              }));
-            }
-            const savedCoupon = localStorage.getItem('aw_coupon');
-            if (savedCoupon) {
-              try {
-                setAppliedCoupon(JSON.parse(savedCoupon));
-              } catch (e) {
-                console.error(e);
-              }
-            }
-            setLoading(false);
-          }, 0);
-        })
-        .catch((err) => {
-          console.error('Failed to fetch user profile:', err);
-          if (!active) return;
-          const timer = setTimeout(() => {
-            setCartItems(cart);
+          if (data.success && data.found && data.user) {
+            setReturningCustomerFound(true);
+            setReturningCustomerName(data.user.fullName || '');
+
             setForm((prev) => ({
               ...prev,
-              email: userObj.email,
-              fullName: userObj.name || '',
+              fullName: data.user.fullName || prev.fullName,
+              email: data.user.email || prev.email,
+              address: data.user.address || prev.address,
+              houseNo: data.user.houseNo || prev.houseNo,
+              area: data.user.area || prev.area,
+              city: data.user.city || prev.city,
+              state: data.user.state || prev.state,
+              pincode: data.user.pincode || prev.pincode,
             }));
-            const savedCoupon = localStorage.getItem('aw_coupon');
-            if (savedCoupon) {
-              try {
-                setAppliedCoupon(JSON.parse(savedCoupon));
-              } catch (e) {
-                console.error(e);
-              }
-            }
-            setLoading(false);
-          }, 0);
-        });
 
-      return () => {
-        active = false;
-      };
+            // Sync user session
+            const session = {
+              id: data.user.id,
+              name: data.user.fullName,
+              email: data.user.email,
+              phone: cleanPhone,
+              loggedIn: true,
+            };
+            localStorage.setItem('aw_user', JSON.stringify(session));
+          } else {
+            setReturningCustomerFound(false);
+          }
+        })
+        .catch((err) => {
+          console.error('Phone lookup error:', err);
+        })
+        .finally(() => {
+          if (active) setPhoneLookupLoading(false);
+        });
     }
-  }, [router]);
+
+    return () => {
+      active = false;
+    };
+  }, [form.phone]);
 
   // Auto-fetch city, state, area on valid pincode entry
   useEffect(() => {
@@ -288,14 +324,11 @@ export default function CheckoutPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Calculations
+  // Calculations (synchronized with Cart page)
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const itemsSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingCost = 70;
-  const protectPromiseFee = totalItems * 9;
-  
-  const orderSubtotal = itemsSubtotal + shippingCost + protectPromiseFee;
-  const freeDeliveryDiscount = itemsSubtotal >= 1000 ? -70 : 0;
+  const isFreeShipping = itemsSubtotal >= 1000 || itemsSubtotal <= 1;
+  const shippingCost = isFreeShipping ? 0 : 70;
   
   let couponDiscount = 0;
   if (appliedCoupon) {
@@ -308,7 +341,37 @@ export default function CheckoutPage() {
     }
   }
   
-  const estimatedTotal = orderSubtotal + freeDeliveryDiscount - couponDiscount;
+  const estimatedTotal = Math.max(0, itemsSubtotal + shippingCost - couponDiscount);
+
+  const handleApplyCouponInCheckout = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    if (code === 'AESTHETX10') {
+      const couponData = { code: 'AESTHETX10', discountType: 'percentage', discountValue: 10 };
+      setAppliedCoupon(couponData);
+      localStorage.setItem('aw_coupon', JSON.stringify(couponData));
+      setCouponInput('');
+      setCouponError('');
+    } else if (code === 'FIRSTORDER') {
+      if (itemsSubtotal < 500) {
+        setCouponError('Minimum order value of ₹500 required');
+        return;
+      }
+      const couponData = { code: 'FIRSTORDER', discountType: 'flat', discountValue: 150 };
+      setAppliedCoupon(couponData);
+      localStorage.setItem('aw_coupon', JSON.stringify(couponData));
+      setCouponInput('');
+      setCouponError('');
+    } else {
+      setCouponError('Invalid promo code');
+    }
+  };
+
+  const handleRemoveCouponInCheckout = () => {
+    setAppliedCoupon(null);
+    localStorage.removeItem('aw_coupon');
+    setCouponError('');
+  };
 
   const handlePlaceOrder = async (e, forceConfirm = false) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -393,6 +456,18 @@ export default function CheckoutPage() {
             if (data.success) {
               setGeneratedOrderNum(data.orderNumber);
               
+              // Automatically initialize and save local user session
+              const userSession = {
+                id: (data.userId && typeof data.userId === 'string' && !data.userId.startsWith('m97'))
+                  ? data.userId
+                  : undefined,
+                name: form.fullName,
+                email: form.email,
+                phone: form.phone,
+                loggedIn: true,
+              };
+              localStorage.setItem('aw_user', JSON.stringify(userSession));
+
               // Save order to browser local storage for Orders history page
               const existingOrders = JSON.parse(localStorage.getItem('aw_orders') || '[]');
               existingOrders.unshift({
@@ -476,244 +551,250 @@ export default function CheckoutPage() {
     return (
       <div className="flex flex-col flex-1 bg-white justify-center items-center py-20 px-6 text-center animate-scale-in relative overflow-hidden min-h-[400px]">
         <Confetti />
-        <CheckCircle2 className="w-16 h-16 text-black stroke-[2] mb-4" />
-        <h1 className="text-base font-black tracking-widest uppercase text-black">Your order has been confirmed</h1>
-        <span className="text-xs tracking-wider font-extrabold text-black block mt-2">ORDER ID: {generatedOrderNum}</span>
-        <p className="text-xs text-black mt-4 max-w-[280px] leading-relaxed font-medium">
-          Thank you for shopping with AesthetX Ways. Now we are redirecting you to our page...
+        <CheckCircle2 className="w-14 h-14 text-emerald-600 stroke-[2] mb-4" />
+        <h1 className="text-base font-bold tracking-tight text-zinc-900">Your order has been confirmed</h1>
+        <span className="text-xs tracking-wider font-mono text-zinc-500 block mt-2">ORDER ID: {generatedOrderNum}</span>
+        <p className="text-xs text-zinc-500 mt-4 max-w-[280px] leading-relaxed">
+          Thank you for shopping with AesthetX Ways. Now we are redirecting you to your orders...
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col flex-1 bg-white relative pb-32">
+    <div className="flex flex-col flex-1 bg-white relative pb-32 w-full overflow-x-hidden">
       {/* Sleek Top Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-black px-4 py-4 flex items-center justify-between">
-        <button onClick={() => router.back()} className="text-black hover:text-black">
-          <ArrowLeft className="w-5 h-5 stroke-[3]" />
+      <header className="sticky top-0 z-40 bg-white border-b border-zinc-100 px-4 py-3 flex items-center justify-between">
+        <button onClick={() => router.back()} className="text-zinc-950 hover:text-black">
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
         </button>
-        <span className="text-xs tracking-[0.2em] uppercase font-black text-black">Checkout</span>
-        <div className="w-5 h-5"></div>
+        <span className="text-[12px] tracking-[0.15em] uppercase font-bold text-zinc-900">Checkout</span>
+        <div className="w-4 h-4"></div>
       </header>
 
-      <main className="flex-1 px-4 py-4 overflow-y-auto">
-        {/* 1. Cart Items listed first */}
-        <section className="mb-8">
-          <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-3">Order Items</span>
-          <div className="border border-black rounded-none p-4 flex flex-col gap-4">
-            {cartItems.map((item, idx) => (
-              <div key={idx} className="flex gap-4 items-center py-2.5 last:border-b-0 border-b border-black">
-                {/* Product Image */}
-                <div className="w-12 h-16 bg-white border border-black rounded-none overflow-hidden shrink-0 relative">
-                  <FallbackImage 
-                    src={getCachedImage(item.productId, item.image)} 
-                    alt={item.name} 
-                    className="w-full h-full object-cover" 
-                    hideText={true}
-                    logoSize="w-4 h-4"
-                    monochrome={true}
-                  />
-                  <div className="absolute top-1 left-1 z-10 pointer-events-none opacity-20">
-                    <img src="/logo_t.svg" alt="Watermark Logo" className="w-2.5 h-2.5 object-contain" />
-                  </div>
-                </div>
-                
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-bold text-black uppercase block truncate">
-                    {item.name}
-                  </span>
-                  <span className="text-[10px] text-black block mt-1 uppercase tracking-wide font-semibold">
-                    Size: {getDisplaySize(item.size, item.sizeDisplayType)} &bull; Qty: {item.quantity}
-                  </span>
-                </div>
-
-                {/* Total Item Price */}
-                <span className="text-xs font-bold text-black font-mono shrink-0">
-                  ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* 2. Shipping details form */}
+      <main className="flex-1 px-4 py-3 flex flex-col w-full overflow-x-hidden pb-36">
         <form onSubmit={handlePlaceOrder} className="flex flex-col gap-4" autoComplete="off">
-          <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-1">Shipping Details</span>
-          
-          {/* Group 1: Name, Phone, Email */}
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] uppercase tracking-widest text-black font-black">Full Name</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  required
-                  value={form.fullName}
-                  onChange={handleChange}
-                  onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-                  placeholder="e.g. John Doe"
-                  className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-                  autoComplete="nope"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] uppercase tracking-widest text-black font-black">Phone</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  required
-                  maxLength={10}
-                  value={form.phone}
-                  onChange={handleChange}
-                  onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-                  placeholder="10-digit mobile"
-                  className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-                  autoComplete="nope"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase tracking-widest text-black font-black">Email Address</label>
-              <input
-                type="email"
-                name="email"
-                required
-                value={form.email}
-                onChange={handleChange}
-                onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-                placeholder="name@example.com"
-                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-                autoComplete="nope"
-              />
-            </div>
-          </div>
+          {/* 1. Shipping details form */}
+          <div>
+            <span className="text-xs tracking-[0.15em] uppercase text-zinc-900 font-bold block mb-2.5">Shipping Details</span>
+            
+            <div className="flex flex-col gap-4">
+              {/* Mobile Number (Primary identification) */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">
+                    Mobile Number
+                  </label>
+                  {phoneLookupLoading && (
+                    <span className="text-[10px] text-zinc-400 font-medium animate-pulse">Checking...</span>
+                  )}
+                </div>
+                <div className="flex items-center border border-zinc-300 rounded-[6px] focus-within:border-black bg-white transition-colors overflow-hidden">
+                  <span className="px-3.5 py-2.5 text-xs font-semibold text-zinc-700 border-r border-zinc-200 bg-zinc-50 select-none">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    maxLength={10}
+                    value={form.phone}
+                    onChange={handleChange}
+                    onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                    placeholder="10-digit mobile number"
+                    className="flex-1 text-sm px-3.5 py-2.5 outline-none text-black placeholder:text-zinc-400 font-mono"
+                    autoComplete="nope"
+                  />
+                </div>
 
-          {/* Group 2: Full Address */}
-          <div className="flex flex-col gap-1 mt-2">
-            <label className="text-[10px] uppercase tracking-widest text-black font-black">Full Address (Road, Street)</label>
-            <input
-              type="text"
-              name="address"
-              required
-              value={form.address}
-              onChange={handleChange}
-              onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-              placeholder="Flat/House No, Building, Street Address"
-              className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-              autoComplete="nope"
-            />
-          </div>
-
-          {/* Group 3: House No & Area */}
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase tracking-widest text-black font-black">House No. / Flat</label>
-              <input
-                type="text"
-                name="houseNo"
-                required
-                value={form.houseNo}
-                onChange={handleChange}
-                onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-                placeholder="e.g. Flat 402"
-                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-                autoComplete="nope"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase tracking-widest text-black font-black">Area / Colony Name</label>
-              <input
-                type="text"
-                name="area"
-                required
-                value={form.area}
-                onChange={handleChange}
-                onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-                placeholder="e.g. Sector 5, Colony"
-                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-                autoComplete="nope"
-              />
-            </div>
-          </div>
-
-          {/* Group 4: City, State, PIN Code */}
-          <div className="grid grid-cols-3 gap-3 mt-2">
-            <div className="flex flex-col gap-1 col-span-1">
-              <label className="text-[10px] uppercase tracking-widest text-black font-black">City</label>
-              <input
-                type="text"
-                name="city"
-                required
-                value={form.city}
-                onChange={handleChange}
-                onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-                placeholder="e.g. Mumbai"
-                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-                autoComplete="nope"
-              />
-            </div>
-            <div className="flex flex-col gap-1 col-span-1">
-              <label className="text-[10px] uppercase tracking-widest text-black font-black">State</label>
-              <input
-                type="text"
-                name="state"
-                required
-                value={form.state}
-                onChange={handleChange}
-                onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-                placeholder="e.g. MH"
-                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-                autoComplete="nope"
-              />
-            </div>
-            <div className="flex flex-col gap-1 col-span-1">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] uppercase tracking-widest text-black font-black">PIN Code</label>
-                {pincodeLoading && (
-                  <span className="text-[9px] text-black font-black animate-pulse uppercase">[checking...]</span>
+                {/* Returning customer recognized banner */}
+                {returningCustomerFound && (
+                  <div className="mt-1 bg-zinc-50 border border-zinc-200 rounded-[6px] px-3.5 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5] shrink-0" />
+                      <span className="text-xs text-zinc-700 font-medium">
+                        Welcome back{returningCustomerName ? `, ${returningCustomerName}` : ''}! Saved details loaded.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReturningCustomerFound(false)}
+                      className="text-[10px] uppercase tracking-wider text-zinc-500 hover:text-black underline font-semibold shrink-0"
+                    >
+                      Edit
+                    </button>
+                  </div>
                 )}
               </div>
-              <input
-                type="text"
-                name="pincode"
-                required
-                maxLength={6}
-                value={form.pincode}
-                onChange={handleChange}
-                onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
-                placeholder="6-digit"
-                className="border border-black text-sm px-3.5 py-3 outline-none focus:ring-1 focus:ring-black rounded-none text-black placeholder:text-black/35"
-                autoComplete="nope"
-              />
+
+              {/* Customer Name & Email */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Full Name</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    required
+                    value={form.fullName}
+                    onChange={handleChange}
+                    onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                    placeholder="e.g. John Doe"
+                    className="border border-zinc-300 rounded-[6px] text-sm px-3.5 py-2.5 outline-none focus:border-black text-black placeholder:text-zinc-400 transition-colors"
+                    autoComplete="nope"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={form.email}
+                    onChange={handleChange}
+                    onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                    placeholder="name@example.com"
+                    className="border border-zinc-300 rounded-[6px] text-sm px-3.5 py-2.5 outline-none focus:border-black text-black placeholder:text-zinc-400 transition-colors"
+                    autoComplete="nope"
+                  />
+                </div>
+              </div>
+
+              {/* Full Address (Road / Street) */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Full Address (Road, Street)</label>
+                <input
+                  type="text"
+                  name="address"
+                  required
+                  value={form.address}
+                  onChange={handleChange}
+                  onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                  placeholder="Flat/House No, Building, Street Address"
+                  className="border border-zinc-300 rounded-[6px] text-sm px-3.5 py-2.5 outline-none focus:border-black text-black placeholder:text-zinc-400 transition-colors"
+                  autoComplete="nope"
+                />
+              </div>
+
+              {/* House No & Area */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">House No. / Flat</label>
+                  <input
+                    type="text"
+                    name="houseNo"
+                    required
+                    value={form.houseNo}
+                    onChange={handleChange}
+                    onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                    placeholder="e.g. Flat 402"
+                    className="border border-zinc-300 rounded-[6px] text-sm px-3.5 py-2.5 outline-none focus:border-black text-black placeholder:text-zinc-400 transition-colors"
+                    autoComplete="nope"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Area / Colony Name</label>
+                  <input
+                    type="text"
+                    name="area"
+                    required
+                    value={form.area}
+                    onChange={handleChange}
+                    onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                    placeholder="e.g. Sector 5, Colony"
+                    className="border border-zinc-300 rounded-[6px] text-sm px-3.5 py-2.5 outline-none focus:border-black text-black placeholder:text-zinc-400 transition-colors"
+                    autoComplete="nope"
+                  />
+                </div>
+              </div>
+
+              {/* City, State, PIN Code */}
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="flex flex-col gap-1.5 col-span-1">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    required
+                    value={form.city}
+                    onChange={handleChange}
+                    onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                    placeholder="e.g. Mumbai"
+                    className="border border-zinc-300 rounded-[6px] text-sm px-3 py-2.5 outline-none focus:border-black text-black placeholder:text-zinc-400 transition-colors"
+                    autoComplete="nope"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 col-span-1">
+                  <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">State</label>
+                  <input
+                    type="text"
+                    name="state"
+                    required
+                    value={form.state}
+                    onChange={handleChange}
+                    onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                    placeholder="e.g. MH"
+                    className="border border-zinc-300 rounded-[6px] text-sm px-3 py-2.5 outline-none focus:border-black text-black placeholder:text-zinc-400 transition-colors"
+                    autoComplete="nope"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 col-span-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">PIN Code</label>
+                    {pincodeLoading && (
+                      <span className="text-[9px] text-zinc-400 animate-pulse font-medium">...</span>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    name="pincode"
+                    required
+                    maxLength={6}
+                    value={form.pincode}
+                    onChange={handleChange}
+                    onBlur={(e) => handleAutoSave(e.target.name, e.target.value)}
+                    placeholder="6-digit"
+                    className="border border-zinc-300 rounded-[6px] text-sm px-3 py-2.5 outline-none focus:border-black text-black placeholder:text-zinc-400 transition-colors font-mono"
+                    autoComplete="nope"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 3. Payment Options Selection */}
-          <div ref={paymentSectionRef} className="mt-8 border-t border-black pt-6 flex flex-col gap-4">
-            <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-1">Select Payment Option</span>
+          {/* 2. Payment Options Selection */}
+          <div ref={paymentSectionRef} className="mt-4 pt-4 border-t border-zinc-100 flex flex-col gap-3">
+            <span className="text-xs tracking-[0.15em] uppercase text-zinc-900 font-bold block">Payment Options</span>
             
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               {/* UPI Option */}
               <div 
                 onClick={() => {
                   setSelectedMethod('upi');
                   setPaymentMethod('UPI');
                 }}
-                className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
+                className={`relative overflow-hidden border p-3.5 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-[8px] ${
                   selectedMethod === 'upi'
-                    ? 'border-black bg-zinc-50 ring-1 ring-black' 
-                    : 'border-zinc-300 hover:border-black'
+                    ? 'border-black bg-zinc-50/50 shadow-xs ring-1 ring-black' 
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
                 }`}
               >
-                <div className="flex flex-col gap-0.5 text-left">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-black">UPI (GPay / PhonePe / Paytm)</span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Pay instantly using any UPI App or UPI ID</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex flex-col gap-0.5 text-left">
+                    <span className="text-xs font-bold text-zinc-900">UPI (GPay / PhonePe / Paytm)</span>
+                    <span className="text-[11px] text-zinc-400 font-normal">Pay instantly using any UPI App or QR</span>
+                  </div>
                 </div>
-                <div className="w-4 h-4 rounded-full border border-black flex items-center justify-center shrink-0">
-                  {selectedMethod === 'upi' && <div className="w-2.5 h-2.5 rounded-full bg-black"></div>}
+                <div className="flex items-center gap-2.5 shrink-0 ml-2">
+                  <div className="overflow-hidden rounded-[6px] flex items-center justify-center">
+                    <img 
+                      src="/payment-icon/upi-options.png" 
+                      alt="UPI (GPay / PhonePe / Paytm)" 
+                      className="h-12 sm:h-14 w-auto object-contain shrink-0 mix-blend-multiply" 
+                    />
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${selectedMethod === 'upi' ? 'border-black' : 'border-zinc-300'}`}>
+                    {selectedMethod === 'upi' && <div className="w-2 h-2 rounded-full bg-black"></div>}
+                  </div>
                 </div>
               </div>
 
@@ -723,18 +804,18 @@ export default function CheckoutPage() {
                   setSelectedMethod('card');
                   setPaymentMethod('CARD');
                 }}
-                className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
+                className={`border p-3.5 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-[8px] ${
                   selectedMethod === 'card'
-                    ? 'border-black bg-zinc-50 ring-1 ring-black' 
-                    : 'border-zinc-300 hover:border-black'
+                    ? 'border-black bg-zinc-50/50 shadow-xs ring-1 ring-black' 
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
                 }`}
               >
                 <div className="flex flex-col gap-0.5 text-left">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-black">Credit / Debit Cards</span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Visa, MasterCard, RuPay, Maestro</span>
+                  <span className="text-xs font-bold text-zinc-900">Credit / Debit Cards</span>
+                  <span className="text-[11px] text-zinc-400 font-normal">Visa, MasterCard, RuPay, Maestro</span>
                 </div>
-                <div className="w-4 h-4 rounded-full border border-black flex items-center justify-center shrink-0">
-                  {selectedMethod === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-black"></div>}
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${selectedMethod === 'card' ? 'border-black' : 'border-zinc-300'}`}>
+                  {selectedMethod === 'card' && <div className="w-2 h-2 rounded-full bg-black"></div>}
                 </div>
               </div>
 
@@ -744,109 +825,168 @@ export default function CheckoutPage() {
                   setSelectedMethod('netbanking');
                   setPaymentMethod('NETBANKING');
                 }}
-                className={`border p-4 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-none ${
+                className={`border p-3.5 flex items-center justify-between cursor-pointer transition-all duration-200 rounded-[8px] ${
                   selectedMethod === 'netbanking'
-                    ? 'border-black bg-zinc-50 ring-1 ring-black' 
-                    : 'border-zinc-300 hover:border-black'
+                    ? 'border-black bg-zinc-50/50 shadow-xs ring-1 ring-black' 
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
                 }`}
               >
                 <div className="flex flex-col gap-0.5 text-left">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-black">Net Banking</span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Secure login for all major Indian banks</span>
+                  <span className="text-xs font-bold text-zinc-900">Net Banking</span>
+                  <span className="text-[11px] text-zinc-400 font-normal">All major Indian banks supported</span>
                 </div>
-                <div className="w-4 h-4 rounded-full border border-black flex items-center justify-center shrink-0">
-                  {selectedMethod === 'netbanking' && <div className="w-2.5 h-2.5 rounded-full bg-black"></div>}
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${selectedMethod === 'netbanking' ? 'border-black' : 'border-zinc-300'}`}>
+                  {selectedMethod === 'netbanking' && <div className="w-2 h-2 rounded-full bg-black"></div>}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 4. Bill Summary (same as cart page) */}
-          <div className="mt-8 border-t border-black pt-6 flex flex-col gap-4">
-            <span className="text-xs tracking-[0.15em] uppercase text-black font-black block mb-1">Bill Summary</span>
+          {/* 3. Bill Summary (exact style as Cart page) */}
+          <div className="mt-4 pt-4 border-t border-zinc-100 flex flex-col gap-3">
+            <span className="text-xs tracking-[0.15em] uppercase text-zinc-900 font-bold block">Bill Summary</span>
 
-            {/* Item subtotal */}
-            <div className="flex justify-between items-center text-xs uppercase text-black font-semibold">
-              <span>Items Subtotal</span>
-              <span className="font-mono text-black font-bold">₹{itemsSubtotal.toLocaleString('en-IN')}</span>
-            </div>
-
-            {/* Shipping */}
-            <div className="flex justify-between items-center text-xs uppercase text-black font-semibold">
-              <span>Shipping</span>
-              <span className="font-mono text-black font-bold">₹{shippingCost} fixed</span>
-            </div>
-
-            {/* Fees with Toggable Dropdown */}
-            <div className="flex flex-col gap-2">
-              <div 
-                onClick={() => setShowFeeDetails(!showFeeDetails)}
-                className="flex justify-between items-center text-xs uppercase text-black font-semibold cursor-pointer hover:text-black transition-colors"
+            {/* Discount code or gift card form */}
+            <div className="flex gap-2 w-full">
+              <input
+                type="text"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value)}
+                placeholder="Discount code or gift card"
+                className="flex-1 border border-zinc-300 rounded-[6px] px-3.5 py-2 text-sm text-black placeholder:text-zinc-400 outline-none focus:border-black transition-colors"
+              />
+              <button
+                type="button"
+                onClick={handleApplyCouponInCheckout}
+                disabled={!couponInput.trim()}
+                className="bg-zinc-100 hover:bg-zinc-200 disabled:opacity-40 text-zinc-900 font-semibold text-sm px-4 py-2 rounded-[6px] border border-zinc-200 transition-colors shrink-0"
               >
-                <span className="flex items-center gap-1 select-none">
-                  Fees 
-                  <ChevronRight className={`w-3.5 h-3.5 text-black stroke-[3.5] transition-transform duration-300 ${showFeeDetails ? 'rotate-90' : 'rotate-0'}`} />
-                </span>
-                <span className="font-mono text-black font-bold">₹{protectPromiseFee}</span>
+                Apply
+              </button>
+            </div>
+
+            {appliedCoupon && (
+              <div className="flex justify-between items-center text-xs text-green-700 bg-green-50/80 px-2.5 py-1.5 rounded-[4px] border border-green-100">
+                <span className="font-medium">Coupon applied: {appliedCoupon.code}</span>
+                <button 
+                  type="button"
+                  onClick={handleRemoveCouponInCheckout}
+                  className="text-zinc-400 hover:text-red-500 text-xs underline font-medium"
+                >
+                  Remove
+                </button>
               </div>
-              
-              <div className={`grid transition-all duration-300 ease-in-out ${showFeeDetails ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}>
-                <div className="overflow-hidden">
-                  <div className="pl-3 py-2 border-l border-black bg-white flex justify-between items-center text-[10px] text-black font-bold tracking-wider">
-                    <span>Protect Promise Fee (₹9 per item × {totalItems})</span>
-                    <span className="font-mono">₹{protectPromiseFee}</span>
+            )}
+
+            {couponError && (
+              <span className="text-xs text-red-500 font-medium">{couponError}</span>
+            )}
+
+            {/* Bill Summary Rows */}
+            <div className="flex flex-col gap-1.5 pt-1">
+              {/* 1. Subtotal · X items */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-zinc-700 font-normal">
+                  Subtotal · {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                </span>
+                <span className="font-semibold text-black font-mono text-sm shrink-0 text-right pr-1">
+                  {formatPrice(itemsSubtotal)}
+                </span>
+              </div>
+
+              {/* Coupon discount line (if applied) */}
+              {appliedCoupon && couponDiscount > 0 && (
+                <div className="flex justify-between items-center text-sm text-green-600">
+                  <span className="font-normal">Discount ({appliedCoupon.code})</span>
+                  <span className="font-semibold font-mono text-sm shrink-0 text-right pr-1">
+                    -{formatPrice(couponDiscount)}
+                  </span>
+                </div>
+              )}
+
+              {/* 2. Shipping (if above ₹1000 free, else ₹70) */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-zinc-700 font-normal flex items-center gap-1">
+                  Shipping
+                  <span className="w-3.5 h-3.5 rounded-full border border-zinc-300 text-[9px] text-zinc-400 flex items-center justify-center font-bold select-none">
+                    ?
+                  </span>
+                </span>
+                <span className="font-semibold text-black text-sm shrink-0 text-right pr-1">
+                  {isFreeShipping ? 'FREE' : formatPrice(shippingCost)}
+                </span>
+              </div>
+
+              {/* 3. Total */}
+              <div className="flex justify-between items-center pt-2 border-t border-zinc-100">
+                <span className="text-base font-bold text-black">Total</span>
+                <span className="text-base font-bold text-black font-mono shrink-0 text-right pr-1">
+                  {formatPrice(estimatedTotal)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Order Items */}
+          <div className="mt-4 pt-4 border-t border-zinc-100 flex flex-col gap-3">
+            <span className="text-xs tracking-[0.15em] uppercase text-zinc-900 font-bold block">Order Items</span>
+            <div className="flex flex-col border border-zinc-200/80 rounded-[8px] p-3 divide-y divide-zinc-100 bg-white">
+              {cartItems.map((item, idx) => (
+                <div key={`${item.productId}-${item.size}-${idx}`} className="h-[70px] shrink-0 flex items-center justify-between gap-3">
+                  {/* Product Image with Top-Right Quantity Indicator Marker */}
+                  <div className="relative shrink-0">
+                    <div className="w-14 h-14 bg-zinc-50 border border-zinc-200/80 rounded-[8px] overflow-hidden block">
+                      <FallbackImage 
+                        src={getCachedImage(item.productId, item.image)} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover" 
+                        logoSize="w-5 h-5"
+                      />
+                    </div>
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-black text-white text-[9.5px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs z-10 select-none">
+                      {item.quantity}
+                    </span>
+                  </div>
+                  
+                  {/* Details */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <h3 className="text-[13.5px] font-semibold text-black tracking-tight leading-snug line-clamp-1">
+                      {item.name}
+                    </h3>
+                    <span className="text-[11.5px] text-zinc-400 font-normal block mt-0.5">
+                      {getDisplaySize(item.size, item.sizeDisplayType)}
+                    </span>
+                  </div>
+
+                  {/* Total Item Price */}
+                  <div className="shrink-0 text-right flex items-center pl-2">
+                    <span className="text-[13.5px] font-semibold text-black font-mono select-none shrink-0 pr-1">
+                      {formatPrice(item.price * item.quantity)}
+                    </span>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Bold subtotal (Items + Shipping + Fees) */}
-            <div className="flex justify-between items-center border-t border-black pt-4 mt-2 text-xs uppercase font-black text-black">
-              <span>Subtotal</span>
-              <span className="font-mono">₹{orderSubtotal.toLocaleString('en-IN')}</span>
-            </div>
-
-            {/* Free delivery discount if order >= 1000 */}
-            {itemsSubtotal >= 1000 && (
-              <div className="flex justify-between items-center text-xs uppercase text-black font-black tracking-wider">
-                <span>Free Delivery Discount</span>
-                <span className="font-mono">-₹70</span>
-              </div>
-            )}
-
-            {/* Coupon Applied Discount row */}
-            {appliedCoupon && (
-              <div className="flex justify-between items-center text-xs uppercase text-black font-black tracking-wider">
-                <span>Coupon Applied ({appliedCoupon.code})</span>
-                <span className="font-mono">-₹{couponDiscount.toLocaleString('en-IN')}</span>
-              </div>
-            )}
-
-            {/* Final Estimated Total */}
-            <div className="flex justify-between items-center border-t-2 border-black pt-5 mt-3">
-              <span className="text-xs uppercase font-black text-black tracking-widest">Estimated Total</span>
-              <span className="text-base font-extrabold text-black font-mono">₹{estimatedTotal.toLocaleString('en-IN')}</span>
+              ))}
             </div>
           </div>
 
-          {/* Place Order Sticky Button */}
-          <div className="fixed bottom-12 left-0 right-0 z-40 bg-white border-t border-black px-4 py-4 max-w-[430px] mx-auto">
+          {/* Place Order Sticky Action Button */}
+          <div className="fixed bottom-11 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 max-w-[430px] mx-auto shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
             {paymentSectionVisible ? (
               <button
                 type="submit"
                 disabled={placingOrder}
-                className="w-full flex items-center justify-center text-xs tracking-[0.25em] uppercase font-black py-4.5 bg-black text-white hover:bg-black active:bg-white active:text-black border border-black rounded-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full flex items-center justify-center text-[11px] tracking-[0.2em] uppercase font-bold py-3.5 bg-black text-white hover:bg-zinc-900 rounded-[6px] disabled:opacity-50 transition-colors shadow-sm"
               >
                 {placingOrder 
                   ? 'Processing...' 
-                  : `Pay ₹${estimatedTotal.toLocaleString('en-IN')} via ${selectedMethod === 'upi' ? 'UPI' : selectedMethod === 'card' ? 'Card' : 'Net Banking'}`
+                  : `Pay ${formatPrice(estimatedTotal)} via ${selectedMethod === 'upi' ? 'UPI' : selectedMethod === 'card' ? 'Card' : 'Net Banking'}`
                 }
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleProceedToPayment}
-                className="w-full flex items-center justify-center text-xs tracking-[0.25em] uppercase font-black py-4.5 bg-black text-white hover:bg-black active:bg-white active:text-black border border-black rounded-none transition-all"
+                className="w-full flex items-center justify-center text-[11px] tracking-[0.2em] uppercase font-bold py-3.5 bg-black text-white hover:bg-zinc-900 rounded-[6px] transition-colors shadow-sm"
               >
                 Proceed to Payment
               </button>

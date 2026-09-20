@@ -18,7 +18,7 @@ function getCutoffDate(period) {
 // Record activity by incrementing pre-aggregated daily counters
 export const recordActivity = mutation({
   args: {
-    userId: v.optional(v.id("users")),
+    userId: v.optional(v.any()),
     sessionId: v.string(),
     activityType: v.string(),
     actionType: v.optional(v.string()),

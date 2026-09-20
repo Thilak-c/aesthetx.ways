@@ -46,6 +46,11 @@ export default function OrdersClient() {
   const [authLoading, setAuthLoading] = useState(false);
   const [shakeModal, setShakeModal] = useState(false);
 
+  // Phone / Order Number lookup states
+  const [lookupQuery, setLookupQuery] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+
   // Load orders and session from local storage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -175,6 +180,44 @@ export default function OrdersClient() {
     }
   };
 
+  const handleOrderLookup = async (e) => {
+    e.preventDefault();
+    setLookupError('');
+    const query = lookupQuery.trim();
+    if (!query) {
+      setLookupError('Please enter a mobile number or order number');
+      return;
+    }
+
+    setLookupLoading(true);
+    try {
+      const res = await fetch(`/api/orders/lookup?query=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (data.success && data.orders && data.orders.length > 0) {
+        setOrders(data.orders);
+        localStorage.setItem('aw_orders', JSON.stringify(data.orders));
+        if (data.user) {
+          const userSession = {
+            id: data.user.id,
+            name: data.user.name,
+            email: data.user.email,
+            phone: data.user.phone,
+            loggedIn: true,
+          };
+          setUser(userSession);
+          localStorage.setItem('aw_user', JSON.stringify(userSession));
+        }
+      } else {
+        setLookupError(data.message || 'No orders found matching this mobile or order number');
+      }
+    } catch (err) {
+      console.error(err);
+      setLookupError('Failed to lookup orders. Please try again.');
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-1 flex-col bg-white justify-center items-center py-32">
@@ -182,8 +225,6 @@ export default function OrdersClient() {
       </div>
     );
   }
-
-
 
   // --- ORDERS LIST VIEW ---
   return (
@@ -200,8 +241,8 @@ export default function OrdersClient() {
       {/* Orders List */}
       <main className="flex-1 px-4 py-4 flex flex-col justify-between min-h-[85vh]">
         {orders.length === 0 ? (
-          <div className="flex min-h-[52vh] flex-col items-center justify-center text-center flex-1 py-12">
-            <div className="w-20 h-20 mb-5 overflow-hidden rounded-full border border-zinc-100 bg-zinc-50 flex items-center justify-center select-none">
+          <div className="flex min-h-[52vh] flex-col items-center justify-center text-center flex-1 py-8 px-2 max-w-sm mx-auto w-full">
+            <div className="w-16 h-16 mb-4 overflow-hidden rounded-full border border-zinc-100 bg-zinc-50 flex items-center justify-center select-none">
               <video 
                 src="/n0-data.mp4" 
                 autoPlay 
@@ -212,28 +253,41 @@ export default function OrdersClient() {
               />
             </div>
             <span className="text-[10px] tracking-widest uppercase text-zinc-400 font-bold">
-              {!user ? 'Login Required' : 'No orders found'}
+              Track your orders
             </span>
-            <p className="text-[9px] text-zinc-400 mt-1 max-w-[200px]">
-              {!user 
-                ? 'Please log in to view or track your orders.' 
-                : "You haven't placed any orders yet."}
+            <p className="text-[9px] text-zinc-400 mt-1 max-w-[260px]">
+              Enter your 10-digit mobile number or Order ID to instantly view your order status.
             </p>
-            {!user ? (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="mt-6 text-[9px] tracking-widest uppercase font-bold bg-black text-white px-5 py-2.5 rounded-[1px] hover:bg-zinc-900 transition-colors"
-              >
-                Log In
-              </button>
-            ) : (
-              <Link
-                href="/"
-                className="mt-6 text-[9px] tracking-widest uppercase font-bold bg-black text-white px-5 py-2.5 rounded-[1px] hover:bg-zinc-900 transition-colors"
-              >
-                Start shopping
-              </Link>
-            )}
+
+            {/* Quick Lookup Form */}
+            <form onSubmit={handleOrderLookup} className="w-full mt-4 flex flex-col gap-2">
+              <div className="flex border border-black focus-within:ring-1 focus-within:ring-black">
+                <input
+                  type="text"
+                  value={lookupQuery}
+                  onChange={(e) => setLookupQuery(e.target.value)}
+                  placeholder="Mobile number or Order ID"
+                  className="flex-1 text-xs px-3 py-2.5 outline-none text-black placeholder:text-black/35 font-mono"
+                />
+                <button
+                  type="submit"
+                  disabled={lookupLoading}
+                  className="bg-black text-white px-4 text-[9px] uppercase tracking-widest font-bold hover:bg-zinc-900 disabled:opacity-50"
+                >
+                  {lookupLoading ? '...' : 'Track'}
+                </button>
+              </div>
+              {lookupError && (
+                <span className="text-[9px] text-red-600 font-bold tracking-wider">{lookupError}</span>
+              )}
+            </form>
+
+            <Link
+              href="/"
+              className="mt-6 text-[9px] tracking-widest uppercase font-bold bg-zinc-100 text-black px-5 py-2.5 rounded-[1px] hover:bg-zinc-200 transition-colors"
+            >
+              Start shopping
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col gap-4">

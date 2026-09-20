@@ -60,9 +60,32 @@ export async function POST(request) {
       }
     }
     
-    // 3. Call the Convex mutation to insert the order and update product stock atomically
+    // 3. Silently upsert customer profile by phone in Convex
+    let resolvedUserId = 'guest';
+    try {
+      if (customerDetails?.phone) {
+        const userUpsert = await convexClient.mutation('users:upsertUserByPhone', {
+          phone: customerDetails.phone,
+          fullName: customerDetails.fullName,
+          email: customerDetails.email,
+          address: customerDetails.address,
+          houseNo: customerDetails.houseNo,
+          area: customerDetails.area,
+          city: customerDetails.city,
+          state: customerDetails.state,
+          pincode: customerDetails.pincode,
+        });
+        if (userUpsert?.userId) {
+          resolvedUserId = userUpsert.userId;
+        }
+      }
+    } catch (userErr) {
+      console.error('Silent user upsert warning:', userErr);
+    }
+
+    // 4. Call the Convex mutation to insert the order and update product stock atomically
     const result = await convexClient.mutation('orders:createOrder', {
-      userId: 'guest',
+      userId: resolvedUserId,
       items: items.map(item => ({
         productId: item.productId,
         name: item.name,
@@ -75,8 +98,8 @@ export async function POST(request) {
         fullName: customerDetails.fullName,
         email: customerDetails.email,
         phone: customerDetails.phone,
-        flatNo: '',
-        area: '',
+        flatNo: customerDetails.houseNo || '',
+        area: customerDetails.area || '',
         landmark: '',
         address: customerDetails.address,
         city: customerDetails.city,
@@ -140,6 +163,7 @@ export async function POST(request) {
       success: true, 
       message: 'Order placed successfully!', 
       orderNumber: result.orderNumber,
+      userId: resolvedUserId,
       order: {
         orderNumber: result.orderNumber,
         items,
