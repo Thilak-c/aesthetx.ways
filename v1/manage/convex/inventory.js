@@ -361,9 +361,14 @@ export const createWebsitePOSBill = mutation({
     subtotal: v.float64(),
     discount: v.optional(v.number()),
     discountAmount: v.optional(v.float64()),
+    discountType: v.optional(v.string()),
     tax: v.float64(),
     total: v.float64(),
     paymentMethod: v.string(),
+    splitDetails: v.optional(v.object({
+      cash: v.float64(),
+      online: v.float64(),
+    })),
     createdBy: v.string(),
   },
   handler: async (ctx, args) => {
@@ -434,9 +439,11 @@ export const createWebsitePOSBill = mutation({
       subtotal: args.subtotal,
       discount: args.discount || 0,
       discountAmount: args.discountAmount || 0,
+      discountType: args.discountType || (args.discountAmount > 0 ? "percentage" : undefined),
       tax: args.tax,
       total: args.total,
       paymentMethod: args.paymentMethod,
+      splitDetails: args.splitDetails,
       createdAt: nowIso(),
       createdBy: args.createdBy,
     });

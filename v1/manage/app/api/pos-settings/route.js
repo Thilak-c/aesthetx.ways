@@ -1,8 +1,9 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const SETTINGS_FILE = path.join(DATA_DIR, 'pos_branches.json');
+const convex = new ConvexHttpClient(
+  process.env.NEXT_PUBLIC_CONVEX_URL || "https://db.aesthetxways.com"
+);
 
 const DEFAULT_STORE_BRANCHES = {
   patna: {
@@ -12,7 +13,7 @@ const DEFAULT_STORE_BRANCHES = {
     storeAddress: "Kankarbagh Colony More, Ghrounda, Patna, Bihar 800001",
     phone: "+91 70337 69997",
     gstin: "10AAACA0000A1Z5",
-    upiId: "8008439762@ptsbi"
+    upiId: "aesthetxways07@okicici"
   },
   gaya: {
     id: "gaya",
@@ -21,33 +22,31 @@ const DEFAULT_STORE_BRANCHES = {
     storeAddress: "Gaya Railway Station Campus Rd, Gol Bagicha, Gaya, Bihar 823002",
     phone: "+91 70337 69997",
     gstin: "10AAACA0000A1Z5",
-    upiId: "8008439762@ptsbi"
+    upiId: "aesthetxways07@okicici"
   }
 };
 
-const USERS_FILE = path.join(DATA_DIR, 'pos_users.json');
-
 export async function GET() {
   try {
-    let settings = { branches: DEFAULT_STORE_BRANCHES, activeBranch: "patna" };
-    try {
-      const data = await fs.readFile(SETTINGS_FILE, 'utf-8');
-      settings = JSON.parse(data);
-    } catch {
-      // File does not exist yet; return defaults
-    }
+    const branchesData = await convex.query(api.siteSettings.getPosBranches, {});
+    const usersData = await convex.query(api.siteSettings.getPosUsers, {});
 
-    let users = null;
-    try {
-      const userData = await fs.readFile(USERS_FILE, 'utf-8');
-      users = JSON.parse(userData);
-    } catch {
-      // Users file not created yet
-    }
+    const branches = branchesData?.branches || DEFAULT_STORE_BRANCHES;
+    const activeBranch = branchesData?.activeBranch || "gaya";
 
-    return Response.json({ success: true, ...settings, users });
+    return Response.json({
+      success: true,
+      branches,
+      activeBranch,
+      users: usersData || null,
+      updatedAt: branchesData?.updatedAt || null
+    });
   } catch (err) {
-    return Response.json({ success: false, error: String(err), branches: DEFAULT_STORE_BRANCHES }, { status: 500 });
+    console.error("Error fetching POS settings from Convex:", err);
+    return Response.json(
+      { success: false, error: String(err), branches: DEFAULT_STORE_BRANCHES },
+      { status: 500 }
+    );
   }
 }
 
@@ -56,27 +55,22 @@ export async function POST(req) {
     const body = await req.json();
     const { branches, activeBranch, users } = body;
 
-    await fs.mkdir(DATA_DIR, { recursive: true });
-
-    if (branches && typeof branches === 'object') {
-      await fs.writeFile(
-        SETTINGS_FILE,
-        JSON.stringify({ branches, activeBranch: activeBranch || 'patna', updatedAt: new Date().toISOString() }, null, 2),
-        'utf-8'
-      );
+    if (branches && typeof branches === "object") {
+      await convex.mutation(api.siteSettings.savePosBranches, {
+        branchesJson: JSON.stringify(branches),
+        activeBranch: activeBranch || "gaya"
+      });
     }
 
     if (users && Array.isArray(users)) {
-      await fs.writeFile(
-        USERS_FILE,
-        JSON.stringify(users, null, 2),
-        'utf-8'
-      );
+      await convex.mutation(api.siteSettings.savePosUsers, {
+        usersJson: JSON.stringify(users)
+      });
     }
 
-    return Response.json({ success: true, message: 'Saved to server successfully' });
+    return Response.json({ success: true, message: "Saved to Convex database successfully" });
   } catch (err) {
+    console.error("Error saving POS settings to Convex:", err);
     return Response.json({ success: false, error: String(err) }, { status: 500 });
   }
 }
-

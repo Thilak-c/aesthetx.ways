@@ -339,9 +339,14 @@ export default defineSchema({
     subtotal: v.float64(),
     discount: v.optional(v.number()), // Discount percentage (0, 5, 10)
     discountAmount: v.optional(v.float64()), // Discount amount in rupees
+    discountType: v.optional(v.string()), // 'flat' | 'percentage'
     tax: v.float64(),
     total: v.float64(),
-    paymentMethod: v.string(), // 'cash', 'card', 'upi'
+    paymentMethod: v.string(), // 'cash', 'card', 'upi', 'split'
+    splitDetails: v.optional(v.object({
+      cash: v.float64(),
+      online: v.float64(),
+    })),
     createdAt: v.string(),
     createdBy: v.string(),
   })

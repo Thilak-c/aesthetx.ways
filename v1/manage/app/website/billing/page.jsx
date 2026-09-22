@@ -238,7 +238,10 @@ export default function NewBillingPage() {
   const [customerInfo, setCustomerInfo] = useState({ name: "", phone: "" });
   const [billNumber, setBillNumber] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [splitPayment, setSplitPayment] = useState({ cash: "", online: "", lastEdited: "cash" });
   const [discount, setDiscount] = useState(0);
+  const [discountType, setDiscountType] = useState("percentage"); // "percentage" | "flat"
+  const [flatDiscount, setFlatDiscount] = useState(0);
   const [recoveryModalData, setRecoveryModalData] = useState(null);
   const [currentTime, setCurrentTime] = useState("");
 
@@ -477,7 +480,8 @@ export default function NewBillingPage() {
       gstin: storeSettings.gstin || "10AAACA0000A1Z5",
       upiId: storeSettings.upiId || "8008439762@ptsbi"
     });
-    toast.success(`Created ${newBranch.name}!`);
+    saveBranchesToServer(updatedBranches, locKey);
+    toast.success(`Created ${newBranch.name} in Convex database!`);
   };
 
   // Handle PIN Verification Submission (Just PIN!)
@@ -545,29 +549,18 @@ export default function NewBillingPage() {
     toast.success("Terminal Locked. Enter PIN to unlock.");
   };
 
-  // Save registered users helper to Convex Cloud + Server API + LocalStorage
+  // Save registered users helper to Convex Cloud Database + LocalStorage
   const saveUsersToStorage = async (updatedUsers) => {
     setRegisteredUsers(updatedUsers);
     localStorage.setItem("pos_registered_users", JSON.stringify(updatedUsers));
 
-    // 1. Save to Convex Cloud Database
+    // Save directly to Convex Cloud Database
     try {
       if (savePosUsersMutation) {
         await savePosUsersMutation({ usersJson: JSON.stringify(updatedUsers) });
       }
     } catch (e) {
       console.error("Failed to save staff users to Convex Cloud", e);
-    }
-
-    // 2. Save to Server Disk API
-    try {
-      await fetch("/api/pos-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ users: updatedUsers })
-      });
-    } catch (e) {
-      console.error("Failed to save staff users to server API", e);
     }
   };
 
@@ -608,10 +601,41 @@ export default function NewBillingPage() {
   const billsHistory = useQuery(api.inventory.getBillingHistory, { limit: 500 }) || [];
   const onlineOrders = useQuery(api.orders.getAllOrders, { limit: 500 }) || [];
   const allUsers = useQuery(api.users.getAllUsers, {}) || [];
+  const cloudPosBranches = useQuery(api.siteSettings.getPosBranches, {});
+  const savePosBranchesMutation = useMutation(api.siteSettings.savePosBranches);
   const cloudPosUsers = useQuery(api.siteSettings.getPosUsers, {});
   const savePosUsersMutation = useMutation(api.siteSettings.savePosUsers);
 
-  // Sync Cloud POS Staff Users
+  // Sync Cloud POS Branches from Convex Database in real-time
+  useEffect(() => {
+    if (cloudPosBranches && cloudPosBranches.branches && Object.keys(cloudPosBranches.branches).length > 0) {
+      setBranches((prev) => {
+        const merged = { ...STORE_BRANCHES, ...prev, ...cloudPosBranches.branches };
+        localStorage.setItem("pos_branches", JSON.stringify(merged));
+        return merged;
+      });
+      const activeKey = cloudPosBranches.activeBranch || activeBranch || "patna";
+      setActiveBranch(activeKey);
+      setEditingBranchId(activeKey);
+      const branchInfo = cloudPosBranches.branches[activeKey] || cloudPosBranches.branches.patna;
+      if (branchInfo) {
+        setStoreSettings((prev) => {
+          const updated = {
+            ...prev,
+            storeName: branchInfo.storeName || prev.storeName,
+            storeAddress: branchInfo.storeAddress || prev.storeAddress,
+            phone: branchInfo.phone || prev.phone,
+            gstin: branchInfo.gstin || prev.gstin,
+            upiId: branchInfo.upiId || prev.upiId
+          };
+          localStorage.setItem("pos_store_settings", JSON.stringify(updated));
+          return updated;
+        });
+      }
+    }
+  }, [cloudPosBranches]);
+
+  // Sync Cloud POS Staff Users from Convex Database in real-time
   useEffect(() => {
     if (cloudPosUsers && Array.isArray(cloudPosUsers) && cloudPosUsers.length > 0) {
       setRegisteredUsers(cloudPosUsers);
@@ -800,6 +824,7 @@ export default function NewBillingPage() {
           discountAmount: Number(bill.discountAmount) || 0,
           tax: Number(bill.tax) || 0,
           paymentMethod: bill.paymentMethod || "cash",
+          splitDetails: bill.splitDetails,
           customerName: bill.customerName || "Customer",
           customerPhone: bill.customerPhone,
           items: (bill.items || []).map((it) => ({
@@ -858,16 +883,17 @@ export default function NewBillingPage() {
   const updateBillingProductMutation = useMutation(api.billingProducts.updateBillingProduct);
   const deleteBillingProductMutation = useMutation(api.billingProducts.deleteBillingProduct);
 
-  // POS Location & Store Settings Server Persistence
+  // POS Location & Store Settings Convex Persistence
   const saveBranchesToServer = async (branchesToSave, currentActiveBranch) => {
     try {
-      await fetch("/api/pos-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ branches: branchesToSave, activeBranch: currentActiveBranch })
-      });
+      if (savePosBranchesMutation) {
+        await savePosBranchesMutation({
+          branchesJson: JSON.stringify(branchesToSave),
+          activeBranch: currentActiveBranch || activeBranch || "patna"
+        });
+      }
     } catch (e) {
-      console.error("Failed to save branch settings to server", e);
+      console.error("Failed to save branch settings to Convex", e);
     }
   };
 
@@ -1125,15 +1151,60 @@ export default function NewBillingPage() {
 
   // Billing Math Calculations
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const effectiveDiscount = userRole === "admin" ? discount : 0;
-  const discountAmount = Math.round((subtotal * (effectiveDiscount / 100)) * 100) / 100;
-  const taxableAmount = subtotal - discountAmount;
+  const effectiveDiscount = discount;
+  const effectiveFlatDiscount = flatDiscount;
+  const discountAmount = discountType === "percentage"
+    ? Math.round((subtotal * (effectiveDiscount / 100)) * 100) / 100
+    : Math.min(subtotal, Math.max(0, effectiveFlatDiscount));
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
   const cgst = 0;
   const sgst = 0;
   const tax = 0;
   const totalWithTax = taxableAmount;
   const grandTotal = Math.round(totalWithTax);
   const roundOff = Math.round((grandTotal - totalWithTax) * 100) / 100;
+
+  // Keep split payment synchronized whenever grandTotal changes (discount applied/altered, cart modified)
+  useEffect(() => {
+    if (paymentMethod !== "split") return;
+
+    if (grandTotal <= 0) {
+      setSplitPayment({ cash: "", online: "", lastEdited: "cash" });
+      return;
+    }
+
+    setSplitPayment((prev) => {
+      // If neither was entered yet
+      if ((prev.cash === "" || prev.cash === undefined) && (prev.online === "" || prev.online === undefined)) {
+        return { cash: grandTotal, online: "", lastEdited: "cash" };
+      }
+
+      if (prev.lastEdited === "online") {
+        const currentOnline = parseFloat(prev.online) || 0;
+        if (currentOnline >= grandTotal) {
+          return { cash: 0, online: grandTotal, lastEdited: "online" };
+        }
+        const remCash = Math.max(0, Math.round((grandTotal - currentOnline) * 100) / 100);
+        return {
+          cash: remCash,
+          online: prev.online === "" ? "" : currentOnline,
+          lastEdited: "online"
+        };
+      } else {
+        // default: lastEdited was cash
+        const currentCash = parseFloat(prev.cash) || 0;
+        if (currentCash >= grandTotal) {
+          return { cash: grandTotal, online: 0, lastEdited: "cash" };
+        }
+        const remOnline = Math.max(0, Math.round((grandTotal - currentCash) * 100) / 100);
+        return {
+          cash: prev.cash === "" ? "" : currentCash,
+          online: remOnline,
+          lastEdited: "cash"
+        };
+      }
+    });
+  }, [grandTotal, paymentMethod]);
 
   // Magnet Club & Restro Thermal Invoice Print Handler (80mm Thermal Receipt Engine)
   const executeMagnetRestroPrint = async (targetBill = null) => {
@@ -1145,12 +1216,17 @@ export default function NewBillingPage() {
       subtotal: subtotal,
       discount: effectiveDiscount,
       discountAmount: discountAmount,
+      discountType: discountType,
       cgst: cgst,
       sgst: sgst,
       tax: tax,
       total: grandTotal,
       roundOff: roundOff,
       paymentMethod: paymentMethod,
+      splitDetails: paymentMethod === "split" ? {
+        cash: parseFloat(splitPayment.cash) || 0,
+        online: parseFloat(splitPayment.online) || 0
+      } : undefined,
       createdBy: activeCashier ? activeCashier.name : "POS Cashier",
       createdAt: new Date().toISOString()
     };
@@ -1182,17 +1258,21 @@ export default function NewBillingPage() {
     const thankMsg = storeSettings?.thankYouMessage || "Thank you for shopping with us..!!";
     const siteUrl = storeSettings?.websiteUrl || "aesthetxways.com";
 
-    // Dynamic UPI QR Code Generation (only when UPI payment method is selected)
+    // Dynamic UPI QR Code Generation (for UPI payment or Split payment with online portion)
+    const isSplit = String(activeBillData.paymentMethod || "").toLowerCase() === "split";
+    const splitOnlineAmount = isSplit && activeBillData.splitDetails ? Number(activeBillData.splitDetails.online || 0) : 0;
     const isUpiPayment = String(activeBillData.paymentMethod || "").toLowerCase() === "upi";
+    const shouldShowUpiQr = isUpiPayment || (isSplit && splitOnlineAmount > 0);
     const billFinalAmount = Number(activeBillData.total ?? activeBillData.grandTotal ?? 0);
-    const upiAmountStr = billFinalAmount.toFixed(2);
+    const upiTargetAmount = isSplit ? splitOnlineAmount : billFinalAmount;
+    const upiAmountStr = upiTargetAmount.toFixed(2);
     const upiId = storeSettings?.upiId || "8008439762@ptsbi";
     const payeeName = encodeURIComponent(storeTitle || "Aesthetx Ways");
     const upiNote = encodeURIComponent(`Bill ${activeBillData.billNumber || ""}`.trim());
     const upiPayload = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${upiAmountStr}&cu=INR&tn=${upiNote}`;
 
     let upiQrDataUrl = "";
-    if (isUpiPayment) {
+    if (shouldShowUpiQr && upiTargetAmount > 0) {
       try {
         if (typeof document !== "undefined") {
           const canvas = document.createElement("canvas");
@@ -1377,7 +1457,7 @@ export default function NewBillingPage() {
               ${activeBillData.discountAmount > 0 ? `
               <tr>
                 <td></td>
-                <td style="text-align: right; padding: 2px 0;">Discount (${activeBillData.discount}%)</td>
+                <td style="text-align: right; padding: 2px 0;">Discount (${activeBillData.discountType === "flat" ? "Flat" : `${activeBillData.discount}%`})</td>
                 <td style="text-align: right; padding: 2px 0;" class="font-mono">-₹${activeBillData.discountAmount.toFixed(2)}</td>
               </tr>` : ''}
               ${billRoundOff !== 0 ? `
@@ -1390,14 +1470,23 @@ export default function NewBillingPage() {
                 <td colspan="2" style="text-align: right; font-weight: 900; font-size: 14px; padding-top: 6px; border-top: 1.5px dashed #000;">Grand Total</td>
                 <td style="text-align: right; font-weight: 900; font-size: 14px; padding-top: 6px; border-top: 1.5px dashed #000;" class="font-mono">₹${billFinalAmount.toFixed(2)}</td>
               </tr>
+              ${isSplit && activeBillData.splitDetails ? `
+              <tr style="font-size: 11px; font-weight: 800; color: #111;">
+                <td colspan="2" style="text-align: right; padding-top: 5px;">Paid in Cash:</td>
+                <td style="text-align: right; padding-top: 5px;" class="font-mono">₹${Number(activeBillData.splitDetails.cash || 0).toFixed(2)}</td>
+              </tr>
+              <tr style="font-size: 11px; font-weight: 800; color: #111;">
+                <td colspan="2" style="text-align: right; padding: 1px 0;">Paid via Online/UPI:</td>
+                <td style="text-align: right; padding: 1px 0;" class="font-mono">₹${Number(activeBillData.splitDetails.online || 0).toFixed(2)}</td>
+              </tr>` : ''}
             </table>
           </div>
 
-          <!-- Dynamic UPI QR Code Section (only when UPI payment method is selected) -->
-          ${isUpiPayment ? `
+          <!-- Dynamic UPI QR Code Section -->
+          ${shouldShowUpiQr && upiTargetAmount > 0 && upiQrDataUrl ? `
           <div style="text-align: center; margin: 8px 0 6px 0; border-bottom: 1.5px dashed #000; padding-bottom: 8px;">
             <div style="font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;">
-              SCAN TO PAY VIA UPI
+              ${isSplit ? 'SCAN TO PAY ONLINE PORTION VIA UPI' : 'SCAN TO PAY VIA UPI'}
             </div>
             <div style="position: relative; display: inline-block; background: #fff;">
               <img src="${upiQrDataUrl}" alt="Scan to Pay via UPI" style="width: 125px; height: 125px; display: block; margin: 0 auto;" />
@@ -1406,7 +1495,7 @@ export default function NewBillingPage() {
               </div>
             </div>
             <div style="font-size: 13px; font-weight: 900; font-family: monospace; margin-top: 4px;">
-              ₹${billFinalAmount.toFixed(2)}
+              ₹${upiTargetAmount.toFixed(2)}
             </div>
             <div style="font-size: 9px; font-weight: 700; color: #222; font-family: monospace; margin-top: 2px; letter-spacing: 0.5px;">
               UPI ID: ${upiId}
@@ -1415,9 +1504,7 @@ export default function NewBillingPage() {
           ` : ''}
 
           <div class="receipt-footer">
-            <div class="payment-badge">
-              PAID VIA ${(activeBillData.paymentMethod || 'CASH').toUpperCase()}
-            </div>
+          
             <p class="thank-you">${thankMsg}</p>
             <p class="website">Visit Our Store Online<br/>${siteUrl}</p>
           </div>
@@ -1451,6 +1538,17 @@ export default function NewBillingPage() {
       return;
     }
 
+    let finalSplitDetails = undefined;
+    if (paymentMethod === "split") {
+      const c = parseFloat(splitPayment.cash) || 0;
+      const o = parseFloat(splitPayment.online) || 0;
+      if (Math.abs((c + o) - grandTotal) > 0.01) {
+        toast.error(`Split amounts (₹${(c + o).toFixed(2)}) must equal Grand Total (₹${grandTotal.toFixed(2)})`);
+        return;
+      }
+      finalSplitDetails = { cash: c, online: o };
+    }
+
     const cashierNameStr = activeCashier ? activeCashier.name : "POS Cashier";
 
     const toastId = toast.loading("Processing POS bill & updating stock...");
@@ -1472,11 +1570,13 @@ export default function NewBillingPage() {
         customerName: customerInfo.name || undefined,
         customerPhone: customerInfo.phone || undefined,
         subtotal: subtotal,
-        discount: effectiveDiscount,
+        discount: discountType === "percentage" ? effectiveDiscount : (subtotal > 0 ? Math.round((discountAmount / subtotal) * 100) : 0),
         discountAmount: discountAmount,
+        discountType: discountType,
         tax: tax,
         total: grandTotal,
         paymentMethod: paymentMethod,
+        splitDetails: finalSplitDetails,
         createdBy: cashierNameStr
       });
 
@@ -1491,12 +1591,14 @@ export default function NewBillingPage() {
         subtotal: subtotal,
         discount: effectiveDiscount,
         discountAmount: discountAmount,
+        discountType: discountType,
         cgst: cgst,
         sgst: sgst,
         tax: tax,
         total: grandTotal,
         roundOff: roundOff,
         paymentMethod: paymentMethod,
+        splitDetails: finalSplitDetails,
         createdBy: cashierNameStr,
         createdAt: new Date().toISOString()
       });
@@ -1505,7 +1607,10 @@ export default function NewBillingPage() {
       setCart([]);
       setCustomerInfo({ name: "", phone: "" });
       setDiscount(0);
+      setFlatDiscount(0);
+      setDiscountType("percentage");
       setPaymentMethod("cash");
+      setSplitPayment({ cash: "", online: "", lastEdited: "cash" });
       const nextBillNum = String(Math.floor(100000 + Math.random() * 900000));
       setBillNumber(nextBillNum);
     } catch (err) {
@@ -2081,7 +2186,9 @@ export default function NewBillingPage() {
                                         {bill.typeLabel}
                                       </span>
                                       <span className="text-[9px] uppercase font-bold text-zinc-500 bg-zinc-100 px-1.5 py-0.2 rounded">
-                                        {bill.paymentMethod}
+                                        {bill.paymentMethod === "split" && bill.splitDetails
+                                          ? `SPLIT (₹${bill.splitDetails.cash} + ₹${bill.splitDetails.online})`
+                                          : bill.paymentMethod}
                                       </span>
                                     </div>
                                     <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 mt-1">
@@ -2222,7 +2329,7 @@ export default function NewBillingPage() {
                                 <span>₹{hoveredBill.total.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                               </div>
                               <div className="text-[9px] text-zinc-400 pt-0.5 flex items-center justify-between">
-                                <span>Method: {hoveredBill.paymentMethod?.toUpperCase()}</span>
+                                <span>Method: {hoveredBill.paymentMethod === "split" && hoveredBill.splitDetails ? `SPLIT (₹${hoveredBill.splitDetails.cash} Cash + ₹${hoveredBill.splitDetails.online} Online)` : hoveredBill.paymentMethod?.toUpperCase()}</span>
                                 <span>{hoveredBill.dateStr}</span>
                               </div>
                             </div>
@@ -2401,53 +2508,110 @@ export default function NewBillingPage() {
 
               {/* Discount & Payment Method Controls */}
               <div className="p-3.5 border-t border-zinc-150 bg-zinc-50/50 space-y-3 shrink-0 font-mono text-xs">
-                {/* Discount % (Admin Only Control) */}
+                {/* Discount Controls (Flat & Percentage with Quick Animation) */}
+                {/* Discount Control */}
                 <div className="flex items-center justify-between text-xs gap-2">
-                  <span className="text-zinc-600 text-[11px] flex items-center gap-1 shrink-0">
-                    <span>Discount:</span>
-                    {userRole === "user" && <span className="text-[9px] text-zinc-400">(Admin only)</span>}
+                  <span className="text-zinc-600 text-[11px] font-medium shrink-0">
+                    Discount:
                   </span>
-                  <div className="flex items-center gap-1 flex-wrap justify-end">
-                    {[0, 5, 10, 20].map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        disabled={userRole !== "admin"}
-                        onClick={() => setDiscount(d)}
-                        className={`px-1.5 py-0.5 rounded-xs text-[10px] border transition-all cursor-pointer ${
-                          effectiveDiscount === d && [0, 5, 10, 20].includes(discount)
-                            ? "bg-zinc-900 text-white border-zinc-900 font-bold"
-                            : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300"
-                        } ${userRole !== "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        {d === 0 ? "None" : `${d}%`}
-                      </button>
-                    ))}
 
-                    {/* Custom Discount Input Field */}
-                    <div className="flex items-center">
+                  <div className="flex items-center gap-1.5">
+                    {/* Mode Switcher Buttons: % vs ₹ */}
+                    <div className="inline-flex p-0.5 bg-zinc-200/80 rounded-xs border border-zinc-300/80 gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (discountType !== "percentage") {
+                            const converted = subtotal > 0 && flatDiscount > 0
+                              ? Math.min(100, Math.round((flatDiscount / subtotal) * 1000) / 10)
+                              : 0;
+                            setDiscount(converted);
+                            setDiscountType("percentage");
+                          }
+                        }}
+                        className={`min-w-[24px] py-0.5 text-center rounded-xs text-[10px] font-semibold transition-all duration-150 cursor-pointer ${
+                          discountType === "percentage"
+                            ? "bg-zinc-900 text-white font-bold shadow-xs"
+                            : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/60"
+                        }`}
+                      >
+                        %
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (discountType !== "flat") {
+                            const converted = discountAmount > 0
+                              ? Math.min(subtotal, Math.round(discountAmount * 100) / 100)
+                              : 0;
+                            setFlatDiscount(converted);
+                            setDiscountType("flat");
+                          }
+                        }}
+                        className={`min-w-[24px] py-0.5 text-center rounded-xs text-[10px] font-semibold transition-all duration-150 cursor-pointer ${
+                          discountType === "flat"
+                            ? "bg-zinc-900 text-white font-bold shadow-xs"
+                            : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/60"
+                        }`}
+                      >
+                        ₹
+                      </button>
+                    </div>
+
+                    {/* Simple aesthetic minimum field */}
+                    <div className="relative flex items-center">
+                      {discountType === "flat" && (
+                        <span className="absolute left-2 text-[10px] text-zinc-400 font-mono pointer-events-none">₹</span>
+                      )}
                       <input
                         type="number"
                         min="0"
-                        max="100"
+                        max={discountType === "percentage" ? 100 : (subtotal > 0 ? subtotal : undefined)}
                         step="any"
-                        placeholder="Custom"
-                        disabled={userRole !== "admin"}
-                        value={![0, 5, 10, 20].includes(discount) && discount > 0 ? discount : ""}
+                        placeholder="0"
+                        value={
+                          discountType === "percentage"
+                            ? (discount > 0 ? discount : "")
+                            : (flatDiscount > 0 ? flatDiscount : "")
+                        }
                         onChange={(e) => {
                           const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                          if (!isNaN(val) && val >= 0 && val <= 100) {
-                            setDiscount(val);
+                          if (!isNaN(val) && val >= 0) {
+                            if (discountType === "percentage") {
+                              if (val <= 100) setDiscount(val);
+                            } else {
+                              const capped = subtotal > 0 ? Math.min(subtotal, val) : val;
+                              setFlatDiscount(capped);
+                            }
                           }
                         }}
-                        className={`w-14 px-1 py-0.5 rounded-xs text-[10px] border text-center font-mono focus:outline-none focus:border-zinc-900 transition-all ${
-                          ![0, 5, 10, 20].includes(discount) && discount > 0
-                            ? "bg-zinc-900 text-white border-zinc-900 font-bold placeholder:text-zinc-400"
+                        className={`w-20 py-0.5 rounded-xs text-[11px] border font-mono focus:outline-none focus:border-zinc-900 transition-all ${
+                          discountType === "flat" ? "pl-5 pr-2 text-right" : "pl-2 pr-5 text-left"
+                        } ${
+                          (discountType === "percentage" ? discount > 0 : flatDiscount > 0)
+                            ? "bg-zinc-900 text-white border-zinc-900 font-bold placeholder:text-zinc-500"
                             : "bg-white text-zinc-800 border-zinc-200 hover:border-zinc-300 placeholder:text-zinc-400"
-                        } ${userRole !== "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
+                        }`}
                       />
-                      <span className="text-[10px] text-zinc-400 ml-0.5 font-mono">%</span>
+                      {discountType === "percentage" && (
+                        <span className="absolute right-2 text-[10px] text-zinc-400 font-mono pointer-events-none">%</span>
+                      )}
                     </div>
+
+                    {/* Clear Button */}
+                    {(discountType === "percentage" ? effectiveDiscount > 0 : effectiveFlatDiscount > 0) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDiscount(0);
+                          setFlatDiscount(0);
+                        }}
+                        title="Clear discount"
+                        className="p-1 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-xs transition-colors cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -2463,18 +2627,30 @@ export default function NewBillingPage() {
                         QR on Print: Active
                       </span>
                     )}
+                    {paymentMethod === "split" && (parseFloat(splitPayment.online) || 0) > 0 && (
+                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-xs flex items-center gap-1">
+                        <QrCode size={10} />
+                        UPI: ₹{(parseFloat(splitPayment.online) || 0).toFixed(0)}
+                      </span>
+                    )}
                   </div>
-                  <div className="grid grid-cols-4 gap-1 text-[10px]">
+                  <div className="grid grid-cols-5 gap-1 text-[10px]">
                     {[
                       { id: "cash", label: "CASH" },
                       { id: "upi", label: "UPI" },
                       { id: "card", label: "CARD" },
-                      { id: "netbanking", label: "NET" }
+                      { id: "netbanking", label: "NET" },
+                      { id: "split", label: "SPLIT" }
                     ].map((pm) => (
                       <button
                         key={pm.id}
                         type="button"
-                        onClick={() => setPaymentMethod(pm.id)}
+                        onClick={() => {
+                          setPaymentMethod(pm.id);
+                          if (pm.id === "split" && !splitPayment.cash && !splitPayment.online) {
+                            setSplitPayment({ cash: grandTotal > 0 ? grandTotal : "", online: "", lastEdited: "cash" });
+                          }
+                        }}
                         className={`py-1 rounded-xs border font-bold transition-all text-center cursor-pointer ${
                           paymentMethod === pm.id
                             ? "bg-zinc-900 text-white border-zinc-900 shadow-xs"
@@ -2485,6 +2661,111 @@ export default function NewBillingPage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Animated Split Payment Breakdown Drawer */}
+                  <AnimatePresence initial={false}>
+                    {paymentMethod === "split" && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden pt-2"
+                      >
+                        <div className="p-2.5 bg-white rounded-xs border border-zinc-200 shadow-2xs space-y-2 font-mono">
+                          <div className="flex items-center justify-between text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">
+                            <span>Split Details</span>
+                            {/* <span className="text-zinc-900 font-bold">Total: ₹{grandTotal.toFixed(2)}</span> */}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            {/* Cash Input */}
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-zinc-700 block">
+                                Cash Portion:
+                              </label>
+                              <div className="relative flex items-center">
+                                <span className="absolute left-2 text-[10px] text-zinc-400 font-mono pointer-events-none">₹</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max={grandTotal}
+                                  step="any"
+                                  placeholder="0"
+                                  value={splitPayment.cash}
+                                  onChange={(e) => {
+                                    const valStr = e.target.value;
+                                    if (valStr === "") {
+                                      setSplitPayment({
+                                        cash: "",
+                                        online: grandTotal > 0 ? grandTotal : "",
+                                        lastEdited: "cash"
+                                      });
+                                      return;
+                                    }
+                                    const val = parseFloat(valStr);
+                                    if (!isNaN(val) && val >= 0) {
+                                      const cappedCash = Math.min(grandTotal, val);
+                                      const remainingOnline = Math.max(0, Math.round((grandTotal - cappedCash) * 100) / 100);
+                                      setSplitPayment({
+                                        cash: val > grandTotal ? grandTotal : valStr,
+                                        online: remainingOnline > 0 ? remainingOnline : 0,
+                                        lastEdited: "cash"
+                                      });
+                                    }
+                                  }}
+                                  className="w-full pl-5 pr-2 py-1 rounded-xs text-[11px] font-mono border border-zinc-250 focus:outline-none focus:border-zinc-900 transition-all bg-zinc-50/60 focus:bg-white text-zinc-900 font-bold"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Online / UPI Input */}
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                                <QrCode size={10} />
+                                <span>Online (upi):</span>
+                              </label>
+                              <div className="relative flex items-center">
+                                <span className="absolute left-2 text-[10px] text-zinc-400 font-mono pointer-events-none">₹</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max={grandTotal}
+                                  step="any"
+                                  placeholder="0"
+                                  value={splitPayment.online}
+                                  onChange={(e) => {
+                                    const valStr = e.target.value;
+                                    if (valStr === "") {
+                                      setSplitPayment({
+                                        online: "",
+                                        cash: grandTotal > 0 ? grandTotal : "",
+                                        lastEdited: "online"
+                                      });
+                                      return;
+                                    }
+                                    const val = parseFloat(valStr);
+                                    if (!isNaN(val) && val >= 0) {
+                                      const cappedOnline = Math.min(grandTotal, val);
+                                      const remainingCash = Math.max(0, Math.round((grandTotal - cappedOnline) * 100) / 100);
+                                      setSplitPayment({
+                                        online: val > grandTotal ? grandTotal : valStr,
+                                        cash: remainingCash > 0 ? remainingCash : 0,
+                                        lastEdited: "online"
+                                      });
+                                    }
+                                  }}
+                                  className="w-full pl-5 pr-2 py-1 rounded-xs text-[11px] font-mono border border-emerald-300 focus:outline-none focus:border-emerald-600 transition-all bg-emerald-50/40 focus:bg-white text-emerald-950 font-bold"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                      
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Bill Math Summary Table */}
@@ -2493,22 +2774,59 @@ export default function NewBillingPage() {
                     <span>Subtotal:</span>
                     <span>₹{subtotal.toFixed(2)}</span>
                   </div>
-                  {effectiveDiscount > 0 && (
-                    <div className="flex justify-between text-emerald-600 font-medium">
-                      <span>Discount ({effectiveDiscount}%):</span>
-                      <span>-₹{discountAmount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {roundOff !== 0 && (
-                    <div className="flex justify-between text-zinc-400 text-[10px]">
-                      <span>Round Off:</span>
-                      <span>{roundOff >= 0 ? `+₹${roundOff.toFixed(2)}` : `-₹${Math.abs(roundOff).toFixed(2)}`}</span>
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {discountAmount > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex justify-between text-emerald-600 font-medium py-0.5">
+                          <span>Discount ({discountType === "flat" ? "Flat" : `${effectiveDiscount}%`}):</span>
+                          <span>-₹{discountAmount.toFixed(2)}</span>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <AnimatePresence initial={false}>
+                    {roundOff !== 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex justify-between text-zinc-400 text-[10px] py-0.5">
+                          <span>Round Off:</span>
+                          <span>{roundOff >= 0 ? `+₹${roundOff.toFixed(2)}` : `-₹${Math.abs(roundOff).toFixed(2)}`}</span>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   <div className="flex justify-between text-sm font-bold text-zinc-950 pt-1.5 border-t border-zinc-200">
                     <span>Grand Total:</span>
                     <span className="text-base text-zinc-950 font-mono">₹{grandTotal.toFixed(2)}</span>
                   </div>
+
+                  {/* Split Summary Breakdown */}
+                  {paymentMethod === "split" && (
+                    <div className="pt-1.5 border-t border-dashed border-zinc-200 space-y-0.5 text-[10px]">
+                      <div className="flex justify-between text-zinc-600">
+                        <span>Paid Cash:</span>
+                        <span className="font-mono">₹{(parseFloat(splitPayment.cash) || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-emerald-700 font-medium">
+                        <span className="flex items-center gap-1">
+                          <QrCode size={10} />
+                          <span>Paid Online (UPI):</span>
+                        </span>
+                        <span className="font-mono">₹{(parseFloat(splitPayment.online) || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Process & Print Magnet Restro Invoice Button */}
@@ -3196,7 +3514,7 @@ export default function NewBillingPage() {
                           localStorage.setItem("pos_store_settings", JSON.stringify(merged));
                           await saveBranchesToServer(branches, activeBranch);
                           setShowSettingsModal(false);
-                          toast.success("Saved Location & Store Settings to Server!");
+                          toast.success("Saved Location & Store Settings to Convex Database!");
                         }}
                         className="space-y-3 font-sans"
                       >
