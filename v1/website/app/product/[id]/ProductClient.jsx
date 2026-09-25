@@ -809,7 +809,7 @@ export default function ProductClient({ params, initialProduct }) {
                 <span className="text-[11px] text-zinc-400 line-through font-mono">
                   ₹{pricing.originalPrice.toLocaleString('en-IN')}
                 </span>
-                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded tracking-wide">
+                <span className="text-[9px] font-bold text-emerald-600  px-1.5 py-0.5 rounded tracking-wide">
                   {pricing.discountPercent}% OFF
                 </span>
               </>
