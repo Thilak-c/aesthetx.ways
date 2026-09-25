@@ -259,7 +259,12 @@ export default function HomeClient() {
 
   const handleQuickAddToCart = (product, selectedSize) => {
     if (typeof window !== 'undefined' && product) {
-      const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+      let cart = [];
+      try {
+        cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+      } catch (e) {
+        cart = [];
+      }
       const existingIndex = cart.findIndex(
         (item) => item.productId === product.itemId && item.size === selectedSize
       );
@@ -279,6 +284,7 @@ export default function HomeClient() {
       }
 
       localStorage.setItem('aw_cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('cart-updated'));
 
       trackEvent('action', 'add_to_cart', {
         productId: product.itemId,
@@ -568,7 +574,12 @@ export default function HomeClient() {
   useEffect(() => {
     function updateCartCount() {
       if (typeof window !== 'undefined') {
-        const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+        let cart = [];
+        try {
+          cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+        } catch (e) {
+          cart = [];
+        }
         const count = cart.reduce((sum, item) => sum + item.quantity, 0);
         setCartCount(count);
       }

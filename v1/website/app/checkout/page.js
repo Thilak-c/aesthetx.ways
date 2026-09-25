@@ -8,6 +8,7 @@ import { getCachedImage } from '@/lib/mediaCache';
 import Confetti from '@/components/Confetti';
 import FallbackImage from '@/components/FallbackImage';
 import { trackEvent } from '@/lib/analytics';
+import { getProductPricing } from '@/lib/pricing';
 
 const SIZE_MAP = {
   S: '28',
@@ -150,7 +151,12 @@ export default function CheckoutPage() {
   // Load cart and check for existing session
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+      let cart = [];
+      try {
+        cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+      } catch (e) {
+        cart = [];
+      }
       if (cart.length === 0) {
         router.push('/cart');
         return;
@@ -329,7 +335,16 @@ export default function CheckoutPage() {
   const itemsSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const isFreeShipping = itemsSubtotal >= 1000 || itemsSubtotal <= 1;
   const shippingCost = isFreeShipping ? 0 : 70;
+  const protectPromiseFee = totalItems * 9;
   
+  // Total MRP and savings calculation
+  const totalMRP = cartItems.reduce((sum, item) => {
+    if (item.productId === 'aw-carry-bag') return sum + item.price * item.quantity;
+    const pricing = getProductPricing(item.price, item.productId);
+    return sum + (pricing.originalPrice || item.price) * item.quantity;
+  }, 0);
+  const totalBagDiscount = Math.max(0, totalMRP - itemsSubtotal);
+
   let couponDiscount = 0;
   if (appliedCoupon) {
     if (appliedCoupon.code === 'AESTHETX10') {
@@ -341,7 +356,8 @@ export default function CheckoutPage() {
     }
   }
   
-  const estimatedTotal = Math.max(0, itemsSubtotal + shippingCost - couponDiscount);
+  const estimatedTotal = Math.max(0, itemsSubtotal + shippingCost + protectPromiseFee - couponDiscount);
+  const totalSavings = totalBagDiscount + couponDiscount + (itemsSubtotal >= 1000 ? 70 : 0);
 
   const handleApplyCouponInCheckout = () => {
     const code = couponInput.trim().toUpperCase();
@@ -394,6 +410,29 @@ export default function CheckoutPage() {
 
     try {
       setPlacingOrder(true);
+
+      // Pre-flight stock check before payment initiation
+      try {
+        const prodRes = await fetch(`/api/products?t=${Date.now()}`, { cache: 'no-store' });
+        const prodData = await prodRes.json();
+        if (prodData.success && prodData.products) {
+          for (const item of cartItems) {
+            if (item.productId === 'aw-carry-bag') continue;
+            const p = prodData.products.find(prod => prod.itemId === item.productId);
+            if (p && p.sizeStock) {
+              const currentStock = p.sizeStock[item.size] || 0;
+              if (currentStock < item.quantity) {
+                alert(`Insufficient stock for ${item.name} (${item.size}). Only ${currentStock} available.`);
+                setPlacingOrder(false);
+                router.push('/cart');
+                return;
+              }
+            }
+          }
+        }
+      } catch (checkErr) {
+        console.warn('Pre-flight stock verification skipped:', checkErr);
+      }
 
       const payAmount = estimatedTotal;
 
@@ -884,6 +923,23 @@ export default function CheckoutPage() {
 
             {/* Bill Summary Rows */}
             <div className="flex flex-col gap-1.5 pt-1">
+              {totalBagDiscount > 0 && (
+                <>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-500 font-normal">Total MRP</span>
+                    <span className="font-semibold text-zinc-400 font-mono text-sm shrink-0 text-right pr-1 line-through">
+                      {formatPrice(totalMRP)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-green-600">
+                    <span className="font-normal">Bag Discount</span>
+                    <span className="font-semibold font-mono text-sm shrink-0 text-right pr-1">
+                      -{formatPrice(totalBagDiscount)}
+                    </span>
+                  </div>
+                </>
+              )}
+
               {/* 1. Subtotal · X items */}
               <div className="flex justify-between items-center text-sm">
                 <span className="text-zinc-700 font-normal">
@@ -908,22 +964,36 @@ export default function CheckoutPage() {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-zinc-700 font-normal flex items-center gap-1">
                   Shipping
-                  <span className="w-3.5 h-3.5 rounded-full border border-zinc-300 text-[9px] text-zinc-400 flex items-center justify-center font-bold select-none">
-                    ?
-                  </span>
                 </span>
-                <span className="font-semibold text-black text-sm shrink-0 text-right pr-1">
+                <span className="font-semibold text-black text-sm shrink-0 text-right pr-1 font-mono">
                   {isFreeShipping ? 'FREE' : formatPrice(shippingCost)}
                 </span>
               </div>
 
-              {/* 3. Total */}
+              {/* 3. Protect Promise Fee */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-zinc-700 font-normal">
+                  Protect Promise Fee ({totalItems} {totalItems === 1 ? 'item' : 'items'} × ₹9)
+                </span>
+                <span className="font-semibold text-black text-sm shrink-0 text-right pr-1 font-mono">
+                  {formatPrice(protectPromiseFee)}
+                </span>
+              </div>
+
+              {/* 4. Total */}
               <div className="flex justify-between items-center pt-2 border-t border-zinc-100">
                 <span className="text-base font-bold text-black">Total</span>
                 <span className="text-base font-bold text-black font-mono shrink-0 text-right pr-1">
                   {formatPrice(estimatedTotal)}
                 </span>
               </div>
+
+              {totalSavings > 0 && (
+                <div className="bg-emerald-50 border border-dashed border-emerald-300 rounded px-2.5 py-1.5 flex items-center justify-between text-[11px] font-bold text-emerald-700 tracking-wide mt-1 select-none">
+                  <span>Total Savings on this order</span>
+                  <span className="font-mono">{formatPrice(totalSavings)}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -959,10 +1029,22 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Total Item Price */}
-                  <div className="shrink-0 text-right flex items-center pl-2">
+                  <div className="shrink-0 text-right flex flex-col items-end pl-2">
                     <span className="text-[13.5px] font-semibold text-black font-mono select-none shrink-0 pr-1">
                       {formatPrice(item.price * item.quantity)}
                     </span>
+                    {(() => {
+                      if (item.productId === 'aw-carry-bag') return null;
+                      const p = getProductPricing(item.price, item.productId);
+                      if (p.originalPrice > item.price) {
+                        return (
+                          <span className="text-[11px] text-zinc-400 line-through font-mono pr-1 select-none">
+                            {formatPrice(p.originalPrice * item.quantity)}
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </div>
               ))}

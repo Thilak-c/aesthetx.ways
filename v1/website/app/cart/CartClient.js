@@ -10,6 +10,7 @@ import { OdometerNumber } from '@/components/SplashWrapper';
 import Footer from '@/components/Footer';
 import SuggestionBar from '@/components/SuggestionBar';
 import { trackEvent } from '@/lib/analytics';
+import { getProductPricing } from '@/lib/pricing';
 
 const SIZE_MAP = {
   S: '28',
@@ -69,17 +70,26 @@ export default function CartClient() {
   // Load cart from local storage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
-      const savedCoupon = localStorage.getItem('aw_coupon');
+      let cart = [];
+      let savedCoupon = null;
+      try {
+        cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+      } catch (e) {
+        cart = [];
+      }
+      try {
+        const rawCoupon = localStorage.getItem('aw_coupon');
+        if (rawCoupon) {
+          savedCoupon = JSON.parse(rawCoupon);
+        }
+      } catch (e) {
+        savedCoupon = null;
+      }
       
       const timer = setTimeout(() => {
         setCartItems(cart);
         if (savedCoupon) {
-          try {
-            setAppliedCoupon(JSON.parse(savedCoupon));
-          } catch (e) {
-            console.error(e);
-          }
+          setAppliedCoupon(savedCoupon);
         }
         setLoading(false);
       }, 0);
@@ -113,10 +123,10 @@ export default function CartClient() {
   };
 
   const removeItem = (productId, size) => {
-    const itemToRemove = cartItems.find(item => item.productId === productId && item.size === size);
-    const filtered = cartItems.filter(
-      (item) => !(item.productId === productId && item.size === size)
-    );
+    const itemIndex = cartItems.findIndex(item => item.productId === productId && item.size === size);
+    if (itemIndex === -1) return;
+    const itemToRemove = cartItems[itemIndex];
+    const filtered = cartItems.filter((_, idx) => idx !== itemIndex);
     saveCart(filtered);
     if (itemToRemove) {
       trackEvent('action', 'remove_from_cart', {
@@ -139,6 +149,14 @@ export default function CartClient() {
   
   // free delivery if items subtotal is >= 1000
   const freeDeliveryDiscount = itemsSubtotal >= 1000 ? -70 : 0;
+
+  // Total MRP and savings calculation
+  const totalMRP = cartItems.reduce((sum, item) => {
+    if (item.productId === 'aw-carry-bag') return sum + item.price * item.quantity;
+    const pricing = getProductPricing(item.price, item.productId);
+    return sum + (pricing.originalPrice || item.price) * item.quantity;
+  }, 0);
+  const totalBagDiscount = Math.max(0, totalMRP - itemsSubtotal);
   
   // coupon discount calculation
   let couponDiscount = 0;
@@ -152,7 +170,17 @@ export default function CartClient() {
     }
   }
   
+  // Auto-remove FIRSTORDER coupon if items subtotal falls below 500
+  useEffect(() => {
+    if (appliedCoupon?.code === 'FIRSTORDER' && itemsSubtotal < 500 && !loading) {
+      setAppliedCoupon(null);
+      localStorage.removeItem('aw_coupon');
+      setCouponError('FIRSTORDER removed: Minimum order value ₹500 required.');
+    }
+  }, [itemsSubtotal, appliedCoupon, loading]);
+
   const estimatedTotal = orderSubtotal + freeDeliveryDiscount - couponDiscount;
+  const totalSavings = totalBagDiscount + couponDiscount + (itemsSubtotal >= 1000 ? 70 : 0);
 
   const triggerCouponError = (msg) => {
     setCouponError(msg);
@@ -303,7 +331,7 @@ export default function CartClient() {
               return (
                 <div 
                   key={`${item.productId}-${item.size}-${idx}`}
-                  className={`flex gap-3.5 py-3.5 border-b border-zinc-150 last:border-b-0 transition-all duration-400 ease-out origin-right ${
+                  className={`flex gap-3.5  border-b border-zinc-200/50 last:border-b-0 transition-all duration-400 ease-out origin-right ${
                     isDeleting 
                       ? 'translate-x-full opacity-0 max-h-0 py-0 border-b-0 overflow-hidden pointer-events-none' 
                       : ''
@@ -339,16 +367,43 @@ export default function CartClient() {
                         <span className="text-[10px] tracking-wider uppercase text-zinc-500 font-bold block mt-1">
                           Size: {getDisplaySize(item.size, item.sizeDisplayType)}
                         </span>
-                        <div className="text-[10px] text-zinc-500 font-bold flex items-center gap-1 mt-1 font-mono select-none">
-                          <OdometerNumber value={`₹${item.price.toLocaleString('en-IN')}`} className="text-[10px] font-bold font-mono text-zinc-500" />
+                        <div className="text-[10px] text-zinc-500 font-bold flex items-center gap-1.5 mt-1 font-mono select-none flex-wrap">
+                          <OdometerNumber value={`₹${item.price.toLocaleString('en-IN')}`} className="text-[10px] font-bold font-mono text-zinc-700" />
+                          {(() => {
+                            if (item.productId === 'aw-carry-bag') return null;
+                            const p = getProductPricing(item.price, item.productId);
+                            if (p.originalPrice > item.price) {
+                              return (
+                                <>
+                                  <span className="text-[9px] text-zinc-400 line-through">₹{p.originalPrice.toLocaleString('en-IN')}</span>
+                                  <span className="text-[8px] font-bold text-emerald-600  px-1 py-0.2 rounded">{p.discountPercent}% OFF</span>
+                                </>
+                              );
+                            }
+                            return null;
+                          })()}
                           <span>×</span>
                           <OdometerNumber value={item.quantity} className="text-[10px] font-bold font-mono text-zinc-500" />
                         </div>
                       </Link>
                       
                       <div className="flex flex-col items-end justify-between min-h-[64px] shrink-0">
-                        <div className="flex items-center text-xs sm:text-[13px] font-black text-black font-mono select-none">
-                          <OdometerNumber value={`₹${(item.price * item.quantity).toLocaleString('en-IN')}`} className="text-xs sm:text-[13px] font-black text-black font-mono" />
+                        <div className="flex flex-col items-end font-mono select-none">
+                          <div className="flex items-center text-xs sm:text-[13px] font-black text-black">
+                            <OdometerNumber value={`₹${(item.price * item.quantity).toLocaleString('en-IN')}`} className="text-xs sm:text-[13px] font-black text-black font-mono" />
+                          </div>
+                          {(() => {
+                            if (item.productId === 'aw-carry-bag') return null;
+                            const p = getProductPricing(item.price, item.productId);
+                            if (p.originalPrice > item.price) {
+                              return (
+                                <span className="text-[10px] text-zinc-400 line-through">
+                                  ₹{(p.originalPrice * item.quantity).toLocaleString('en-IN')}
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                         <button 
                           onClick={() => handleDeleteClick(item.productId, item.size)}
@@ -416,17 +471,25 @@ export default function CartClient() {
                     onClick={() => {
                       setBagExiting(true);
                       setTimeout(() => {
-                        const newItem = {
-                          productId: 'aw-carry-bag',
-                          name: 'Aesthetx Ways Bag',
-                          price: 20,
-                          quantity: 1,
-                          size: 'One Size',
-                          image: '/icons/bag.png',
-                          color: 'Default',
-                        };
+                        const existingBagIdx = cartItems.findIndex(item => item.productId === 'aw-carry-bag');
+                        let updated;
+                        if (existingBagIdx > -1) {
+                          updated = cartItems.map((item, idx) => 
+                            idx === existingBagIdx ? { ...item, quantity: item.quantity + 1 } : item
+                          );
+                        } else {
+                          const newItem = {
+                            productId: 'aw-carry-bag',
+                            name: 'Aesthetx Ways Bag',
+                            price: 20,
+                            quantity: 1,
+                            size: 'One Size',
+                            image: '/icons/bag.png',
+                            color: 'Default',
+                          };
+                          updated = [...cartItems, newItem];
+                        }
                         setAnimateNewBag(true);
-                        const updated = [...cartItems, newItem];
                         saveCart(updated);
                         setBagExiting(false);
                       }, 500);
@@ -440,7 +503,21 @@ export default function CartClient() {
             })()}
 
             {/* Price Calculations */}
-            <div className="pt-5 flex flex-col gap-3">
+            <div className="pt-5 flex flex-col gap-1">
+              {/* Total MRP and Bag Discount if applicable */}
+              {totalBagDiscount > 0 && (
+                <>
+                  <div className="flex justify-between items-center text-xs uppercase font-medium text-zinc-500">
+                    <span>Total MRP</span>
+                    <span className="text-xs font-bold font-mono text-zinc-400 line-through">₹{totalMRP.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs uppercase font-bold text-emerald-600 select-none">
+                    <span>Bag Discount</span>
+                    <span className="text-xs font-bold font-mono text-emerald-600">-₹{totalBagDiscount.toLocaleString('en-IN')}</span>
+                  </div>
+                </>
+              )}
+
               {/* Item subtotal */}
               <div className="flex justify-between items-center text-xs uppercase font-bold text-zinc-900">
                 <span>Items Subtotal</span>
@@ -520,6 +597,14 @@ export default function CartClient() {
                 <span className="text-xs sm:text-sm uppercase font-black text-black tracking-widest">Total</span>
                 <OdometerNumber value={`₹${estimatedTotal.toLocaleString('en-IN')}`} className="text-[15px] sm:text-lg  font-black text-black font-mono" />
               </div>
+
+              {/* Total Savings Badge */}
+              {totalSavings > 0 && (
+                <div className="bg-emerald-50 border border-dashed border-emerald-300 rounded px-2.5 py-1.5 flex items-center justify-between text-[11px] font-bold text-emerald-700 tracking-wide mt-1 select-none">
+                  <span>Total Savings on this order</span>
+                  <span className="font-mono">₹{totalSavings.toLocaleString('en-IN')}</span>
+                </div>
+              )}
 
               {/* Have a Promo Code? Input Section (Located below the Estimated Total) */}
               {!appliedCoupon && (

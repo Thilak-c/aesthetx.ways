@@ -35,6 +35,30 @@ export async function POST(request) {
       if (generatedSignature !== razorpaySignature) {
         return NextResponse.json({ success: false, message: 'Payment verification failed: invalid signature' }, { status: 400 });
       }
+
+      // 1b. Verify that the payment amount on Razorpay matches orderTotal
+      const keyId = process.env.RAZORPAY_KEY_ID;
+      if (keyId && secret) {
+        try {
+          const rzpRes = await fetch(`https://api.razorpay.com/v1/payments/${razorpayPaymentId}`, {
+            headers: {
+              'Authorization': 'Basic ' + Buffer.from(keyId + ':' + secret).toString('base64'),
+            },
+          });
+          if (rzpRes.ok) {
+            const payData = await rzpRes.json();
+            const paidInRupees = Math.round(payData.amount / 100);
+            if (paidInRupees !== Math.round(orderTotal)) {
+              return NextResponse.json({ 
+                success: false, 
+                message: `Payment amount mismatch: paid ₹${paidInRupees}, expected ₹${orderTotal}` 
+              }, { status: 400 });
+            }
+          }
+        } catch (verErr) {
+          console.error('Razorpay payment amount verification error:', verErr);
+        }
+      }
     } else {
       return NextResponse.json({ success: false, message: 'Payment verification failed: missing payment identifiers' }, { status: 400 });
     }

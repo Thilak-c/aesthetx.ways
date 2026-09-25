@@ -5,39 +5,39 @@ import { createPortal } from 'react-dom';
 
 import { usePathname } from 'next/navigation';
 
-// Odometer Number Component with faded top/bottom overlays to blend the digits
+// Odometer Number Component with fluid, scalable dimensions that adapt to any font size
 export function OdometerNumber({ value, className = "" }) {
   const digits = value.toString().split('');
 
   return (
-    <div className={`inline-flex relative h-5 overflow-hidden select-none bg-transparent ${className}`}>
+    <span className={`inline-flex items-center relative h-[1.25em] leading-[1.25em] overflow-hidden select-none bg-transparent align-middle ${className}`}>
       {digits.map((digit, idx) => {
-        const isDigit = !isNaN(parseInt(digit));
+        const isDigit = !isNaN(parseInt(digit)) && digit !== ' ';
         if (!isDigit) {
           return (
-            <span key={idx} className="h-5 leading-5 text-center block px-0.5 select-none font-bold">
+            <span key={idx} className="h-[1.25em] leading-[1.25em] text-center inline-flex items-center justify-center select-none">
               {digit}
             </span>
           );
         }
         return (
-          <div key={idx} className="relative h-5 w-2 overflow-hidden">
-            <div
-              className="flex flex-col transition-transform duration-500 ease-out"
+          <span key={idx} className="relative h-[1.25em] w-[1.1ch] overflow-hidden inline-block shrink-0">
+            <span
+              className="flex flex-col transition-transform duration-500 ease-out will-change-transform"
               style={{
-                transform: `translateY(-${parseInt(digit) * 20}px)`
+                transform: `translateY(-${parseInt(digit) * 10}%)`
               }}
             >
               {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <span key={num} className="h-5 leading-5 text-center block font-bold">
+                <span key={num} className="h-[1.25em] leading-[1.25em] text-center block select-none">
                   {num}
                 </span>
               ))}
-            </div>
-          </div>
+            </span>
+          </span>
         );
       })}
-    </div>
+    </span>
   );
 }
 

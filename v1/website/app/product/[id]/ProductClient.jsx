@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,7 @@ import FallbackImage from '@/components/FallbackImage';
 import SuggestionBar from '@/components/SuggestionBar';
 import Footer from '@/components/Footer';
 import { trackEvent } from '@/lib/analytics';
+import { getProductPricing } from '@/lib/pricing';
 
 const SIZE_MAP = {
   S: '28',
@@ -128,6 +129,10 @@ export default function ProductClient({ params, initialProduct }) {
   const [loading, setLoading] = useState(initialProduct ? false : true);
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
+
+  const pricing = useMemo(() => {
+    return product ? getProductPricing(product) : null;
+  }, [product]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const sliderRef = useRef(null);
   const isScrollingRef = useRef(false);
@@ -147,12 +152,13 @@ export default function ProductClient({ params, initialProduct }) {
   // Load wishlist status on product change
   useEffect(() => {
     if (typeof window !== 'undefined' && product) {
-      const wishlist = JSON.parse(localStorage.getItem('aw_wishlist') || '[]');
-      const isFav = wishlist.includes(product.itemId);
-      const timer = setTimeout(() => {
+      try {
+        const wishlist = JSON.parse(localStorage.getItem('aw_wishlist') || '[]');
+        const isFav = wishlist.includes(product.itemId);
         setIsFavorited(isFav);
-      }, 0);
-      return () => clearTimeout(timer);
+      } catch (e) {
+        setIsFavorited(false);
+      }
     }
   }, [product]);
 
@@ -255,36 +261,38 @@ export default function ProductClient({ params, initialProduct }) {
     });
   }, []);
 
-  // Fetch product data
+  // Auto-select size if product is loaded
   useEffect(() => {
     if (product) {
-      const timer = setTimeout(() => {
-        if (loading) {
-          setLoading(false);
-        }
-        // Auto-select size if it's a free-size product (socks, caps, cap, or sizeDisplayType is free)
-        const catLower = product.category?.toLowerCase().trim();
-        const isFreeSize = product.sizeDisplayType === 'free' || 
-                           catLower === 'socks' || 
-                           catLower === 'cap' || 
-                           catLower === 'caps' ||
-                           (product.availableSizes?.length === 1 && product.availableSizes?.[0] === 'OS');
+      if (loading) {
+        setLoading(false);
+      }
+      const catLower = product.category?.toLowerCase().trim();
+      const isFreeSize = product.sizeDisplayType === 'free' || 
+                         catLower === 'socks' || 
+                         catLower === 'cap' || 
+                         catLower === 'caps' ||
+                         (product.availableSizes?.length === 1 && product.availableSizes?.[0] === 'OS');
 
-        if (isFreeSize && product.availableSizes?.includes('OS')) {
-          setSelectedSize('OS');
-        } else if (isFreeSize && product.availableSizes?.length === 1) {
-          setSelectedSize(product.availableSizes[0]);
-        }
-      }, 0);
-      return () => clearTimeout(timer);
+      if (isFreeSize && product.availableSizes?.includes('OS')) {
+        setSelectedSize('OS');
+      } else if (isFreeSize && product.availableSizes?.length === 1) {
+        setSelectedSize(product.availableSizes[0]);
+      }
     }
+  }, [product, loading]);
 
+  // Fetch product data only if not provided initially
+  useEffect(() => {
+    if (product) return;
+
+    let isMounted = true;
     async function fetchProduct() {
       try {
         setLoading(true);
         const res = await fetch(`/api/products`);
         const data = await res.json();
-        if (data.success) {
+        if (data.success && isMounted) {
           let found = data.products.find(p => p.itemId === id);
           if (!found && id === 'aw-carry-bag') {
             found = {
@@ -305,22 +313,6 @@ export default function ProductClient({ params, initialProduct }) {
           }
           if (found) {
             setProduct(found);
-
-            // Auto-select size if it's a free-size product (socks, caps, cap, or sizeDisplayType is free)
-            const catLower = found.category?.toLowerCase().trim();
-            const isFreeSize = found.sizeDisplayType === 'free' || 
-                               catLower === 'socks' || 
-                               catLower === 'cap' || 
-                               catLower === 'caps' ||
-                               (found.availableSizes?.length === 1 && found.availableSizes?.[0] === 'OS');
-
-            if (isFreeSize && found.availableSizes?.includes('OS')) {
-              setSelectedSize('OS');
-            } else if (isFreeSize && found.availableSizes?.length === 1) {
-              setSelectedSize(found.availableSizes[0]);
-            }
-
-            // Pre-cache main and other images in the background
             getCachedImage(found.itemId, found.mainImage);
             if (found.otherImages) {
               found.otherImages.forEach((img, idx) => {
@@ -332,17 +324,28 @@ export default function ProductClient({ params, initialProduct }) {
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
     fetchProduct();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id, product]);
 
   // Load cart count & cleanup timer
   useEffect(() => {
     function updateCartCount() {
       if (typeof window !== 'undefined') {
-        const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+        let cart = [];
+        try {
+          cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+        } catch (e) {
+          cart = [];
+        }
         const count = cart.reduce((sum, item) => sum + item.quantity, 0);
         setCartCount(count);
       }
@@ -448,7 +451,12 @@ export default function ProductClient({ params, initialProduct }) {
 
     // Step 2: "Add anyway" clicked (nudge is active and button clicked again)
     if (typeof window !== 'undefined' && product) {
-      const cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+      let cart = [];
+      try {
+        cart = JSON.parse(localStorage.getItem('aw_cart') || '[]');
+      } catch (e) {
+        cart = [];
+      }
       const existingIndex = cart.findIndex(
         (item) => item.productId === product.itemId && item.size === selectedSize
       );
@@ -792,9 +800,21 @@ export default function ProductClient({ params, initialProduct }) {
           <h1 className="text-sm font-bold tracking-wide uppercase text-black mt-1">
             {product.name}
           </h1>
-          <span className="text-[11px] font-bold text-black mt-1">
-            ₹{product.price.toLocaleString('en-IN')}
-          </span>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <span className="text-xs font-bold text-black font-mono">
+              ₹{product.price.toLocaleString('en-IN')}
+            </span>
+            {pricing && pricing.originalPrice > product.price && (
+              <>
+                <span className="text-[11px] text-zinc-400 line-through font-mono">
+                  ₹{pricing.originalPrice.toLocaleString('en-IN')}
+                </span>
+                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded tracking-wide">
+                  {pricing.discountPercent}% OFF
+                </span>
+              </>
+            )}
+          </div>
 
           <div className="mt-4 border-t border-zinc-100 pt-3">
             <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-medium">Color</span>
@@ -894,11 +914,16 @@ export default function ProductClient({ params, initialProduct }) {
       <div className="fixed bottom-11 left-0 right-0 z-40 bg-white border-t border-zinc-100 px-4 py-3 flex items-center justify-between max-w-[430px] mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
         <div className="flex flex-col">
           <span className="text-[8px] uppercase text-zinc-400 font-medium tracking-wider">Total Price</span>
-          <div className="flex items-center mt-0.5">
+          <div className="flex items-center gap-1.5 mt-0.5">
             <OdometerNumber
               value={`₹${(product.price * quantity).toLocaleString('en-IN')}`}
               className="text-xs font-bold text-black"
             />
+            {pricing && pricing.originalPrice > product.price && (
+              <span className="text-[10px] text-zinc-400 line-through font-mono">
+                ₹{(pricing.originalPrice * quantity).toLocaleString('en-IN')}
+              </span>
+            )}
           </div>
         </div>
         <button

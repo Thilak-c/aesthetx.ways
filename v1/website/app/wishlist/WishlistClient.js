@@ -22,7 +22,12 @@ export default function WishlistClient() {
       try {
         setLoading(true);
         // Load wishlisted IDs
-        const savedWishlist = JSON.parse(localStorage.getItem('aw_wishlist') || '[]');
+        let savedWishlist = [];
+        try {
+          savedWishlist = JSON.parse(localStorage.getItem('aw_wishlist') || '[]');
+        } catch (e) {
+          savedWishlist = [];
+        }
         setWishlistIds(savedWishlist);
 
         // Fetch products
@@ -129,12 +134,12 @@ export default function WishlistClient() {
               {wishlistedProducts.map((product) => {
                 return (
                   <div key={product._id} className="group flex flex-col relative">
-                    <Link href={`/product/${product.itemId}`} className="flex flex-col relative">
-                      <div className="relative w-full aspect-[4/5] bg-zinc-50 overflow-hidden rounded-[2px] border border-zinc-100">
+                    <div className="relative w-full aspect-[4/5] bg-zinc-50 overflow-hidden rounded-[2px] border border-zinc-100">
+                      <Link href={`/product/${product.itemId}`} className="block w-full h-full">
                         <FallbackImage
                           src={getCachedImage(product.itemId, product.mainImage)}
                           alt={product.name}
-                          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.02] ${!product.inStock ? 'blur-[3px] grayscale-[20%]' : ''}`}
+                          className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.02] ${!product.inStock ? 'blur-[3px] grayscale-[20%]' : ''}`}
                         />
                         {!product.inStock && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 pointer-events-none">
@@ -143,28 +148,29 @@ export default function WishlistClient() {
                             </span>
                           </div>
                         )}
+                      </Link>
 
-                        {/* Remove from Wishlist icon button */}
-                        <button
-                          onClick={(e) => handleRemoveFromWishlist(product.itemId, e)}
-                          className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/80 hover:bg-white text-red-500 hover:text-red-600 flex items-center justify-center shadow-md transition-transform duration-300 active:scale-95 cursor-pointer"
-                          aria-label="Remove from wishlist"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      
-                      <div className="mt-2 flex flex-col flex-1">
-                        <h3 className="text-[10px] font-bold tracking-wide uppercase text-black line-clamp-1">
-                          {product.name}
-                        </h3>
-                        <span className="text-[8px] text-zinc-400 uppercase tracking-wider font-medium mt-0.5">
-                          {product.category}
-                        </span>
-                        <span className="text-[9px] font-semibold text-black mt-1">
-                          ₹{product.price.toLocaleString('en-IN')}
-                        </span>
-                      </div>
+                      {/* Remove from Wishlist icon button - Sibling to avoid invalid nested link */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemoveFromWishlist(product.itemId, e)}
+                        className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/80 hover:bg-white text-red-500 hover:text-red-600 flex items-center justify-center shadow-md transition-transform duration-300 active:scale-95 cursor-pointer"
+                        aria-label="Remove from wishlist"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    
+                    <Link href={`/product/${product.itemId}`} className="mt-2 flex flex-col flex-1">
+                      <h3 className="text-[10px] font-bold tracking-wide uppercase text-black line-clamp-1">
+                        {product.name}
+                      </h3>
+                      <span className="text-[8px] text-zinc-400 uppercase tracking-wider font-medium mt-0.5">
+                        {product.category}
+                      </span>
+                      <span className="text-[9px] font-semibold text-black mt-1">
+                        ₹{product.price.toLocaleString('en-IN')}
+                      </span>
                     </Link>
                   </div>
                 );
