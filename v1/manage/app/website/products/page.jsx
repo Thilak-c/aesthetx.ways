@@ -48,7 +48,7 @@ const MAIN_CATEGORIES = [
 
 const CATEGORY_MAP = {
   footwear: ["Shoes", "boots", "sandals", "sneakers"],
-  apparel: ["Shirts", "t-shirts", "jackets", "pants", "dresses", "socks", "jersey", "jerseys"],
+  apparel: ["Shirts", "t-shirts", "Waffle T-shirt", "jackets", "pants", "jeans", "dresses", "socks", "jersey", "jerseys"],
   headwear: ["Hats", "caps", "beanies"],
   eyewear: ["Glasses", "sunglasses"]
 };
@@ -804,9 +804,13 @@ export default function WebsiteProducts() {
                     </div>
 
                     <div>
-                      <label className="text-[9px] font-bold text-zinc-400 uppercase block mb-1 font-mono">Category *</label>
+                      <label className="text-[9px] font-bold text-zinc-400 uppercase block mb-1 font-mono">Store Category *</label>
                       <select
-                        value={editForm.category}
+                        value={
+                          (CATEGORY_MAP[editForm.mainCategory || "footwear"] || []).find(
+                            (c) => c.toLowerCase() === (editForm.category || "").toLowerCase()
+                          ) || editForm.category || ""
+                        }
                         onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                         className="w-full px-2 py-1.5 bg-white border border-zinc-200 focus:border-zinc-950 rounded-xs text-xs focus:outline-none cursor-pointer"
                       >
@@ -814,6 +818,11 @@ export default function WebsiteProducts() {
                         {(CATEGORY_MAP[editForm.mainCategory || "footwear"] || []).map((c) => (
                           <option key={c} value={c}>{c}</option>
                         ))}
+                        {editForm.category && !(CATEGORY_MAP[editForm.mainCategory || "footwear"] || []).some(
+                          (c) => c.toLowerCase() === editForm.category.toLowerCase()
+                        ) && (
+                          <option value={editForm.category}>{editForm.category}</option>
+                        )}
                       </select>
                     </div>
 

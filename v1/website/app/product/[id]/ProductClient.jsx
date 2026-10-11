@@ -798,7 +798,12 @@ export default function ProductClient({ params, initialProduct }) {
             {product.category}
           </span>
           <h1 className="text-sm font-bold tracking-wide uppercase text-black mt-1">
-            {product.name}
+            <span>{product.name}</span>
+            {product.color && product.color.toLowerCase() !== 'default' && (
+              <span className="text-xs font-normal uppercase text-zinc-400 ml-1.5">
+                · {product.color}
+              </span>
+            )}
           </h1>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <span className="text-xs font-bold text-black font-mono">
@@ -809,17 +814,15 @@ export default function ProductClient({ params, initialProduct }) {
                 <span className="text-[11px] text-zinc-400 line-through font-mono">
                   ₹{pricing.originalPrice.toLocaleString('en-IN')}
                 </span>
-                <span className="text-[9px] font-bold text-emerald-600  px-1.5 py-0.5 rounded tracking-wide">
+                <span className="text-[9px] font-bold text-emerald-600 px-1.5 py-0.5 rounded tracking-wide">
                   {pricing.discountPercent}% OFF
                 </span>
               </>
             )}
           </div>
-
-          <div className="mt-4 border-t border-zinc-100 pt-3">
-            <span className="text-[8px] tracking-wider uppercase text-zinc-400 font-medium">Color</span>
-            <span className="text-[10px] text-black font-medium block mt-0.5">{product.color || 'Default'}</span>
-          </div>
+          <span className="text-[9.5px] text-zinc-400 font-normal mt-1">
+            Tax included. Shipping calculated at payment.
+          </span>
 
           {/* Size Selection */}
           {isFreeSizeProduct ? (
